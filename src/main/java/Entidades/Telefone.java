@@ -25,15 +25,16 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "telefone")
-public class Telefone implements Serializable, ClassePai{
+public class Telefone implements Serializable, ClassePai {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tel_id")
-    private Long id; 
+    private Long id;
     @Column(name = "tel_numero")
-    private String numero;  
+    private String numero;
     @Column(name = "tel_operadora")
-    private String operadora;   
+    private String operadora;
     @Column(name = "tel_tipotelefone")
     @Enumerated(EnumType.STRING)
     private tipoTelefone tipoTelefone;
@@ -44,6 +45,16 @@ public class Telefone implements Serializable, ClassePai{
     @Override
     public Long getId() {
         return id;
+    }
+
+    public String getNumeroFormatado() {
+        if (numero != null && numero.length() == 11) {
+            return "(" + numero.substring(0, 2) + ") " + numero.substring(2, 7) + "-" + numero.substring(7);
+        } else if (numero != null && numero.length() == 10) {
+            // Caso o telefone fixo não tenha 9 na frente
+            return "(" + numero.substring(0, 2) + ") " + numero.substring(2, 6) + "-" + numero.substring(6);
+        }
+        return numero; // Retorna como está caso não tenha o tamanho esperado
     }
 
     public void setId(Long id) {
@@ -82,8 +93,6 @@ public class Telefone implements Serializable, ClassePai{
         this.pessoa = pessoa;
     }
 
-    
-    
     @Override
     public int hashCode() {
         // Se o ID existe (objeto persistido), use o hashCode do ID.
@@ -120,8 +129,8 @@ public class Telefone implements Serializable, ClassePai{
         // Se ambos os IDs são null (objetos novos, ainda não persistidos),
         // compare pelos campos de negócio para determinar a igualdade.
         if (this.id == null && other.id == null) {
-            return Objects.equals(this.numero, other.numero) &&
-                   Objects.equals(this.tipoTelefone, other.tipoTelefone);
+            return Objects.equals(this.numero, other.numero)
+                    && Objects.equals(this.tipoTelefone, other.tipoTelefone);
             // Considere adicionar Objects.equals(this.operadora, other.operadora)
             // se a operadora também fizer parte da chave de unicidade para um telefone não salvo.
         }

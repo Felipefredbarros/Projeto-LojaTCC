@@ -118,6 +118,23 @@ public class PessoaControle implements Serializable {
         // The <p:ajax update="xxx"/> in JSF will handle UI updates.
     }
 
+    public void onTipoTelefonePessoaChange() {
+        novoTelefone.setNumero(null);
+        System.out.println("Telefone da Pessoa (FISICA/JURIDICA) alterada para: " + novoTelefone.getTipoTelefone());
+    }
+
+    public String getMascaraTelefone() {
+        if (novoTelefone.getTipoTelefone() == null) {
+            return "(99) 99999-9999"; // padrão
+        }
+
+        if (novoTelefone.getTipoTelefone() == tipoTelefone.CELULAR) {
+            return "(99) 99999-9999";
+        }
+
+        return "(99) 9999-9999";
+    }
+
     //novo
     public void adicionarEndereco() {
         if (novoEndereco.getRua() == null || novoEndereco.getRua().trim().isEmpty()
@@ -186,9 +203,6 @@ public class PessoaControle implements Serializable {
             if (pessoa.getTipo() != TipoPessoa.FORNECEDOR) {
                 pessoa.setRegiao(null);
             }
-
-            System.out.println("Pessoa para salvar: " + pessoa.getNome() + " - Tipo Role: " + pessoa.getTipo() + " - Natureza: " + pessoa.getTipoPessoa());
-            System.out.println("CPF/CNPJ (limpo): " + pessoa.getCpfcnpj());
 
             pessoaFacade.salvar(pessoa);
             pessoa = new Pessoa();
@@ -408,10 +422,10 @@ public class PessoaControle implements Serializable {
 
         PdfPTable mainTable = new PdfPTable(8);
         mainTable.setWidthPercentage(100);
-        mainTable.setWidths(new float[]{1f ,1f ,2.5f, 3f, 1.5f, 1f, 4f, 2f}); 
+        mainTable.setWidths(new float[]{1f, 1f, 2.5f, 3f, 1.5f, 1f, 4f, 2f});
 
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Font.BOLD, Color.WHITE);
-        String[] headers = {"Tipo Pessoa","Natureza" ,"Nome", "Email", "CPF/CNPJ", "Status", "Endereços", "Telefones"};
+        String[] headers = {"Tipo Pessoa", "Natureza", "Nome", "Email", "CPF/CNPJ", "Status", "Endereços", "Telefones"};
         for (String header : headers) {
             PdfPCell headerCell = new PdfPCell(new Phrase(header, headerFont));
             headerCell.setBackgroundColor(new Color(102, 102, 102));

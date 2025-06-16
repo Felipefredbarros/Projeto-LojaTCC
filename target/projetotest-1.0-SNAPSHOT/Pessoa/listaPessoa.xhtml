@@ -23,18 +23,21 @@
                                          style="margin-right: 10px"/>
 
                         <p:commandButton value="Lista de Pessoas Inativadas" icon="pi pi-plus"
-                                         action="listaPessoasInativas.xhtml"
+                                         action="listaPessoasInativas.xhtml?faces-redirect=true"
                                          styleClass="ui-button-success"
                                          process="@this"/>
                     </p:toolbarGroup>
                 </p:toolbar>
 
-                <p:dataTable id="tabelaPessoas" var="pessoaItem" value="#{pessoaControle.listaPessoaAtiva}"
+                <p:dataTable id="tabelaPessoas"  widgetVar="tabelaPessoasWV"
+                             var="pessoaItem" value="#{pessoaControle.listaPessoaAtiva}"
                              emptyMessage="Nenhuma pessoa cadastrada."
-                             rows="10" paginator="false"
-                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rows="6" paginator="true"
+                             filterEvent="keyup"
+                             paginatorPosition="bottom"
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
-                             rowsPerPageTemplate="5,10,15,20">
+                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
+
 
                     <p:column headerText="Nome" sortBy="#{pessoaItem.nome}" filterBy="#{pessoaItem.nome}" filterMatchMode="contains">
                         <h:outputText value="#{pessoaItem.nome}" />
@@ -70,7 +73,7 @@
                         <h:outputText value="#{pessoaItem.tipoPessoa == 'JURIDICA' ? 'Pessoa Jurídica' : 'Pessoa Física'}" />
                     </p:column>
 
-                    <p:column headerText="Ações" style="width:120px;text-align:center">
+                    <p:column headerText="Ações" style="width:150px;text-align:center">
                         <p:commandButton icon="pi pi-search" title="Visualizar"
                                          actionListener="#{pessoaControle.prepararVisualizacao(pessoaItem)}"
                                          process="@this"
@@ -152,13 +155,13 @@
                             <p:column headerText="Rua"><h:outputText value="#{endereco.rua}"/></p:column>
                             <p:column headerText="Número"><h:outputText value="#{endereco.numero}"/></p:column>
                             <p:column headerText="Bairro"><h:outputText value="#{endereco.bairro}"/></p:column>
-                            <p:column headerText="CEP"><h:outputText value="#{endereco.cep}"/></p:column>
+                            <p:column headerText="CEP"><h:outputText value="#{endereco.cepFormatado}"/></p:column>
                         </p:dataTable>
 
                         <!-- Telefones -->
                         <h3 class="section-title"><strong>Telefones</strong></h3>
                         <p:dataTable value="#{pessoaControle.pessoaSelecionado.listaTelefones}" var="telefone" style="width:100%;">
-                            <p:column headerText="Número"><h:outputText value="#{telefone.numero}"/></p:column>
+                            <p:column headerText="Número"><h:outputText value="#{telefone.numeroFormatado}"/></p:column>
                             <p:column headerText="Tipo"><h:outputText value="#{telefone.tipoTelefone}"/></p:column>
                             <p:column headerText="Operadora"><h:outputText value="#{telefone.operadora}"/></p:column>
                         </p:dataTable>
@@ -238,6 +241,21 @@
                 .btn-edit:hover {
                     background-color: #5a6268;
                 }
+                .custom-paginator .ui-paginator {
+                    background-color: #f9f9f9;
+                    border: none;
+                    border-top: 1px solid #dee2e6;
+                    padding: 10px;
+                    font-size: 14px;
+                }
+
+                .ui-datatable .ui-datatable-data > tr > td,
+                .ui-datatable .ui-datatable-thead > tr > th {
+                    padding: 6px 8px;   /* Reduz o espaçamento interno */
+                    font-size: 1.2rem; /* Fonte um pouco menor */
+                    line-height: 0.5;   /* Altura de linha menor */
+                }
+
 
 
 

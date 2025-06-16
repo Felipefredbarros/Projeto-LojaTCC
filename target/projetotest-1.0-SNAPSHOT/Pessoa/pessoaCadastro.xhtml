@@ -8,192 +8,226 @@
 
     <ui:composition template="../index.xhtml">
         <ui:define name="body">
-            <h:form id="form">
+            <h:form id="form" styleClass="form-container">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true"/>
-                <h1>Cadastro Unificado de Pessoas</h1>
+                <p:panel header="Cadastro Unificado de Pessoas" styleClass="form-card">
 
-                <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card"
-                             columnClasses="ui-grid-col-3,ui-grid-col-9">
                     <p:outputLabel for="tipoPessoaEnum" value="Tipo de Pessoa (Função):" styleClass="font-semibold"/>
-                    <p:selectOneMenu id="tipoPessoaEnum" value="#{pessoaControle.pessoa.tipo}" required="true"
-                                     requiredMessage="O tipo de pessoa (função) é obrigatório.">
-                        <f:selectItems value="#{pessoaControle.tiposPessoaDisponiveis}" var="tipoEnum"
-                                       itemLabel="#{tipoEnum.label}" itemValue="#{tipoEnum}"/> <p:ajax listener="#{pessoaControle.onTipoPessoaChange}"
-                                       update="panelDocumentos panelCamposEspecificos"/>
-                    </p:selectOneMenu>
-                </p:panelGrid>
 
-                <p:panel header="Dados Gerais" styleClass="mt-3">
-                    <p:panelGrid columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
-                                 columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+                    <p:selectOneMenu id="tipoPessoaEnum" value="#{pessoaControle.pessoa.tipo}" required="true"
+                                     requiredMessage="O tipo de pessoa (função) é obrigatório."
+                                     style="width: 10%;">
+
+                        <f:selectItems value="#{pessoaControle.tiposPessoaDisponiveis}" var="tipoEnum"
+                                       itemLabel="#{tipoEnum.label}" itemValue="#{tipoEnum}"/>
+                        <p:ajax listener="#{pessoaControle.onTipoPessoaChange}" update="panelDocumentos panelCamposEspecificos"/>
+                    </p:selectOneMenu>
+                    <h3 class="section-title">Informações Gerais</h3>
+                    <p:panelGrid columns="4" layout="grid" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+
                         <p:outputLabel for="nome" value="Nome:" styleClass="font-semibold"/>
-                        <p:inputText id="nome" value="#{pessoaControle.pessoa.nome}" required="true"
-                                     requiredMessage="Nome é obrigatório." maxlength="150"/>
+                        <p:inputText id="nome" value="#{pessoaControle.pessoa.nome}" required="true" maxlength="150" style="width: 80%;"/>
 
                         <p:outputLabel for="email" value="Email:" styleClass="font-semibold"/>
-                        <p:inputText id="email" value="#{pessoaControle.pessoa.email}" required="true"
-                                     requiredMessage="Email é obrigatório." validatorMessage="Email inválido."
-                                     maxlength="100">
-                        </p:inputText>
+                        <p:inputText id="email" value="#{pessoaControle.pessoa.email}" required="true" maxlength="100" style="width: 80%;"/>
                     </p:panelGrid>
-                </p:panel>
 
-                <p:outputPanel id="panelDocumentos" styleClass="mt-3">
-                    <p:panel header="Documentos">
-                        <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
-                                     columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+
+                    <p:outputPanel id="panelDocumentos" styleClass="card ui-fluid mb-3">
+                        <h3 class="section-title">Documentação</h3>
+
+                        <p:panelGrid columns="4" layout="grid"
+                                     columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4"
+                                     styleClass="ui-panelgrid-blank">
+
+                            <p:outputLabel for="naturezaPessoa" value="Natureza:" styleClass="font-semibold"/>
+                            <p:selectOneRadio id="naturezaPessoa" value="#{pessoaControle.pessoa.tipoPessoa}"
+                                              layout="responsive" columns="2" required="true" style="width: 80%;">
+                                <f:selectItem itemLabel="Física" itemValue="FISICA"/>
+                                <f:selectItem itemLabel="Jurídica" itemValue="JURIDICA"/>
+                                <p:ajax listener="#{pessoaControle.onNaturezaPessoaChange}" update="labelCpfCnpj inputCpfCnpj"/>
+                            </p:selectOneRadio>
+
                             <p:outputLabel id="labelCpfCnpj"
                                            value="#{pessoaControle.pessoa.tipoPessoa == 'JURIDICA' ? 'CNPJ' : 'CPF'}:"
                                            styleClass="font-semibold"/>
                             <p:inputMask id="inputCpfCnpj" value="#{pessoaControle.pessoa.cpfcnpj}"
                                          mask="#{pessoaControle.pessoa.tipoPessoa == 'JURIDICA' ? '99.999.999/9999-99' : '999.999.999-99'}"
-                                         required="true"
-                                         requiredMessage="O #{pessoaControle.pessoa.tipoPessoa == 'JURIDICA' ? 'CNPJ' : 'CPF'} é obrigatório."/>
-
-                            <p:outputLabel for="naturezaPessoa" value="Natureza:" styleClass="font-semibold"/>
-                            <p:selectOneRadio id="naturezaPessoa" value="#{pessoaControle.pessoa.tipoPessoa}" layout="responsive" columns="2"
-                                              required="true" requiredMessage="Natureza da pessoa é obrigatória.">
-                                <f:selectItem itemLabel="Pessoa Física" itemValue="FISICA"/>
-                                <f:selectItem itemLabel="Pessoa Jurídica" itemValue="JURIDICA"/>
-                                <p:ajax listener="#{pessoaControle.onNaturezaPessoaChange}"
-                                        update="labelCpfCnpj inputCpfCnpj"/>
-                            </p:selectOneRadio>
+                                         required="true" placeholder="Digite o número" style="width: 80%;"/>
                         </p:panelGrid>
-                    </p:panel>
-                </p:outputPanel>
-                <p:outputPanel id="panelCamposEspecificos" styleClass="mt-3">
-                    <p:panel header="Dados do Funcionário" rendered="#{pessoaControle.pessoa.tipo == 'FUNCIONARIO'}">
-                        <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
-                                     columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+                    </p:outputPanel>
+
+                    <p:outputPanel id="panelCamposEspecificos">
+
+                        <h:panelGroup rendered="#{pessoaControle.pessoa.tipo == 'FUNCIONARIO'}">
+                            <h3 class="section-title">Campos Específicos</h3>
+                        </h:panelGroup> 
+
+                        <p:panelGrid columns="4" layout="grid" rendered="#{pessoaControle.pessoa.tipo == 'FUNCIONARIO'}" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
                             <p:outputLabel for="salario" value="Salário:" styleClass="font-semibold"/>
-                            <p:inputNumber id="salario" value="#{pessoaControle.pessoa.salario}" symbol="R$ "
-                                           decimalSeparator="," thousandSeparator="." required="true" requiredMessage="Salário é obrigatório." minValue="0"/>
+                            <p:inputNumber id="salario" value="#{pessoaControle.pessoa.salario}" symbol="R$ " decimalSeparator="," thousandSeparator="." required="true" minValue="0" style="width: 100%;"/>
 
                             <p:outputLabel for="cargo" value="Cargo:" styleClass="font-semibold"/>
-                            <p:selectOneMenu id="cargo" value="#{pessoaControle.pessoa.cargo}" required="true" requiredMessage="Cargo é obrigatório.">
+                            <p:selectOneMenu id="cargo" value="#{pessoaControle.pessoa.cargo}" required="true" style="width: 100%;">
                                 <f:selectItem itemLabel="Selecione o Cargo" itemValue="" noSelectionOption="true"/>
                                 <f:selectItem itemLabel="Gerente" itemValue="Gerente"/>
                                 <f:selectItem itemLabel="Funcionário" itemValue="Funcionario"/>
                             </p:selectOneMenu>
 
                             <p:outputLabel for="diaPagamento" value="Dia do Pagamento:" styleClass="font-semibold"/>
-                            <p:calendar id="diaPagamento" value="#{pessoaControle.pessoa.diaPagamentos}"
-                                        pattern="dd/MM/yyyy" mask="true" required="true" requiredMessage="Data de pagamento é obrigatória." locale="pt_BR"/>
+                            <p:calendar id="diaPagamento" value="#{pessoaControle.pessoa.diaPagamentos}" pattern="dd/MM/yyyy" mask="true" locale="pt_BR" required="true" style="width: 100%;"/>
                         </p:panelGrid>
-                    </p:panel>
-                </p:outputPanel>
-                <p:tabView id="tabViewContatos" styleClass="mt-3">
-                    <p:tab title="Endereços Adicionais">
-                        <p:panelGrid id="panelNovoEndereco" columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card mb-3" columnClasses="ui-grid-col-2, ui-grid-col-4, ui-grid-col-2, ui-grid-col-4">
-                            <p:outputLabel for="endRua" value="Rua:" styleClass="font-semibold"/> <p:inputText id="endRua" value="#{pessoaControle.novoEndereco.rua}" maxlength="150"/>
-                            <p:outputLabel for="endNumero" value="Número:" styleClass="font-semibold"/> <p:inputText id="endNumero" value="#{pessoaControle.novoEndereco.numero}" maxlength="10"/>
-                            <p:outputLabel for="endBairro" value="Bairro:" styleClass="font-semibold"/> <p:inputText id="endBairro" value="#{pessoaControle.novoEndereco.bairro}" maxlength="100"/>
-                            <p:outputLabel for="endCep" value="CEP:" styleClass="font-semibold"/> <p:inputMask id="endCep" value="#{pessoaControle.novoEndereco.cep}" mask="99999-999"/>
-                        </p:panelGrid>
-                        <p:commandButton value="Adicionar Endereço" icon="pi pi-plus" actionListener="#{pessoaControle.adicionarEndereco}"
-                                         update="tabelaEnderecos :form:growlMessages panelNovoEndereco" process="@this endRua endNumero endBairro endCep"
-                                         styleClass="p-mb-2" style="margin-right: 10px"/>
-
-                        <p:dataTable id="tabelaEnderecos" scrollable="true" scrollHeight="150" var="end" value="#{pessoaControle.pessoa.listaEnderecos}" emptyMessage="Nenhum endereço adicional." rows="5" paginator="false">
-                            <p:column headerText="Rua"><h:outputText value="#{end.rua}" /></p:column>
-                            <p:column headerText="Nº"><h:outputText value="#{end.numero}" /></p:column>
-                            <p:column headerText="Bairro"><h:outputText value="#{end.bairro}" /></p:column>
-                            <p:column headerText="CEP"><h:outputText value="#{end.cep}" /></p:column>
-                            <p:column headerText="Ações" style="width:100px;text-align:center">
-                                <p:commandButton icon="pi pi-trash" title="Remover" actionListener="#{pessoaControle.removerEndereco(end)}"
-                                                 update="tabelaEnderecos" process="@this"/>
-                            </p:column>
-                        </p:dataTable>
-                    </p:tab>
-                    <p:tab title="Telefones Adicionais">
-                        <p:panelGrid id="panelNovoTelefone"  columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card mb-3" columnClasses="ui-grid-col-2, ui-grid-col-4, ui-grid-col-2, ui-grid-col-4">
-                            <p:outputLabel for="telNumero" value="Número:" styleClass="font-semibold"/> <p:inputMask id="telNumero" value="#{pessoaControle.novoTelefone.numero}" mask="(99) 99999-9999"/>
-                            <p:outputLabel for="telTipo" value="Tipo:" styleClass="font-semibold"/>
-                            <p:selectOneMenu id="telTipo" value="#{pessoaControle.novoTelefone.tipoTelefone}">
-                                <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
-                                <f:selectItems value="#{pessoaControle.tiposTelefoneDisponiveis}" var="tt" itemLabel="#{tt.descricao}" itemValue="#{tt}"/>
-                            </p:selectOneMenu>
-                            <p:outputLabel for="telOperadora" value="Operadora:" styleClass="font-semibold"/> <p:inputText id="telOperadora" value="#{pessoaControle.novoTelefone.operadora}" maxlength="30"/>
-                        </p:panelGrid>
-                        <p:commandButton value="Adicionar Telefone" icon="pi pi-plus" actionListener="#{pessoaControle.adicionarTelefone}"
-                                         update="tabelaTelefones :form:growlMessages panelNovoTelefone" process="@this telNumero telTipo telOperadora"
-                                         styleClass="p-mb-2" style="margin-right: 10px"/>
-
-                        <p:dataTable id="tabelaTelefones" var="tel" scrollable="true" scrollHeight="150" value="#{pessoaControle.pessoa.listaTelefones}" emptyMessage="Nenhum telefone adicional." rows="5" paginator="false">
-                            <p:column headerText="Número"><h:outputText value="#{tel.numero}" /></p:column>
-                            <p:column headerText="Tipo"><h:outputText value="#{tel.tipoTelefone.descricao}" /></p:column>
-                            <p:column headerText="Operadora"><h:outputText value="#{tel.operadora}" /></p:column>
-                            <p:column headerText="Ações" style="width:100px;text-align:center">
-                                <p:commandButton icon="pi pi-trash" title="Remover" actionListener="#{pessoaControle.removerTelefone(tel)}"
-                                                 update="tabelaTelefones" process="@this"/>
-                            </p:column>
-                        </p:dataTable>
-                    </p:tab>
-                </p:tabView>
+                    </p:outputPanel>
 
 
+                    <h3 class="section-title">Contato</h3>
+                    <p:tabView>
+                        <p:tab title="Endereços Adicionais">
+                            <p:panelGrid id="panelNovoEndereco" columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card mb-3" columnClasses="ui-grid-col-2, ui-grid-col-4, ui-grid-col-2, ui-grid-col-4">
+                                <p:outputLabel for="endRua" value="Rua:" styleClass="font-semibold"/> <p:inputText id="endRua" value="#{pessoaControle.novoEndereco.rua}" maxlength="150"/>
+                                <p:outputLabel for="endNumero" value="Número:" styleClass="font-semibold"/> <p:inputText id="endNumero" value="#{pessoaControle.novoEndereco.numero}" maxlength="10"/>
+                                <p:outputLabel for="endBairro" value="Bairro:" styleClass="font-semibold"/> <p:inputText id="endBairro" value="#{pessoaControle.novoEndereco.bairro}" maxlength="100"/>
+                                <p:outputLabel for="endCep" value="CEP:" styleClass="font-semibold"/> <p:inputMask id="endCep" value="#{pessoaControle.novoEndereco.cep}" mask="99999-999"/>
+                            </p:panelGrid>
+                            <p:commandButton value="Adicionar Endereço" icon="pi pi-plus" actionListener="#{pessoaControle.adicionarEndereco}"
+                                             update="tabelaEnderecos :form:growlMessages panelNovoEndereco" process="@this endRua endNumero endBairro endCep"
+                                             styleClass="p-mb-2" style="margin-right: 10px"/>
 
+                            <p:dataTable id="tabelaEnderecos" scrollable="true" scrollHeight="165" var="end" value="#{pessoaControle.pessoa.listaEnderecos}" emptyMessage="Nenhum endereço adicional." rows="5" paginator="false">
+                                <p:column headerText="Rua"><h:outputText value="#{end.rua}" /></p:column>
+                                <p:column headerText="Nº"><h:outputText value="#{end.numero}" /></p:column>
+                                <p:column headerText="Bairro"><h:outputText value="#{end.bairro}" /></p:column>
+                                <p:column headerText="CEP"><h:outputText value="#{end.cep}" /></p:column>
+                                <p:column headerText="Ações" style="width:100px;text-align:center">
+                                    <p:commandButton icon="pi pi-trash" title="Remover" actionListener="#{pessoaControle.removerEndereco(end)}"
+                                                     update="tabelaEnderecos" process="@this"/>
+                                </p:column>
+                            </p:dataTable>                    </p:tab>
+                        <p:tab title="Telefones Adicionais">
+                            <p:panelGrid id="panelNovoTelefone"  columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card mb-3" columnClasses="ui-grid-col-2, ui-grid-col-4, ui-grid-col-2, ui-grid-col-4">
+                                <p:outputLabel for="telNumero" value="Número:" styleClass="font-semibold"/> 
+                                <p:inputMask id="telNumero" value="#{pessoaControle.novoTelefone.numero}" mask="#{pessoaControle.mascaraTelefone}"/>
+                                <p:outputLabel for="telTipo" value="Tipo:" styleClass="font-semibold"/>
+                                <p:selectOneMenu id="telTipo" value="#{pessoaControle.novoTelefone.tipoTelefone}" >
+                                    <f:selectItem itemLabel="Celular" itemValue="CELULAR"/>
+                                    <f:selectItem itemLabel="Fixo" itemValue="FIXO"/>
+                                    <f:selectItem itemLabel="Comercial" itemValue="COMERCIAL"/>
+                                    <p:ajax listener="#{pessoaControle.onTipoTelefonePessoaChange}" update="telNumero"/>
+                                </p:selectOneMenu>
+                                <p:outputLabel for="telOperadora" value="Operadora:" styleClass="font-semibold"/> <p:inputText id="telOperadora" value="#{pessoaControle.novoTelefone.operadora}" maxlength="30"/>
+                            </p:panelGrid>
+                            <p:commandButton value="Adicionar Telefone" icon="pi pi-plus" actionListener="#{pessoaControle.adicionarTelefone}"
+                                             update="tabelaTelefones :form:growlMessages panelNovoTelefone" process="@this telNumero telTipo telOperadora"
+                                             styleClass="p-mb-2" style="margin-right: 10px"/>
 
+                            <p:dataTable id="tabelaTelefones" var="tel" scrollable="true" scrollHeight="165" value="#{pessoaControle.pessoa.listaTelefones}" emptyMessage="Nenhum telefone adicional." rows="5" paginator="false">
+                                <p:column headerText="Número"><h:outputText value="#{tel.numero}" /></p:column>
+                                <p:column headerText="Tipo"><h:outputText value="#{tel.tipoTelefone.descricao}" /></p:column>
+                                <p:column headerText="Operadora"><h:outputText value="#{tel.operadora}" /></p:column>
+                                <p:column headerText="Ações" style="width:100px;text-align:center">
+                                    <p:commandButton icon="pi pi-trash" title="Remover" actionListener="#{pessoaControle.removerTelefone(tel)}"
+                                                     update="tabelaTelefones" process="@this"/>
+                                </p:column>
+                            </p:dataTable>
+                        </p:tab>
+                    </p:tabView>
 
-                <p:commandButton value="Salvar" actionListener="#{pessoaControle.salvarPessoa}" action="listaPessoa.xhtml" update="@form" icon="pi pi-save" styleClass="mt-3" style="margin-right: 10px"/>
-                <p:commandButton value="Limpar" action="#{pessoaControle.limparFormulario}" process="@this" update="@form" icon="pi pi-trash" styleClass="ui-button-secondary mt-3"/>
-
-
+                    <p:commandButton value="Salvar" actionListener="#{pessoaControle.salvarPessoa}" action="listaPessoa.xhtml" update="@form" icon="pi pi-save" style="margin-right: 10px"/>
+                    <p:commandButton value="Limpar" action="#{pessoaControle.limparFormulario}" process="@this" update="@form" icon="pi pi-trash" styleClass="ui-button-secondary"/>
+                </p:panel>
             </h:form>
 
             <style>
                 body {
-                    font-family: 'Poppins', sans-serif;
-                    background-color: #f4f4f4;
-                    color: #333;
-                    margin: 20px; /* Added some margin for better viewing */
-                    padding: 0;
-                    /* display: flex; Remove flex for scrollability if form is long */
-                    /* justify-content: center; */
-                    /* align-items: center; */
-                    /* height: 100vh; */
+                    background-color: #f0f4f8;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                }
+                .form-container {
+                    width: 100%;
+                    max-width: 1300px;
+                    margin-left: 40px;
+                    margin-right: auto;
+                    padding: 10px;
                 }
 
-                h1 {
-                    text-align: center;
-                    color: #007bff;
-                    margin-bottom: 20px; /* Increased margin */
-                }
-
-                .form-container { /* This class was in your CSS but not used in the provided snippet directly on h:form or panel */
-                    background: white;
-                    padding: 10px; /* Increased padding */
+                .form-card {
+                    padding: 25px;
                     border-radius: 10px;
-                    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-                    max-width: 100%; /* Increased max-width for a wider form */
-                    margin: 20px auto; /* Centering and margin */
-                }
-                .card {
-                    background: white;
-                    padding: 0.5em;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    margin-bottom:0.5em;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    background-color: #ffffff;
                 }
 
-                .mt-3 {
-                    margin-top: 1rem !important;
+                /* Título do p:panel */
+                .ui-panel-titlebar {
+                    background-color: #007bff !important;
+                    color: #fff !important;
+                    font-weight: bold;
+                    font-size: 18px;
+                    padding: 12px 20px !important;
+                    border-top-left-radius: 10px;
+                    border-top-right-radius: 10px;
+                    border: none !important;
+                    box-shadow: none !important;
                 }
 
-                .ui-outputlabel.font-semibold {
+                .font-semibold {
+                    font-weight: 600;
+                    color: #2c3e50;
+                }
+
+                .section-title {
+                    margin-top: 30px;
+                    margin-bottom: 10px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #007bff;
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 5px;
+                }
+                .ui-inputfield,
+                .ui-selectonemenu-label,
+                .ui-inputnumber .ui-inputfield {
+                    border-radius: 6px !important;
+                    padding: 8px 10px !important;
+                }
+
+                .ui-inputfield:focus,
+                .ui-selectonemenu:focus,
+                .ui-inputnumber .ui-inputfield:focus {
+                    border-color: #007bff !important;
+                    box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.25) !important;
+                }
+
+                .ui-button,
+                .ui-button-info,
+                .ui-button-success,
+                .ui-button-secondary {
+                    border-radius: 6px;
                     font-weight: 600;
                 }
-                remover {
+
+                .ui-button-success {
                     background-color: #007bff;
-                    color: white;
-                    border: none;
-                    padding: 12px 20px;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    cursor: pointer;
-                    transition: background-color 0.3s;
-                    width: 100%;
-                    margin-top: 10px;
+                    border-color: #007bff;
+                }
+
+                .ui-button-success:hover {
+                    background-color: #0056b3;
+                    border-color: #004b9b;
+                }
+
+                .ui-button-secondary {
+                    background-color: #6c757d;
+                    border-color: #6c757d;
+                }
+
+                .ui-button-secondary:hover {
+                    background-color: #5a6268;
+                    border-color: #4e555b;
+                }
+
+                .ui-panelgrid .ui-panelgrid-cell {
+                    padding: 0.5rem;
                 }
             </style>
         </ui:define>

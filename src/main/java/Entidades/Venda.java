@@ -82,6 +82,7 @@ public class Venda implements Serializable, ClassePai {
         return valorTotal;
     }
 
+
     @Override
     public Long getId() {
         return id;

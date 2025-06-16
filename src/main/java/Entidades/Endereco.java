@@ -45,6 +45,13 @@ public class Endereco implements Serializable, ClassePai {
     @JoinColumn(name = "pessoa_id")
     private Pessoa pessoa;
 
+    public String getCepFormatado() {
+    if (cep != null && cep.length() == 8) {
+        return cep.substring(0, 5) + "-" + cep.substring(5);
+    }
+    return cep;
+}
+    
     @Override
     public Long getId() {
         return id;

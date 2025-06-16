@@ -133,6 +133,19 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <executable>mvn</executable>
+                    <arguments>
+                        <argument>clean</argument>
+                        <argument>package</argument>
+                        <argument>cargo:redeploy</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

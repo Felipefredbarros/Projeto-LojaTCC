@@ -1,202 +1,258 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html>
-
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
 
     <ui:composition template="../index.xhtml">
         <ui:define name="body">
-            <h2>Lista de Produtos Cadastrados</h2>
-            <br/>
-            <h:form id="form">
-                <p:growl id="mdialog" showDetail="true"/>
+            <h:form id="formListagemProdutos">
+                <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h:dataTable value="#{produtoControle.listaProdutos}" var="prod" border="0" styleClass="table-style">
-                    <h:column>
-                        <f:facet name="header">Categoria</f:facet>
-                        <h:outputText value="#{prod.categoria.categoria}" />
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Marca</f:facet>
-                        <h:outputText value="#{prod.marca.marca}"/>
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">NCM</f:facet>
-                        <h:outputText value="#{prod.ncm}" />
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Valor De Compra</f:facet>
-                        <h:outputText value="#{prod.valorUnitarioCompra}">
+                <h1>Listagem de Produtos</h1>
+
+                <p:toolbar styleClass="mb-3">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Novo Produto" icon="pi pi-plus"
+                                         action="produtoCadastro.xhtml"
+                                         actionListener="#{produtoControle.novo()}"
+                                         styleClass="ui-button-success"
+                                         process="@this"
+                                         style="margin-right: 10px"/>
+
+                        <p:commandButton value="Lista de Produtos Inativados" icon="pi pi-plus"
+                                         action="listaProdutosInativas.xhtml?faces-redirect=true"
+                                         styleClass="ui-button-success"
+                                         process="@this"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+                <p:dataTable id="tabelaProdutos"  widgetVar="tabelaProdutosWV"
+                             var="produtoItem" value="#{produtoControle.listaProdutos}"
+                             emptyMessage="Nenhuma produto cadastrada."
+                             rows="6" paginator="true"
+                             filterEvent="keyup"
+                             paginatorPosition="bottom"
+                             currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
+
+
+                    <p:column headerText="Categoria" sortBy="#{produtoItem.categoria.categoria}" filterBy="#{produtoItem.categoria.categoria}" filterMatchMode="contains">
+                        <h:outputText value="#{produtoItem.categoria.categoria}" />
+                    </p:column>
+
+                    <p:column headerText="Marca" sortBy="#{produtoItem.marca.marca}" filterBy="#{produtoItem.marca.marca}" filterMatchMode="contains">
+                        <h:outputText value="#{produtoItem.marca.marca}" />
+                    </p:column>
+
+                    <p:column headerText="NCM" sortBy="#{produtoItem.ncm}" filterBy="#{produtoItem.ncm}" filterMatchMode="contains">
+                        <h:outputText value="#{produtoItem.ncm}" />
+                    </p:column>
+
+                    <p:column headerText="Valor De Compra" sortBy="#{produtoItem.valorUnitarioCompra}" filterBy="#{produtoItem.valorUnitarioCompra}" filterMatchMode="contains">
+                        <h:outputText value="#{produtoItem.valorUnitarioCompra}">
                             <f:convertNumber type="currency"/>
                         </h:outputText>
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Valor De Venda</f:facet>
-                        <h:outputText value="#{prod.valorUnitarioVenda}">
-                            <f:convertNumber type="currency"/>
-                        </h:outputText>
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Status</f:facet>
-                        <h:outputText value="#{prod.status}"/>
-                    </h:column>
-                    <h:column>
-                        <f:facet name="header">Operações</f:facet>
-                        <h:commandButton value="Excluir" action="#{produtoControle.excluir(prod)}" styleClass="btn-delete"/>
-                        <h:commandButton value="Editar" actionListener="#{produtoControle.editar(prod)}" styleClass="btn-edit"/>
-                        <h:commandButton  value="Ver Produto" styleClass="btn-edit">
-                            <p:ajax 
-                                update="form:dialogT"
-                                listener="#{produtoControle.prepararVisualizacao(prod)}"
-                                rendered=":form:produtoDetailPanel"
-                                oncomplete="PF('produtoDialog').show()"/>
-                        </h:commandButton>
+                    </p:column>
 
-                    </h:column>
-                </h:dataTable>
-                <p:dialog id="dialogT" header="Detalhes do Produto" widgetVar="produtoDialog" modal="true" 
-                          resizable="false" width="800" height="500" closeOnEscape="true"
-                          dynamic="true" responsive="true">
+                    <p:column headerText="Valor De Venda" sortBy="#{produtoItem.valorUnitarioVenda}" filterBy="#{produtoItem.valorUnitarioVenda}" filterMatchMode="contains">
+                        <h:outputText value="#{produtoItem.valorUnitarioVenda}">
+                            <f:convertNumber type="currency"/>
+                        </h:outputText>                    
+                    </p:column>
+
+                    <p:column headerText="Status" sortBy="#{produtoItem.status}" filterBy="#{produtoItem.status}" filterMatchMode="contains">
+                        <h:outputText value="#{produtoItem.status}" />
+                    </p:column>
+
+                    <p:column headerText="Ações" style="width:150px;text-align:center">
+                        <p:commandButton icon="pi pi-search" title="Visualizar"
+                                         actionListener="#{produtoControle.prepararVisualizacao(produtoItem)}"
+                                         process="@this"
+                                         update=":formListagemProdutos:produtoDetailPanel"
+                                         oncomplete="PF('produtoDialog').show()"
+                                         styleClass="rounded-button ui-button-info"
+                                         style="margin-right: 5px;"/>
+
+                        <p:commandButton icon="pi pi-pencil" title="Editar"
+                                         actionListener="#{produtoControle.editar(produtoItem)}"
+                                         process="@this"
+                                         styleClass="rounded-button ui-button-info"
+                                         style="margin-right: 5px;"/>
+
+                        <p:commandButton icon="pi pi-trash" title="Excluir"
+                                         action="#{produtoControle.excluir(produtoItem)}"
+                                         process="@this"
+                                         update=":formListagemProdutos:tabelaProdutos :formListagemProdutos:growlMessages"
+                                         styleClass="rounded-button ui-button-danger">
+                            <p:confirm header="Confirmação" message="Deseja realmente excluir esta produto: " icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+                    </p:column>
+                </p:dataTable>
+
+                <p:dialog id="dialogT" header="Detalhes da Produto" widgetVar="produtoDialog" modal="true" 
+                          resizable="false" width="800" height="600" closeOnEscape="true"
+                          dynamic="true" responsive="true" styleClass="meu-dialogo">
+
                     <p:outputPanel id="produtoDetailPanel">
-                        <h:panelGrid columns="2" rendered="#{not empty produtoControle.produtoSelecionado}"
-                                     style="width: 100%">
-                            <h:outputLabel value="Categoria: " />
-                            <h:outputText value="#{produtoControle.produtoSelecionado.categoria.categoria}"/>
+                        <!-- Bloco com informações principais -->
+                        <h3 class="section-title"><strong>Informações Gerais</strong></h3>
 
-                            <h:outputLabel value="Marca: " />
-                            <h:outputText value="#{produtoControle.produtoSelecionado.marca.marca}"/>
+                        <div class="info-box-grid" rendered="#{not empty produtoControle.produtoSelecionado}">
+                            <div class="info-box">
+                                <span class="label"><strong>Categoria</strong></span>
+                                <span class="value">#{produtoControle.produtoSelecionado.categoria.categoria}</span>
+                            </div>
+                            <div class="info-box">
+                                <span class="label"><strong>NCM</strong></span>
+                                <span class="value">#{produtoControle.produtoSelecionado.ncm}</span>
+                            </div>
+                            <div class="info-box">
+                                <span class="label"><strong>Valor de Compra</strong></span>
+                                <span class="value">
+                                    <h:outputText value="#{produtoControle.produtoSelecionado.valorUnitarioCompra}">
+                                        <f:convertNumber type="currency"/>
+                                    </h:outputText>
+                                </span>
+                            </div>
 
-                            <h:outputLabel value="ncm: " />
-                            <h:outputText value="#{produtoControle.produtoSelecionado.ncm}"/>
-
-                            <h:outputLabel value="Valor da Venda: " />
-                            <h:outputText value="#{produtoControle.produtoSelecionado.valorUnitarioVenda}">
-                                <f:convertNumber type="currency"/>
-                            </h:outputText>
-
-                            <h:outputText value="Derivações: " style="font-weight:bold; display: block; margin-bottom: 10px;"/>
-
-                            <p:dataTable value="#{produtoControle.produtoSelecionado.variacoes}" var="derivacao" 
-                                         style="width:100%; margin-top:10px;">
-                                <p:column headerText="Descrição">
-                                    <h:outputText value="#{derivacao.descricao}"/>
-                                </p:column>
-                                <p:column headerText="Tamanho">
-                                    <h:outputText value="#{derivacao.tamanho}"/>
-                                </p:column>
-                                <p:column headerText="Cor">
-                                    <h:outputText value="#{derivacao.cor}"/>
-                                </p:column>
-                                <p:column headerText="Quantidade">
-                                    <h:outputText value="#{derivacao.quantidade}"/>
-                                </p:column>
-                            </p:dataTable>
-                        </h:panelGrid>
+                            <div class="info-box">
+                                <span class="label"><strong>Valor de Venda</strong></span>
+                                <span class="value">
+                                    <h:outputText value="#{produtoControle.produtoSelecionado.valorUnitarioVenda}">
+                                        <f:convertNumber type="currency"/>
+                                    </h:outputText>
+                                </span>
+                            </div>
+                        </div>
                     </p:outputPanel>
+                    <!-- Derivações -->
+                    <h3 class="section-title"><strong>Derivações</strong></h3>
+                    <p:dataTable value="#{produtoControle.produtoSelecionado.variacoes}" var="var" style="width:100%; margin-bottom: 30px;">
+                        <p:column headerText="Descrição"><h:outputText value="#{var.descricao}"/></p:column>
+                        <p:column headerText="Tamanho"><h:outputText value="#{var.tamanho}"/></p:column>
+                        <p:column headerText="Cor"><h:outputText value="#{var.cor}"/></p:column>
+                        <p:column headerText="Quantidade">
+                            <h:outputText value="#{var.quantidade}">
+                                <f:convertNumber integerOnly="true" groupingUsed="true" />
+                            </h:outputText>
+                        </p:column>
+                    </p:dataTable>
 
 
-                    <p:commandButton value="Fechar"  onclick="PF('produtoDialog').hide()" styleClass="btn-edit" 
-                                     style="margin-top:20px; float:right"/>
+                    <p:commandButton value="Fechar" onclick="PF('produtoDialog').hide()" styleClass="btn-edit"
+                                     style="margin-top:30px; float:right"/>
                 </p:dialog>
 
 
 
-                <div class="action-buttons">
-                    <h:commandButton value="Novo Produto" action="produtoCadastro.xhtml" actionListener="#{produtoControle.novo()}" styleClass="btn-new" />
-                    <h:commandButton value="Produtos Inativos" action="listaInativo.xhtml" styleClass="btn-new" />
-
-
-                </div>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                    <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+                </p:confirmDialog>
             </h:form>
-
             <style>
-                html, body {
-                    height: 100%;
-                    margin: 0;
-                    padding: 0;
-                    font-family: 'Poppins', sans-serif;
-                    background-color: #f0f2f5;
-                    color: #333;
+                .info-box-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                    gap: 16px;
+                    margin-bottom: 30px;
                 }
 
-                h2 {
-                    text-align: center;
-                    color: #343a40;
-                    margin-bottom: 20px;
-                    font-size: 28px;
-                }
-
-                .table-style {
-                    width: 90%;
-                    margin: 20px auto;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-                    background-color: #fff;
-                    border-radius: 8px;
-                    border-collapse: collapse;
-                }
-
-                th {
-                    background-color: #007bff;
-                    color: white;
-                    padding: 10px;
-                    font-size: 14px;
-                    text-align: left;
-                    text-transform: uppercase;
-                }
-
-                td {
+                .ui-dialog.meu-dialogo .ui-dialog-titlebar {
+                    background-color: #003366;   /* cor de fundo */
+                    color: #ffffff;              /* cor do texto */
+                    font-weight: bold;           /* negrito */
+                    font-size: 18px;             /* tamanho da fonte */
+                    border-radius: 8px 8px 0 0;  /* cantos arredondados no topo */
                     padding: 12px;
-                    border-bottom: 1px solid #e9ecef;
-                    font-size: 14px;
-                    transition: background-color 0.3s;
                 }
 
-                tr:nth-child(even) {
-                    background-color: #f7f9fc;
+                .info-box {
+                    background-color: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 10px;
+                    padding: 15px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
                 }
 
-                tr:hover {
-                    background-color: #e9ecef;
+                .info-box .label {
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                    color: #495057;
                 }
 
-                .btn-delete, .btn-new, .btn-edit {
-                    background-color: #007bff;
+                .info-box .value {
+                    font-size: 0.95rem;
+                    color: #212529;
+                }
+
+                .section-title {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    color: #343a40;
+                    margin: 30px 0 15px;
+                    border-bottom: 1px solid #dee2e6;
+                    padding-bottom: 5px;
+                }
+
+                /* Botão de fechar estilizado */
+                .btn-edit {
+                    background-color: #6c757d;
                     color: white;
                     border: none;
-                    padding: 10px 15px;
-                    border-radius: 4px;
+                    padding: 10px 20px;
+                    font-size: 0.9rem;
                     cursor: pointer;
-                    transition: background-color 0.3s, transform 0.3s;
-                    margin: 2px;
+                    border-radius: 8px;
+                    transition: background-color 0.2s ease;
                 }
 
-                .btn-delete:hover, .btn-edit:hover, .btn-new:hover {
-                    background-color: #0056b3;
-                    transform: scale(1.05);
+                .btn-edit:hover {
+                    background-color: #5a6268;
+                }
+                .custom-paginator .ui-paginator {
+                    background-color: #f9f9f9;
+                    border: none;
+                    border-top: 1px solid #dee2e6;
+                    padding: 10px;
+                    font-size: 14px;
                 }
 
-                .action-buttons {
-                    text-align: center;
-                    margin-top: 20px;
+                .ui-datatable .ui-datatable-data > tr > td,
+                .ui-datatable .ui-datatable-thead > tr > th {
+                    padding: 6px 8px;   /* Reduz o espaçamento interno */
+                    font-size: 1.2rem; /* Fonte um pouco menor */
+                    line-height: 0.5;   /* Altura de linha menor */
                 }
 
 
 
-                @media (max-width: 768px) {
-                    th, td {
-                        font-size: 12px;
-                        padding: 6px;
+
+                @media screen and (max-width: 768px) {
+                    .ui-dialog {
+                        width: 95% !important;
+                        left: 2.5% !important;
                     }
 
-                    .btn-delete, .btn-edit, .btn-new {
-                        padding: 6px 10px;
-                        font-size: 12px;
+                    .ui-panelgrid {
+                        display: block !important;
+                    }
+
+                    .ui-panelgrid td {
+                        display: block !important;
+                        width: 100% !important;
                     }
                 }
+
             </style>
+
+
         </ui:define>
     </ui:composition>
 </html>
