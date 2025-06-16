@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h2>Lista de Produtos Inativados</h2>
+            <br/>
+            <h:form id="form">
+                <p:growl id="mdialog" showDetail="true"/>
+
+                <h:dataTable value="#{produtoControle.listaProdutosInativos}" var="prod" border="0" styleClass="table-style">
+                    <h:column>
+                        <f:facet name="header">Categoria</f:facet>
+                        <h:outputText value="#{prod.categoria.categoria}" />
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Marca</f:facet>
+                        <h:outputText value="#{prod.marca.marca}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">NCM</f:facet>
+                        <h:outputText value="#{prod.ncm}" />
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Valor De Compra</f:facet>
+                        <h:outputText value="#{prod.valorUnitarioCompra}">
+                            <f:convertNumber type="currency"/>
+                        </h:outputText>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Valor De Venda</f:facet>
+                        <h:outputText value="#{prod.valorUnitarioVenda}">
+                            <f:convertNumber type="currency"/>
+                        </h:outputText>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Status</f:facet>
+                        <h:outputText value="#{prod.status}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Operações</f:facet>
+                        <h:commandButton value="Excluir" action="#{produtoControle.excluir(prod)}" styleClass="btn-delete"/>
+                        <h:commandButton  value="Ver Produto" styleClass="btn-edit">
+                            <p:ajax 
+                                update="form:dialogT"
+                                listener="#{produtoControle.prepararVisualizacao(prod)}"
+                                rendered=":form:produtoDetailPanel"
+                                oncomplete="PF('produtoDialog').show()"/>
+                        </h:commandButton>
+
+                    </h:column>
+                </h:dataTable>
+                <p:dialog id="dialogT" header="Detalhes do Produto" widgetVar="produtoDialog" modal="true" 
+                          resizable="false" width="800" height="500" closeOnEscape="true"
+                          dynamic="true" responsive="true">
+                    <p:outputPanel id="produtoDetailPanel">
+                        <h:panelGrid columns="2" rendered="#{not empty produtoControle.produtoSelecionado}"
+                                     style="width: 100%">
+                            <h:outputLabel value="Categoria: " />
+                            <h:outputText value="#{produtoControle.produtoSelecionado.categoria.categoria}"/>
+
+                            <h:outputLabel value="Marca: " />
+                            <h:outputText value="#{produtoControle.produtoSelecionado.marca.marca}"/>
+
+                            <h:outputLabel value="ncm: " />
+                            <h:outputText value="#{produtoControle.produtoSelecionado.ncm}"/>
+
+                            <h:outputLabel value="Valor da Venda: " />
+                            <h:outputText value="#{produtoControle.produtoSelecionado.valorUnitarioVenda}">
+                                <f:convertNumber type="currency"/>
+                            </h:outputText>
+
+                            <h:outputText value="Derivações: " style="font-weight:bold; display: block; margin-bottom: 10px;"/>
+
+                            <p:dataTable value="#{produtoControle.produtoSelecionado.variacoes}" var="derivacao" 
+                                         style="width:100%; margin-top:10px;">
+                                <p:column headerText="Descrição">
+                                    <h:outputText value="#{derivacao.descricao}"/>
+                                </p:column>
+                                <p:column headerText="Tamanho">
+                                    <h:outputText value="#{derivacao.tamanho}"/>
+                                </p:column>
+                                <p:column headerText="Cor">
+                                    <h:outputText value="#{derivacao.cor}"/>
+                                </p:column>
+                                <p:column headerText="Quantidade">
+                                    <h:outputText value="#{derivacao.quantidade}"/>
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGrid>
+                    </p:outputPanel>
+
+
+                    <p:commandButton value="Fechar"  onclick="PF('produtoDialog').hide()" styleClass="btn-edit" 
+                                     style="margin-top:20px; float:right"/>
+                </p:dialog>
+
+
+
+                <div class="action-buttons">
+                    <h:commandButton value="Lista de Produtos" action="listaProduto.xhtml" styleClass="btn-new" />
+                </div>
+            </h:form>
+
+            <style>
+                html, body {
+                    height: 100%;
+                    margin: 0;
+                    padding: 0;
+                    font-family: 'Poppins', sans-serif;
+                    background-color: #f0f2f5;
+                    color: #333;
+                }
+
+                h2 {
+                    text-align: center;
+                    color: #343a40;
+                    margin-bottom: 20px;
+                    font-size: 28px;
+                }
+
+                .table-style {
+                    width: 90%;
+                    margin: 20px auto;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    background-color: #fff;
+                    border-radius: 8px;
+                    border-collapse: collapse;
+                }
+
+                th {
+                    background-color: #007bff;
+                    color: white;
+                    padding: 10px;
+                    font-size: 14px;
+                    text-align: left;
+                    text-transform: uppercase;
+                }
+
+                td {
+                    padding: 12px;
+                    border-bottom: 1px solid #e9ecef;
+                    font-size: 14px;
+                    transition: background-color 0.3s;
+                }
+
+                tr:nth-child(even) {
+                    background-color: #f7f9fc;
+                }
+
+                tr:hover {
+                    background-color: #e9ecef;
+                }
+
+                .btn-delete, .btn-new, .btn-edit {
+                    background-color: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.3s, transform 0.3s;
+                    margin: 2px;
+                }
+
+                .btn-delete:hover, .btn-edit:hover, .btn-new:hover {
+                    background-color: #0056b3;
+                    transform: scale(1.05);
+                }
+
+                .action-buttons {
+                    text-align: center;
+                    margin-top: 20px;
+                }
+
+
+
+                @media (max-width: 768px) {
+                    th, td {
+                        font-size: 12px;
+                        padding: 6px;
+                    }
+
+                    .btn-delete, .btn-edit, .btn-new {
+                        padding: 6px 10px;
+                        font-size: 12px;
+                    }
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

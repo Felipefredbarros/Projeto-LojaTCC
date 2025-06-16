@@ -1,0 +1,557 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+    <h:head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+        <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css"/>
+        <title>LOJA SÃO JUDAS TADEU</title>
+        <style>
+            :root {
+                --primary-color: #007bff;
+                --primary-color-dark: #0056b3;
+                --primary-color-light: #e6f2ff; /* Um tom mais claro para fundos ou hovers suaves */
+                --secondary-color: #6c757d;
+                --secondary-color-light: #adb5bd; /* Tom mais claro para textos secundários ou bordas */
+                --dark-color: #212529; /* Um preto um pouco mais suave */
+                --light-color: #f8f9fa;
+                --white-color: #ffffff;
+                --border-color: #e0e0e0; /* Borda mais suave */
+                --success-color: #28a745;
+                --danger-color: #dc3545;
+                --info-color: #17a2b8;
+                --warning-color: #ffc107;
+
+                --font-family-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                --font-family-headings: 'Roboto', var(--font-family-base);
+
+                --spacing-xs: 0.25rem;  /* 4px */
+                --spacing-sm: 0.5rem;   /* 8px */
+                --spacing-md: 1rem;     /* 16px */
+                --spacing-lg: 1.5rem;   /* 24px */
+                --spacing-xl: 2rem;     /* 32px */
+
+                --border-radius: 0.375rem; /* aprox. 6px, mais suave */
+                --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+                --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.07);
+                --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.07);
+
+                --sidebar-width: 240px; /* Largura da sidebar */
+            }
+
+            /* Reset básico e configurações globais */
+            *, *::before, *::after {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: var(--light-color);
+                color: var(--dark-color);
+                font-family: var(--font-family-base);
+                font-size: 1rem; /* 16px como base */
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+
+            /* Header */
+            header {
+                background-color: var(--white-color); /* Header branco para um visual mais limpo */
+                color: var(--primary-color); /* Texto do header com a cor primária */
+                padding: var(--spacing-md);
+                text-align: center;
+                font-size: 1.375rem; /* 22px */
+                font-weight: 700; /* Mais peso */
+                letter-spacing: 0.5px;
+                box-shadow: var(--shadow-sm); /* Sombra mais sutil */
+                margin-left: var(--sidebar-width);
+                font-family: var(--font-family-headings);
+                border-bottom: 1px solid var(--border-color);
+                height: 65px; /* Altura fixa para o header */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .container {
+                display: flex;
+                min-height: calc(100vh - 65px - 75px); /* Altura do header - Altura do footer */
+            }
+
+            /* Sidebar */
+            .sidebar {
+                width: var(--sidebar-width);
+                background-color: var(--dark-color); /* Sidebar escura para contraste */
+                padding: 0;
+                box-shadow: 3px 0 6px rgba(0, 0, 0, 0.1); /* Sombra um pouco mais pronunciada */
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                height: 100vh;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                z-index: 1000; /* Para garantir que a sidebar fique por cima */
+            }
+
+            .sidebar .titulo { /* Título da Loja na Sidebar */
+                color: var(--white-color);
+                text-decoration: none;
+                display: block;
+                padding: var(--spacing-lg) var(--spacing-md);
+                background-color: var(--primary-color); /* Fundo do título com cor primária */
+                text-align: center;
+                font-size: 1.25rem; /* 20px */
+                font-weight: 700;
+                font-family: var(--font-family-headings);
+                transition: background-color 0.3s ease;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                min-height: 65px; /* Mesma altura do header */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar .titulo:hover {
+                background-color: var(--primary-color-dark);
+            }
+
+            .sidebar h4 { /* Cabeçalhos de Seção do Menu */
+                font-family: var(--font-family-base);
+                color: var(--secondary-color-light);
+                margin-top: var(--spacing-lg);
+                margin-bottom: var(--spacing-sm);
+                padding: 0 var(--spacing-lg);
+                font-size: 0.75rem; /* 12px */
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                font-weight: 600;
+            }
+
+            .sidebar .campos { /* Container dos links do menu */
+                padding: 0 var(--spacing-md); /* Padding lateral para os links */
+            }
+
+            .sidebar .campos a, .sidebar .campos .ui-commandlink {
+                color: #e0e0e0; /* Links da sidebar mais claros */
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                padding: var(--spacing-sm) var(--spacing-md);
+                margin: var(--spacing-xs) 0;
+                border-radius: var(--border-radius);
+                transition: background-color 0.2s ease, color 0.2s ease;
+                font-size: 0.9rem; /* 14.4px */
+                font-weight: 500;
+            }
+
+            .sidebar .campos a:hover, .sidebar .campos .ui-commandlink:hover {
+                background-color: rgba(255, 255, 255, 0.1); /* Hover sutil */
+                color: var(--white-color);
+            }
+            .sidebar .campos a.active, .sidebar .campos .ui-commandlink.active { /* Para link ativo */
+                 background-color: var(--primary-color);
+                 color: var(--white-color);
+                 font-weight: 600;
+            }
+
+            .sidebar .campos a i, .sidebar .campos .ui-commandlink .ui-icon-left { /* Ícones nos links */
+                margin-right: var(--spacing-md);
+                width: 18px; /* Largura fixa para alinhar ícones */
+                text-align: center;
+                font-size: 1.1em; /* Tamanho do ícone um pouco maior */
+            }
+
+            /* Área de Conteúdo Principal */
+            .content {
+                flex: 1;
+                padding: var(--spacing-xl); /* Mais padding para "respirar" */
+                margin-left: var(--sidebar-width);
+                background-color: #f4f7fc; /* Fundo do conteúdo ligeiramente diferente do body */
+            }
+
+            .content h1 {
+                font-size: 1.875rem; /* 30px */
+                color: var(--dark-color);
+                margin-bottom: var(--spacing-xl);
+                padding-bottom: var(--spacing-md);
+                font-family: var(--font-family-headings);
+                font-weight: 700;
+                border-bottom: 3px solid var(--primary-color);
+            }
+
+            /* Dashboard Grid e Painéis */
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: var(--spacing-lg);
+                margin-bottom: var(--spacing-xl);
+            }
+
+            .panel {
+                background-color: var(--white-color);
+                padding: var(--spacing-lg);
+                border-radius: var(--border-radius);
+                box-shadow: var(--shadow-sm);
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around; /* Melhor distribuição interna */
+                align-items: center;
+                min-height: 160px;
+                transition: transform 0.25s ease, box-shadow 0.25s ease;
+                border: 1px solid var(--border-color);
+            }
+
+            .panel:hover {
+                transform: translateY(-5px);
+                box-shadow: var(--shadow-md);
+            }
+
+            .panel h3 { /* Título do Painel */
+                color: var(--primary-color);
+                font-size: 0.9rem; /* 14.4px */
+                margin-top: 0;
+                margin-bottom: var(--spacing-sm);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 600;
+                font-family: var(--font-family-headings);
+            }
+
+            .panel .ui-outputtext, .panel .panel-value { /* Para o valor no painel */
+                font-size: 2.25rem; /* 36px, valor bem destacado */
+                font-weight: 700;
+                color: var(--dark-color);
+                font-family: var(--font-family-headings);
+                line-height: 1.2; /* Ajustar espaçamento do valor */
+            }
+
+            /* Footer */
+            footer {
+                background-color: var(--white-color);
+                color: var(--secondary-color);
+                text-align: center;
+                padding: var(--spacing-lg); /* Padding mais generoso */
+                font-size: 0.875rem; /* 14px */
+                margin-left: var(--sidebar-width);
+                box-sizing: border-box;
+                border-top: 1px solid var(--border-color);
+                height: 75px; /* Altura fixa para o footer */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Estilização de Componentes PrimeFaces (Refinada) */
+            .ui-datatable {
+                border: 1px solid var(--border-color);
+                border-radius: var(--border-radius);
+                box-shadow: var(--shadow-sm);
+                overflow: hidden; /* Para o border-radius funcionar nas bordas da tabela */
+            }
+
+            .ui-datatable .ui-datatable-header {
+                background: var(--primary-color);
+                color: var(--white-color);
+                padding: var(--spacing-md) var(--spacing-lg);
+                font-size: 1.1rem; /* 17.6px */
+                font-weight: 600;
+                border-bottom: 1px solid var(--primary-color-dark);
+                font-family: var(--font-family-headings);
+            }
+
+            .ui-datatable .ui-datatable-thead th {
+                background-color: var(--light-color);
+                color: var(--dark-color);
+                border-color: var(--border-color);
+                padding: var(--spacing-md);
+                font-weight: 600;
+                text-align: left;
+                font-size: 0.9rem; /* 14.4px */
+            }
+             .ui-datatable .ui-column-title {
+                color: var(--dark-color); /* Herdado, mas para garantir */
+            }
+
+            .ui-datatable .ui-datatable-tbody td {
+                padding: var(--spacing-md);
+                border-color: var(--border-color);
+                vertical-align: middle;
+                font-size: 0.9rem; /* 14.4px */
+            }
+
+            .ui-datatable .ui-datatable-tbody tr.ui-datatable-odd {
+                background-color: var(--white-color);
+            }
+            .ui-datatable .ui-datatable-tbody tr.ui-datatable-even {
+                background-color: #f9fafc; /* Alternar cor de linha muito sutil */
+            }
+            .ui-datatable .ui-datatable-tbody tr:hover td {
+                background-color: var(--primary-color-light) !important;
+                color: var(--primary-color-dark) !important;
+            }
+
+            .ui-datatable .ui-paginator {
+                background-color: var(--light-color);
+                padding: var(--spacing-md);
+                border-top: 1px solid var(--border-color);
+            }
+
+            .ui-paginator .ui-paginator-page {
+                border-radius: var(--border-radius);
+                margin: 0 var(--spacing-xs);
+                padding: var(--spacing-sm) var(--spacing-md);
+                transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+                border: 1px solid var(--border-color);
+                color: var(--primary-color);
+                background-color: var(--white-color);
+            }
+            .ui-paginator .ui-paginator-page.ui-state-active {
+                background-color: var(--primary-color);
+                color: var(--white-color);
+                border-color: var(--primary-color);
+            }
+            .ui-paginator .ui-paginator-page:not(.ui-state-active):hover {
+                background-color: var(--primary-color-light);
+                border-color: var(--primary-color);
+            }
+            .ui-paginator .ui-paginator-first,
+            .ui-paginator .ui-paginator-prev,
+            .ui-paginator .ui-paginator-next,
+            .ui-paginator .ui-paginator-last {
+                color: var(--primary-color) !important;
+                padding: var(--spacing-sm);
+            }
+            .ui-paginator .ui-paginator-first:hover,
+            .ui-paginator .ui-paginator-prev:hover,
+            .ui-paginator .ui-paginator-next:hover,
+            .ui-paginator .ui-paginator-last:hover {
+                background-color: var(--primary-color-light) !important;
+                border-radius: var(--border-radius);
+            }
+
+            /* Botões PrimeFaces (Refinados) */
+            .ui-button.ui-widget {
+                padding: var(--spacing-sm) var(--spacing-lg);
+                border-radius: var(--border-radius);
+                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+                font-size: 0.9rem; /* 14.4px */
+                font-weight: 500;
+                border-width: 1px;
+                border-style: solid;
+                text-decoration: none; /* Para commandLink estilizado como botão */
+                line-height: 1.5; /* Alinhamento vertical do texto do botão */
+            }
+            /* Botão Primário */
+            .ui-button.ui-widget.ui-state-default:not(.ui-button-outlined):not(.ui-button-textonly) {
+                background-color: var(--primary-color);
+                color: var(--white-color);
+                border-color: var(--primary-color);
+            }
+            .ui-button.ui-widget.ui-state-default:not(.ui-button-outlined):not(.ui-button-textonly):hover {
+                background-color: var(--primary-color-dark);
+                border-color: var(--primary-color-dark);
+                box-shadow: var(--shadow-sm);
+            }
+            /* Botão Secundário (Estilo Outlined) */
+            .ui-button.ui-button-secondary, .ui-button.ui-button-outlined {
+                background-color: var(--white-color);
+                color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+            .ui-button.ui-button-secondary:hover, .ui-button.ui-button-outlined:hover {
+                background-color: var(--primary-color-light);
+                border-color: var(--primary-color);
+                color: var(--primary-color-dark);
+            }
+            /* Botões de Severidade */
+            .ui-button.ui-button-success { background-color: var(--success-color); color: var(--white-color); border-color: var(--success-color); }
+            .ui-button.ui-button-success:hover { background-color: color-mix(in srgb, var(--success-color) 85%, black); border-color: color-mix(in srgb, var(--success-color) 85%, black); }
+
+            .ui-button.ui-button-danger { background-color: var(--danger-color); color: var(--white-color); border-color: var(--danger-color); }
+            .ui-button.ui-button-danger:hover { background-color: color-mix(in srgb, var(--danger-color) 85%, black); border-color: color-mix(in srgb, var(--danger-color) 85%, black); }
+
+            .ui-button.ui-button-warning { background-color: var(--warning-color); color: var(--dark-color); border-color: var(--warning-color); }
+            .ui-button.ui-button-warning:hover { background-color: color-mix(in srgb, var(--warning-color) 85%, black); border-color: color-mix(in srgb, var(--warning-color) 85%, black); color: var(--white-color); }
+
+            .ui-button.ui-button-info { background-color: var(--info-color); color: var(--white-color); border-color: var(--info-color); }
+            .ui-button.ui-button-info:hover { background-color: color-mix(in srgb, var(--info-color) 85%, black); border-color: color-mix(in srgb, var(--info-color) 85%, black); }
+
+            /* Adicionando estilo para ícones nos botões */
+            .ui-button .ui-button-icon-left, .ui-button .ui-button-icon-right {
+                margin-top: -2px; /* Ajuste fino vertical para ícones de botão */
+            }
+            .ui-button.ui-button-icon-only {
+                padding: var(--spacing-sm); /* Padding para botões só com ícone */
+            }
+
+            /* Responsividade */
+            @media (max-width: 992px) { /* Telas menores que large desktops */
+                :root {
+                    --sidebar-width: 220px; /* Sidebar um pouco menor */
+                }
+                .content h1 {
+                    font-size: 1.625rem; /* 26px */
+                }
+                .panel .ui-outputtext, .panel .panel-value {
+                    font-size: 1.875rem; /* 30px */
+                }
+            }
+
+            @media (max-width: 768px) { /* Tablets e mobile */
+                :root {
+                    --sidebar-width: 0; /* Esconder sidebar */
+                }
+                header, .content, footer {
+                    margin-left: 0;
+                }
+                footer {
+                     width: 100%;
+                }
+                .sidebar {
+                    transform: translateX(-100%); /* Esconder sidebar fora da tela */
+                    /* Para uma sidebar "drawer", você precisaria de JS para alternar uma classe aqui */
+                    /* Ex: .sidebar.open { transform: translateX(0); } */
+                    transition: transform 0.3s ease-in-out;
+                }
+                /* Adicionar um botão "hamburger" para abrir/fechar a sidebar seria o ideal aqui */
+
+                .content h1 {
+                    font-size: 1.5rem; /* 24px */
+                }
+                .dashboard-grid {
+                    grid-template-columns: 1fr; /* Painéis empilhados */
+                    gap: var(--spacing-md);
+                }
+                .panel {
+                    min-height: 140px;
+                }
+                 .ui-datatable .ui-datatable-thead th, .ui-datatable .ui-datatable-tbody td {
+                    padding: var(--spacing-sm); /* Menos padding em tabelas */
+                }
+            }
+        </style>
+    </h:head>
+    <h:body>
+
+        <header>
+            LOJA SÃO JUDAS TADEU
+        </header>
+
+        <div class="container">
+            <div class="sidebar">
+                <h:form id="formularioSidebar"> <h:commandLink styleClass="titulo" action="/index.xhtml?faces-redirect=true">
+                        <i class="fas fa-store" style="margin-right: 8px;"></i> Loja S. Judas Tadeu
+                    </h:commandLink>
+
+                    <h4>Cadastros</h4>
+                    <div class="campos">
+                        <h:commandLink action="/Pessoa/listaPessoa.xhtml?faces-redirect=true">
+                            <i class="fas fa-users fa-fw"></i> <span>Pessoas</span>
+                        </h:commandLink>
+                        <h:commandLink action="/Produto/listaProduto.xhtml?faces-redirect=true" styleClass="#{view.viewId.contains('/Produto/') ? 'active' : ''}">
+                            <i class="fas fa-box-open fa-fw"></i> <span>Produtos</span>
+                        </h:commandLink>
+                    </div>
+
+                    <h4>Movimentos</h4>
+                    <div class="campos">
+                        <h:commandLink action="/Venda/listaVenda.xhtml?faces-redirect=true">
+                            <i class="fas fa-shopping-cart fa-fw"></i> <span>Vendas</span>
+                        </h:commandLink>
+                        <h:commandLink action="/Compra/listaCompra.xhtml?faces-redirect=true">
+                            <i class="fas fa-receipt fa-fw"></i> <span>Compras</span>
+                        </h:commandLink>
+                    </div>
+
+                    <h4>Relatórios</h4>
+                    <div class="campos">
+                        <h:commandLink action="/Relatorios/relatorios.xhtml?faces-redirect=true">
+                            <i class="fas fa-file-invoice fa-fw"></i> <span>Rel. Cadastrais</span>
+                        </h:commandLink>
+                        <h:commandLink action="/Relatorios/relatoriosGerenciais.xhtml?faces-redirect=true">
+                            <i class="fas fa-chart-pie fa-fw"></i> <span>Rel. Gerenciais</span>
+                        </h:commandLink>
+                    </div>
+                </h:form>
+            </div>
+
+            <div class="content">
+                <ui:insert id="corpo" name="body">
+                    <h1>Dashboard de Visão Geral</h1>
+                    <h:form id="formularioDashboard"> <div class="dashboard-grid">
+                            <div class="panel">
+                                <h3>Total de Produtos Cadastrados</h3>
+                                <span class="panel-value">
+                                    <h:outputText value="#{dashBoardControle.totalProdutos}" />
+                                </span>
+                            </div>
+                            <div class="panel">
+                                <h3>Produtos com Estoque Baixo</h3>
+                                 <span class="panel-value">
+                                    <h:outputText value="#{dashBoardControle.produtosEstoqueBaixo.size()}" />
+                                 </span>
+                            </div>
+                            <div class="panel">
+                                <h3>Quantidade Total de Estoque</h3>
+                                 <span class="panel-value">
+                                    <h:outputText value="#{dashBoardControle.totalEstoque}" />
+                                 </span>
+                            </div>
+                            <div class="panel">
+                                <h3>Total de Vendas Realizadas</h3>
+                                 <span class="panel-value">
+                                    <h:outputText value="#{dashBoardControle.totalVendas}" />
+                                 </span>
+                            </div>
+                            <div class="panel">
+                                <h3>Valor Total Vendido</h3>
+                                 <span class="panel-value">
+                                     <h:outputText value="#{dashBoardControle.valorTotalVendido}">
+                                         <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                                     </h:outputText>
+                                 </span>
+                            </div>
+                            <div class="panel">
+                                <h3>Total de Compras Realizadas</h3>
+                                 <span class="panel-value">
+                                    <h:outputText value="#{dashBoardControle.totalCompras}" />
+                                 </span>
+                            </div>
+                            <div class="panel">
+                                <h3>Valor Total Comprado</h3>
+                                 <span class="panel-value">
+                                    <h:outputText value="#{dashBoardControle.valorTotalComprado}">
+                                        <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                                    </h:outputText>
+                                 </span>
+                            </div>
+                            <div class="panel">
+                                <h3>Lucro Líquido (Estimado)</h3>
+                                 <span class="panel-value">
+                                    <h:outputText value="#{dashBoardControle.lucroLiquido}">
+                                         <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                                    </h:outputText>
+                                 </span>
+                            </div>
+                        </div>
+                    </h:form>
+                </ui:insert>
+            </div>
+        </div>
+
+        <footer>
+            &copy; #{calendario.anoAtual} Loja São Judas Tadeu. Todos os direitos reservados.
+            </footer>
+
+    </h:body>
+</html>

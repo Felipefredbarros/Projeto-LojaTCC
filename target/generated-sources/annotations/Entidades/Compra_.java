@@ -1,0 +1,29 @@
+package Entidades;
+
+import Entidades.ItensCompra;
+import Entidades.MetodoPagamento;
+import Entidades.ParcelaCompra;
+import Entidades.Pessoa;
+import Entidades.PlanoPagamento;
+import java.util.Date;
+import javax.annotation.Generated;
+import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.StaticMetamodel;
+
+@Generated(value="EclipseLink-2.7.10.v20211216-rNA", date="2025-06-16T00:41:31")
+@StaticMetamodel(Compra.class)
+public class Compra_ { 
+
+    public static volatile SingularAttribute<Compra, Integer> parcelas;
+    public static volatile SingularAttribute<Compra, MetodoPagamento> metodoPagamento;
+    public static volatile SingularAttribute<Compra, PlanoPagamento> planoPagamento;
+    public static volatile SingularAttribute<Compra, Double> valorTotal;
+    public static volatile SingularAttribute<Compra, Date> dataVencimento;
+    public static volatile SingularAttribute<Compra, Long> id;
+    public static volatile SingularAttribute<Compra, Pessoa> fornecedor;
+    public static volatile ListAttribute<Compra, ItensCompra> itensCompra;
+    public static volatile ListAttribute<Compra, ParcelaCompra> parcelasCompra;
+    public static volatile SingularAttribute<Compra, Date> dataCompra;
+
+}

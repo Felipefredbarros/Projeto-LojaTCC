@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formRelatorioProdutos">
+                <p:panel header="Relatório de Produtos" style="width: 95%; margin: auto;">
+                    <!-- Título -->
+                    <h3 style="text-align: center; margin-bottom: 20px;">Lista de Produtos Cadastrados</h3>
+                    <h4 style="text-align: center;">
+                        Total de Produtos Cadastrados: <h:outputText value="#{dashBoardControle.totalProdutos}" />
+                    </h4>
+
+                    <h4 style="text-align: center;">
+                        Soma Total do Estoque: <h:outputText value="#{dashBoardControle.totalEstoque}" />
+                    </h4>
+
+                    <p:commandButton value="Exportar Relatório Completo (PDF)" action="#{produtoControle.exportarPDF(false)}" ajax="false" />
+                    <p:commandButton value="Exportar Relatório Visível (PDF)" action="#{produtoControle.exportarPDF(true)}" ajax="false" />
+
+
+                    <!-- DataTable PrimeFaces com paginação -->
+                    <p:dataTable id="tabelaProdutos" value="#{produtoControle.listaProdutos}" var="prod"
+                                 paginator="true" rows="10" rowsPerPageTemplate="5,10,20" 
+                                 emptyMessage="Nenhum produto encontrado."
+                                 paginatorPosition="bottom" 
+                                 currentPageReportTemplate="Mostrando {startRecord} a {endRecord} de {totalRecords} produtos"
+                                 style="width: 100%;">
+
+                        <!-- Colunas da Tabela -->
+                        <p:column headerText="Categoria" sortBy="#{prod.categoria.categoria}" filterBy="#{prod.categoria.categoria}" filterMatchMode="contains" style="width: 20%;">
+                            <h:outputText value="#{prod.categoria.categoria}" />
+                        </p:column>
+
+                        <p:column headerText="Marca" sortBy="#{prod.marca.marca}" filterBy="#{prod.marca.marca}" style="width: 15%;">
+                            <h:outputText value="#{prod.marca.marca}" />
+                        </p:column>
+
+                        <p:column headerText="NCM" sortBy="#{prod.ncm}" filterBy="#{prod.ncm}" style="width: 20%;">
+                            <h:outputText value="#{prod.ncm}" />
+                        </p:column>
+
+                        <p:column headerText="Valor de Compra" sortBy="#{prod.valorUnitarioCompra}" filterBy="#{prod.valorUnitarioCompra}" style="width: 15%;">
+                            <h:outputText value="#{prod.valorUnitarioCompra}" />
+                        </p:column>
+
+                        <p:column headerText="Valor de Venda" sortBy="#{prod.valorUnitarioVenda}" filterBy="#{prod.valorUnitarioVenda}" style="width: 15%;">
+                            <h:outputText value="#{prod.valorUnitarioVenda}" />
+                        </p:column>
+
+                        <p:column headerText="Status" sortBy="#{prod.status}" style="width: 10%;">
+                            <h:outputText value="#{prod.status}" />
+                        </p:column>
+                    </p:dataTable>
+                </p:panel>
+
+            </h:form>
+
+            <!-- Estilos personalizados para a página -->
+            <style>
+                html, body {
+                    font-family: 'Poppins', sans-serif;
+                    background-color: #f8f9fa;
+                }
+
+                h3 {
+                    color: #343a40;
+                }
+
+                .ui-datatable {
+                    margin-top: 20px;
+                    background-color: #fff;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .ui-datatable-header, .ui-datatable-footer {
+                    background-color: #007bff;
+                    color: white;
+                    text-align: center;
+                    padding: 10px;
+                }
+
+                .ui-datatable th {
+                    background-color: #007bff;
+                    color: white;
+                    text-transform: uppercase;
+                    text-align: center;
+                }
+
+                .ui-datatable td {
+                    text-align: center;
+                }
+
+                .ui-paginator .ui-state-default {
+                    background-color: #007bff;
+                    color: white;
+                }
+
+                .ui-paginator .ui-state-active {
+                    background-color: #0056b3;
+                }
+
+                @media (max-width: 768px) {
+                    .ui-datatable th, .ui-datatable td {
+                        font-size: 12px;
+                        padding: 8px;
+                    }
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

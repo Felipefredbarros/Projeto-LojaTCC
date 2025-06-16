@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formRelatorioClientes">
+                <p:panel header="Relatório de Clientes" style="width: 95%; margin: auto;">
+                    <!-- Título -->
+                    <h3 style="text-align: center; margin-bottom: 20px;">Lista de Clientes Cadastrados</h3>
+                    <p:commandButton value="Exportar Relatório de Clientes (PDF)" action="#{pessoaControle.exportarRelatorioClientes}" ajax="false" />
+
+
+                    <!-- DataTable PrimeFaces com paginação -->
+                    <p:dataTable id="tabelaClientes" value="#{pessoaControle.listaClientes}" var="cli"
+                                 paginator="true" rows="10" rowsPerPageTemplate="5,10,20" 
+                                 emptyMessage="Nenhum cliente encontrado."
+                                 paginatorPosition="bottom" 
+                                 currentPageReportTemplate="Mostrando {startRecord} a {endRecord} de {totalRecords} clientes"
+                                 style="width: 100%;">
+
+                        <!-- Colunas da Tabela -->
+                        <p:column headerText="Nome" sortBy="#{cli.nome}" filterBy="#{cli.nome}" filterMatchMode="contains" style="width: 20%;">
+                            <h:outputText value="#{cli.nome}" />
+                        </p:column>
+
+                        <p:column headerText="E-mail" sortBy="#{cli.email}" filterBy="#{cli.email}" style="width: 20%;">
+                            <h:outputText value="#{cli.email}" />
+                        </p:column>
+
+                        <p:column headerText="CPF/CNPJ" sortBy="#{cli.cpfcnpjFormatado}" filterBy="#{cli.cpfcnpjFormatado}" style="width: 15%;">
+                            <h:outputText value="#{cli.cpfcnpjFormatado}" />
+                        </p:column>
+
+                        
+                        <p:column headerText="Tipo" sortBy="#{cli.tipoPessoa}" filterBy="#{cli.tipoPessoa}" style="width: 15%;">
+                            <h:outputText value="#{cli.tipoPessoa}" />
+                        </p:column>
+
+                        <p:column headerText="Status" sortBy="#{cli.status}" style="width: 10%;">
+                            <h:outputText value="#{cli.status}" />
+                        </p:column>
+                    </p:dataTable>
+
+                </p:panel>
+            </h:form>
+
+            <!-- Estilos personalizados para a página -->
+            <style>
+                html, body {
+                    font-family: 'Poppins', sans-serif;
+                    background-color: #f8f9fa;
+                }
+
+                h3 {
+                    color: #343a40;
+                }
+
+                .ui-datatable {
+                    margin-top: 20px;
+                    background-color: #fff;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .ui-datatable-header, .ui-datatable-footer {
+                    background-color: #007bff;
+                    color: white;
+                    text-align: center;
+                    padding: 10px;
+                }
+
+                .ui-datatable th {
+                    background-color: #007bff;
+                    color: white;
+                    text-transform: uppercase;
+                    text-align: center;
+                }
+
+                .ui-datatable td {
+                    text-align: center;
+                }
+
+                .ui-paginator .ui-state-default {
+                    background-color: #007bff;
+                    color: white;
+                }
+
+                .ui-paginator .ui-state-active {
+                    background-color: #0056b3;
+                }
+
+                @media (max-width: 768px) {
+                    .ui-datatable th, .ui-datatable td {
+                        font-size: 12px;
+                        padding: 8px;
+                    }
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

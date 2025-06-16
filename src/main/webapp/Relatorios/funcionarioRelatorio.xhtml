@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formRelatorioFuncionarios">
+                <p:panel header="Relatório de Funcionarios" style="width: 95%; margin: auto;">
+                    <!-- Título -->
+                    <h3 style="text-align: center; margin-bottom: 20px;">Lista de Funcionarios Cadastrados</h3>
+                    <p:commandButton value="Exportar Relatório de Funcionarios (PDF)" action="#{pessoaControle.exportarRelatorioFuncionarios}" ajax="false" />
+
+
+                    <!-- DataTable PrimeFaces com paginação -->
+                    <p:dataTable id="tabelaFuncionarios" value="#{pessoaControle.listaFuncionario}" var="func"
+                                 paginator="true" rows="10" rowsPerPageTemplate="5,10,20" 
+                                 emptyMessage="Nenhum funcionario encontrado."
+                                 paginatorPosition="bottom" 
+                                 currentPageReportTemplate="Mostrando {startRecord} a {endRecord} de {totalRecords} funcionarios"
+                                 style="width: 100%;">
+
+                        <!-- Colunas da Tabela -->
+                        <p:column headerText="Nome" sortBy="#{func.nome}" filterBy="#{func.nome}" filterMatchMode="contains" style="width: 20%;">
+                            <h:outputText value="#{func.nome}" />
+                        </p:column>
+                        
+                        <p:column headerText="E-Mail" sortBy="#{func.email}" filterBy="#{func.email}" filterMatchMode="contains" style="width: 20%;">
+                            <h:outputText value="#{func.email}" />
+                        </p:column>
+
+                        <p:column headerText="Salario" sortBy="#{func.salario}" filterBy="#{func.salario}" style="width: 20%;">
+                            <h:outputText value="#{func.salario}" />
+                        </p:column>
+
+                        <p:column headerText="Dia de Pagamento" sortBy="#{func.diaPagamentos}" filterBy="#{func.diaPagamentos}" style="width: 20%;">
+                            <h:outputText value="#{func.diaPagamentos}" >
+                                <f:convertDateTime pattern="dd/MM"/>
+                            </h:outputText>
+                        </p:column>
+
+                        <p:column headerText="Cargo" sortBy="#{func.cargo}" filterBy="#{func.cargo}" style="width: 20%;">
+                            <h:outputText value="#{func.cargo}" />
+                        </p:column>
+
+                        <p:column headerText="CPF" sortBy="#{func.cpfcnpjFormatado}" filterBy="#{func.cpfcnpjFormatado}" style="width: 15%;">
+                            <h:outputText value="#{func.cpfcnpjFormatado}" />
+                        </p:column>
+
+                        <p:column headerText="Status" sortBy="#{func.status}" style="width: 10%;">
+                            <h:outputText value="#{func.status}" />
+                        </p:column>
+                    </p:dataTable>
+
+                </p:panel>
+            </h:form>
+
+            <!-- Estilos personalizados para a página -->
+            <style>
+                html, body {
+                    font-family: 'Poppins', sans-serif;
+                    background-color: #f8f9fa;
+                }
+
+                h3 {
+                    color: #343a40;
+                }
+
+                .ui-datatable {
+                    margin-top: 20px;
+                    background-color: #fff;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .ui-datatable-header, .ui-datatable-footer {
+                    background-color: #007bff;
+                    color: white;
+                    text-align: center;
+                    padding: 10px;
+                }
+
+                .ui-datatable th {
+                    background-color: #007bff;
+                    color: white;
+                    text-transform: uppercase;
+                    text-align: center;
+                }
+
+                .ui-datatable td {
+                    text-align: center;
+                }
+
+                .ui-paginator .ui-state-default {
+                    background-color: #007bff;
+                    color: white;
+                }
+
+                .ui-paginator .ui-state-active {
+                    background-color: #0056b3;
+                }
+
+                @media (max-width: 768px) {
+                    .ui-datatable th, .ui-datatable td {
+                        font-size: 12px;
+                        padding: 8px;
+                    }
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

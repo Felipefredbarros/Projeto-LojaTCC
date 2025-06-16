@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formListagemPessoas">
+                <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
+
+                <h1>Listagem de Pessoas Inativas</h1>
+
+                <p:toolbar styleClass="mb-3">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Lista de Pessoas" icon="pi pi-plus"
+                                         action="listaPessoa.xhtml"
+                                         styleClass="ui-button-success"
+                                         process="@this"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+                <p:dataTable id="tabelaPessoas" var="pessoaItem" value="#{pessoaControle.listaPessoaInativa}"
+                             emptyMessage="Nenhuma pessoa cadastrada."
+                             rows="10" paginator="true"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                             rowsPerPageTemplate="5,10,15,20">
+
+                    <p:column headerText="Nome" sortBy="#{pessoaItem.nome}" filterBy="#{pessoaItem.nome}" filterMatchMode="contains">
+                        <h:outputText value="#{pessoaItem.nome}" />
+                    </p:column>
+
+                    <p:column headerText="Email" sortBy="#{pessoaItem.email}" filterBy="#{pessoaItem.email}" filterMatchMode="contains">
+                        <h:outputText value="#{pessoaItem.email}" />
+                    </p:column>
+
+                    <p:column headerText="Documento (CPF/CNPJ)" sortBy="#{pessoaItem.cpfcnpjFormatado}" filterBy="#{pessoaItem.cpfcnpjFormatado}" filterMatchMode="contains">
+                        <h:outputText value="#{pessoaItem.cpfcnpjFormatado}" />
+                    </p:column>
+
+                    <p:column headerText="Tipo (Função)" sortBy="#{pessoaItem.tipo.label}" filterBy="#{pessoaItem.tipo.label}" filterMatchMode="exact">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('tabelaPessoasWV').filter()" styleClass="custom-filter">
+                                <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{pessoaControle.tiposPessoaDisponiveis}" var="tipoFiltro"
+                                               itemLabel="#{tipoFiltro.label}" itemValue="#{tipoFiltro.label}"/>
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{pessoaItem.tipo.label}" />
+                    </p:column>
+
+                    <p:column headerText="Natureza" sortBy="#{pessoaItem.tipoPessoa}" filterBy="#{pessoaItem.tipoPessoa}" filterMatchMode="exact">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('tabelaPessoasWV').filter()" styleClass="custom-filter">
+                                <f:selectItem itemLabel="Todas" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItem itemLabel="Pessoa Física" itemValue="FISICA" />
+                                <f:selectItem itemLabel="Pessoa Jurídica" itemValue="JURIDICA" />
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{pessoaItem.tipoPessoa == 'JURIDICA' ? 'Pessoa Jurídica' : 'Pessoa Física'}" />
+                    </p:column>
+
+                    <p:column headerText="Ações" style="width:120px;text-align:center">
+                        <p:commandButton icon="pi pi-search" title="Visualizar"
+                                         actionListener="#{pessoaControle.prepararVisualizacao(pessoaItem)}"
+                                         process="@this"
+                                         update=":formListagemPessoas:pessoaDetailPanel"  oncomplete="PF('pessoaDialog').show()"
+                                         styleClass="rounded-button ui-button-info"
+                                         style="margin-right: 5px;"/>
+
+                        <p:commandButton icon="pi pi-trash" title="Excluir"
+                                         action="#{pessoaControle.excluir(pessoaItem)}"
+                                         process="@this"
+                                         update=":formListagemPessoas:tabelaPessoas :formListagemPessoas:growlMessages"
+                                         styleClass="rounded-button ui-button-danger">
+                            <p:confirm header="Confirmação" message="Deseja realmente excluir esta pessoa: #{pessoaItem.nome}?" icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+                    </p:column>
+                </p:dataTable>
+                <p:dialog id="dialogT" header="Detalhes de Pessoa" widgetVar="pessoaDialog" modal="true" 
+                          resizable="false" width="800" height="500" closeOnEscape="true"
+                          dynamic="true" responsive="true">
+                    <p:outputPanel id="pessoaDetailPanel">
+                        <h:panelGrid columns="2" rendered="#{not empty pessoaControle.pessoaSelecionado}"
+                                     style="width: 100%">
+                            <h:outputLabel value="Tipo de Pessoa: " />
+                            <h:outputText value="#{pessoaControle.pessoaSelecionado.tipoPessoa}"/>
+
+                            <h:outputLabel value="Natureza da Pessoa: " />
+                            <h:outputText value="#{pessoaControle.pessoaSelecionado.tipo}"/>
+
+                            <h:outputLabel value="Nome: " />
+                            <h:outputText value="#{pessoaControle.pessoaSelecionado.nome}"/>
+
+                            <h:outputLabel value="Email: " />
+                            <h:outputText value="#{pessoaControle.pessoaSelecionado.email}"/>
+
+                            <h:outputLabel value="CPF ou CPNJ: " />
+                            <h:outputText value="#{pessoaControle.pessoaSelecionado.cpfcnpjFormatado}"/>
+
+                            <h:outputLabel value="Salario: " />
+                            <h:outputText value="#{pessoaControle.pessoaSelecionado.salario}"/>
+
+                            <h:outputLabel value="Dia do Pagamento: " />
+                            <h:outputText value="#{pessoaControle.pessoaSelecionado.diaPagamentos}">
+                                <f:convertDateTime pattern="dd/MM"/>
+                            </h:outputText>
+
+                            <h:outputText value="Endereços: " style="font-weight:bold; display: block; margin-bottom: 10px;"/>
+
+                            <p:dataTable value="#{pessoaControle.pessoaSelecionado.listaEnderecos}" var="endereco" 
+                                         style="width:100%; margin-top:10px;">
+                                <p:column headerText="Rua">
+                                    <h:outputText value="#{endereco.rua}"/>
+                                </p:column>
+                                <p:column headerText="Numero">
+                                    <h:outputText value="#{endereco.numero}"/>
+                                </p:column>
+                                <p:column headerText="Bairro">
+                                    <h:outputText value="#{endereco.bairro}"/>
+                                </p:column>
+                                <p:column headerText="CEP">
+                                    <h:outputText value="#{endereco.cep}"/>
+                                </p:column>
+                            </p:dataTable>
+
+                            <h:outputText value="Telefones " style="font-weight:bold; display: block; margin-bottom: 10px;"/>
+
+                            <p:dataTable value="#{pessoaControle.pessoaSelecionado.listaTelefones}" var="telefone" 
+                                         style="width:100%; margin-top:10px;">
+                                <p:column headerText="Numero">
+                                    <h:outputText value="#{telefone.numero}"/>
+                                </p:column>
+                                <p:column headerText="Tipo">
+                                    <h:outputText value="#{telefone.tipoTelefone}"/>
+                                </p:column>
+                                <p:column headerText="Operadora">
+                                    <h:outputText value="#{telefone.operadora}"/>
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGrid>
+                    </p:outputPanel>
+
+
+                    <p:commandButton value="Fechar"  onclick="PF('pessoaDialog').hide()" styleClass="btn-edit" 
+                                     style="margin-top:20px; float:right"/>
+                </p:dialog>
+
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                    <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+                </p:confirmDialog>
+
+            </h:form>
+
+            <style type="text/css">
+                /* Optional: Custom styles for filter dropdowns if needed */
+                .custom-filter {
+                    width: 100%;
+                }
+                /* Ensure body styles from the original form are applied via index.xhtml or a shared CSS */
+                body {
+                    font-family: 'Poppins', sans-serif; /* Example from your CSS */
+                    background-color: #f4f4f4; /* Example from your CSS */
+                    color: #333; /* Example from your CSS */
+                    margin: 20px;
+                    padding: 0;
+                }
+
+                h1 {
+                    text-align: center;
+                    color: #007bff; /* Example from your CSS */
+                    margin-bottom: 20px;
+                }
+                /* Add PrimeFaces button styling overrides if necessary */
+                .mb-3 {
+                    margin-bottom: 1rem !important;
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

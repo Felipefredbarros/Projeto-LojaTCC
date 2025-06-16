@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml"> 
+
+        <ui:define name="body">
+            <h:form id="formCadastroPessoa">
+                <p:growl id="growlMessages" showDetail="true" sticky="false" life="5000"/>
+
+                <h1>Cadastro Unificado de Pessoas</h1>
+
+                <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card" columnClasses="ui-grid-col-3,ui-grid-col-9">
+                    <p:outputLabel for="tipoPessoa" value="Tipo de Pessoa:" styleClass="font-semibold"/>
+                    <p:selectOneMenu id="tipoPessoa" value="#{pessoaControle.pessoa.tipo}" required="true"
+                                     requiredMessage="O tipo de pessoa é obrigatório.">
+                        <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{pessoaControle.tiposPessoaDisponiveis}" var="tipo"
+                                       itemLabel="#{tipo.label}" itemValue="#{tipo}"/>
+                        <p:ajax listener="#{pessoaControle.onTipoPessoaChange}"
+                                update="panelCamposEspecificos panelDocumentos labelCpfCnpj inputCpfCnpj inputRg"/>
+                    </p:selectOneMenu>
+                </p:panelGrid>
+
+                <p:panel header="Dados Gerais" styleClass="mt-3">
+                    <p:panelGrid columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
+                                 columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+
+                        <p:outputLabel for="nome" value="Nome:" styleClass="font-semibold"/>
+                        <p:inputText id="nome" value="#{pessoaControle.pessoa.nome}" required="true"
+                                     requiredMessage="Nome é obrigatório." maxlength="150"/>
+
+                        <p:outputLabel for="email" value="Email:" styleClass="font-semibold"/>
+                        <p:inputText id="email" value="#{pessoaControle.pessoa.email}" required="true"
+                                     requiredMessage="Email é obrigatório." validatorMessage="Email inválido." maxlength="100">
+                            <f:validateRegex pattern="^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"/>
+                        </p:inputText>
+
+                        <p:outputLabel for="telefonePrincipal" value="Telefone Principal:" styleClass="font-semibold"/>
+                        <p:inputMask id="telefonePrincipal" value="#{pessoaControle.pessoa.telefonePrincipal}" mask="(99) 99999-9999"/>
+
+                        <p:outputLabel for="enderecoPrincipal" value="Endereço Principal:" styleClass="font-semibold"/>
+                        <p:inputText id="enderecoPrincipal" value="#{pessoaControle.pessoa.enderecoPrincipal}" maxlength="255"/>
+                    </p:panelGrid>
+                </p:panel>
+
+                <p:outputPanel id="panelDocumentos" styleClass="mt-3">
+                    <p:panel header="Documentos">
+                        <p:panelGrid columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
+                                     columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+
+                            <p:outputPanel rendered="#{pessoaControle.pessoa.tipo == 'FORNECEDOR'}">
+                                <p:outputLabel for="tipoDocFornecedor" value="Doc. Fornecedor:" styleClass="font-semibold"/>
+                            </p:outputPanel>
+                            <p:outputPanel rendered="#{pessoaControle.pessoa.tipo == 'FORNECEDOR'}">
+                                <p:selectOneRadio id="tipoDocFornecedor" value="#{pessoaControle.pessoa.tipoDocumentoFornecedor}" layout="responsive" columns="2">
+                                    <f:selectItem itemLabel="CPF" itemValue="CPF"/>
+                                    <f:selectItem itemLabel="CNPJ" itemValue="CNPJ"/>
+                                    <p:ajax listener="#{pessoaControle.onTipoDocumentoFornecedorChange}" update="labelCpfCnpj inputCpfCnpj inputRg"/>
+                                </p:selectOneRadio>
+                            </p:outputPanel>
+                            <p:outputPanel rendered="#{pessoaControle.pessoa.tipo != 'FORNECEDOR'}"/><p:outputPanel rendered="#{pessoaControle.pessoa.tipo != 'FORNECEDOR'}"/>
+
+
+                            <p:outputLabel id="labelCpfCnpj"
+                                           value="#{pessoaControle.pessoa.tipo == 'FORNECEDOR' ? pessoaControle.pessoa.tipoDocumentoFornecedor : 'CPF'}:"
+                                           styleClass="font-semibold"/>
+                            <p:inputMask id="inputCpfCnpj" value="#{pessoaControle.pessoa.cpfcnpj}"
+                                         mask="#{pessoaControle.pessoa.tipo == 'FORNECEDOR' ? (pessoaControle.pessoa.tipoDocumentoFornecedor == 'CNPJ' ? '99.999.999/9999-99' : '999.999.999-99') : '999.999.999-99'}"
+                                         required="true"
+                                         requiredMessage="O #{pessoaControle.pessoa.tipo == 'FORNECEDOR' ? pessoaControle.pessoa.tipoDocumentoFornecedor : 'CPF'} é obrigatório."/>
+
+                            <p:outputLabel for="inputRg" value="RG:" styleClass="font-semibold"/>
+                            <p:inputMask id="inputRg" value="#{pessoaControle.pessoa.rg}" mask="99.999.999-9"
+                                         required="#{pessoaControle.pessoa.tipo == 'CLIENTE' || pessoaControle.pessoa.tipo == 'FUNCIONARIO' || (pessoaControle.pessoa.tipo == 'FORNECEDOR' &amp;&amp; pessoaControle.pessoa.tipoDocumentoFornecedor == 'CPF')}"
+                                         requiredMessage="RG é obrigatório para este tipo de pessoa/documento."/>
+                        </p:panelGrid>
+                    </p:panel>
+                </p:outputPanel>
+
+                <p:outputPanel id="panelCamposEspecificos" styleClass="mt-3">
+                    <p:panel header="Dados do Funcionário" rendered="#{pessoaControle.pessoa.tipo == 'FUNCIONARIO'}">
+                        <p:panelGrid columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
+                                     columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+                            <p:outputLabel for="salario" value="Salário:" styleClass="font-semibold"/>
+                            <p:inputNumber id="salario" value="#{pessoaControle.pessoa.salario}" symbol="R$ "
+                                           decimalSeparator="," thousandSeparator="." required="true" requiredMessage="Salário é obrigatório." minValue="0"/>
+
+                            <p:outputLabel for="cargo" value="Cargo:" styleClass="font-semibold"/>
+                            <p:selectOneMenu id="cargo" value="#{pessoaControle.pessoa.cargo}" required="true" requiredMessage="Cargo é obrigatório.">
+                                <f:selectItem itemLabel="Selecione o Cargo" itemValue="" noSelectionOption="true"/>
+                                <f:selectItem itemLabel="Gerente" itemValue="Gerente"/>
+                                <f:selectItem itemLabel="Funcionário" itemValue="Funcionario"/>
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="diaPagamento" value="Dia do Pagamento:" styleClass="font-semibold"/>
+                            <p:calendar id="diaPagamento" value="#{pessoaControle.pessoa.diaPagamentos}"
+                                        pattern="dd/MM/yyyy" mask="true" required="true" requiredMessage="Data de pagamento é obrigatória." locale="pt_BR"/>
+                        </p:panelGrid>
+                    </p:panel>
+
+                    <p:panel header="Dados do Fornecedor" rendered="#{pessoaControle.pessoa.tipo == 'FORNECEDOR'}">
+                        <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
+                                     columnClasses="ui-grid-col-2,ui-grid-col-10">
+                            <p:outputLabel for="regiao" value="Região de Atuação:" styleClass="font-semibold"/>
+                            <p:inputText id="regiao" value="#{pessoaControle.pessoa.regiao}" maxlength="100"/>
+                        </p:panelGrid>
+                    </p:panel>
+
+                    <p:panel header="Dados Adicionais do Cliente" rendered="#{pessoaControle.pessoa.tipo == 'CLIENTE'}">
+                        <p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
+                            <h:outputText value="Nenhum campo adicional para cliente no momento."/>
+                        </p:panelGrid>
+                    </p:panel>
+                </p:outputPanel>
+
+                <p:tabView id="tabViewContatos" styleClass="mt-3">
+                    <p:tab title="Endereços Adicionais">
+                        <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card mb-3" columnClasses="ui-grid-col-2, ui-grid-col-4, ui-grid-col-2, ui-grid-col-4">
+                            <p:outputLabel for="endRua" value="Rua:" styleClass="font-semibold"/> <p:inputText id="endRua" value="#{pessoaControle.novoEndereco.rua}" maxlength="150"/>
+                            <p:outputLabel for="endNumero" value="Número:" styleClass="font-semibold"/> <p:inputText id="endNumero" value="#{pessoaControle.novoEndereco.numero}" maxlength="10"/>
+                            <p:outputLabel for="endBairro" value="Bairro:" styleClass="font-semibold"/> <p:inputText id="endBairro" value="#{pessoaControle.novoEndereco.bairro}" maxlength="100"/>
+                            <p:outputLabel for="endCep" value="CEP:" styleClass="font-semibold"/> <p:inputMask id="endCep" value="#{pessoaControle.novoEndereco.cep}" mask="99999-999"/>
+                            <p:outputLabel for="endCidade" value="Cidade:" styleClass="font-semibold"/>
+                        </p:panelGrid>
+                        <p:commandButton value="Adicionar Endereço" icon="pi pi-plus" actionListener="#{pessoaControle.adicionarEndereco}"
+                                         update="tabelaEnderecos growlMessages formCadastroPessoa:endRua formCadastroPessoa:endNumero formCadastroPessoa:endBairro formCadastroPessoa:endCep formCadastroPessoa:endCidade" process="@this endRua endNumero endBairro endCep endCidade"
+                                         styleClass="p-mb-2"/>
+
+                        <p:dataTable id="tabelaEnderecos" var="end" value="#{pessoaControle.pessoa.listaEnderecos}" emptyMessage="Nenhum endereço adicional." rows="5" paginator="true">
+                            <p:column headerText="Rua"><h:outputText value="#{end.rua}" /></p:column>
+                            <p:column headerText="Nº"><h:outputText value="#{end.numero}" /></p:column>
+                            <p:column headerText="Bairro"><h:outputText value="#{end.bairro}" /></p:column>
+                            <p:column headerText="CEP"><h:outputText value="#{end.cep}" /></p:column>
+                            <p:column headerText="Cidade"><h:outputText value="#{end.cidade.nome}" /></p:column>
+                            <p:column headerText="Ações" style="width:100px;text-align:center">
+                                <p:commandButton icon="pi pi-trash" title="Remover" actionListener="#{pessoaControle.removerEndereco(end)}"
+                                                 update="tabelaEnderecos growlMessages" process="@this"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+
+                    <p:tab title="Telefones Adicionais">
+                        <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card mb-3" columnClasses="ui-grid-col-2, ui-grid-col-4, ui-grid-col-2, ui-grid-col-4">
+                            <p:outputLabel for="telNumero" value="Número:" styleClass="font-semibold"/> <p:inputMask id="telNumero" value="#{pessoaControle.novoTelefone.numero}" mask="(99) 99999-9999"/>
+                            <p:outputLabel for="telTipo" value="Tipo:" styleClass="font-semibold"/>
+                            <p:selectOneMenu id="telTipo" value="#{pessoaControle.novoTelefone.tipoTelefone}">
+                                <f:selectItem itemLabel="Selecione..." itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{pessoaControle.tiposTelefoneDisponiveis}" var="tt" itemLabel="#{tt.descricao}" itemValue="#{tt}"/>
+                            </p:selectOneMenu>
+                            <p:outputLabel for="telOperadora" value="Operadora:" styleClass="font-semibold"/> <p:inputText id="telOperadora" value="#{pessoaControle.novoTelefone.operadora}" maxlength="30"/>
+                        </p:panelGrid>
+                        <p:commandButton value="Adicionar Telefone" icon="pi pi-plus" actionListener="#{pessoaControle.adicionarTelefone}"
+                                         update="tabelaTelefones growlMessages formCadastroPessoa:telNumero formCadastroPessoa:telTipo formCadastroPessoa:telOperadora" process="@this telNumero telTipo telOperadora"
+                                         styleClass="p-mb-2"/>
+
+                        <p:dataTable id="tabelaTelefones" var="tel" value="#{pessoaControle.pessoa.listaTelefones}" emptyMessage="Nenhum telefone adicional." rows="5" paginator="true">
+                            <p:column headerText="Número"><h:outputText value="#{tel.numero}" /></p:column>
+                            <p:column headerText="Tipo"><h:outputText value="#{tel.tipoTelefone.descricao}" /></p:column>
+                            <p:column headerText="Operadora"><h:outputText value="#{tel.operadora}" /></p:column>
+                            <p:column headerText="Ações" style="width:100px;text-align:center">
+                                <p:commandButton icon="pi pi-trash" title="Remover" actionListener="#{pessoaControle.removerTelefone(tel)}"
+                                                 update="tabelaTelefones growlMessages" process="@this"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+                </p:tabView>
+
+                <p:panelGrid columns="3" layout="grid" styleClass="ui-panelgrid-blank mt-3">
+                    <p:outputLabel for="ativoSwitch" value="Status:" styleClass="font-semibold"/>
+                    <p:inputSwitch id="ativoSwitch" value="#{pessoaControle.pessoa.ativo}" offLabel="Inativo" onLabel="Ativo"/>
+                    <p:outputPanel/> </p:panelGrid>
+
+                <div class="ui-g ui-fluid mt-4">
+                    <div class="ui-g-12 ui-md-2">
+                        <p:commandButton value="Salvar" action="#{pessoaControle.salvarPessoa()}"
+                                         update="@form" icon="pi pi-save" styleClass="ui-button-success"/>
+                    </div>
+                    <div class="ui-g-12 ui-md-2">
+                        <p:commandButton value="Novo" actionListener="#{pessoaControle.limparFormulario()}"
+                                         update="@form" process="@this" icon="pi pi-file" styleClass="ui-button-info"/>
+                    </div>
+                    <div class="ui-g-12 ui-md-2">
+                        <p:commandButton value="Cancelar" action="listaPessoas.xhtml?faces-redirect=true" immediate="true"
+                                         icon="pi pi-times" styleClass="ui-button-warning"/>
+                    </div>
+                </div>
+
+            </h:form>
+            <h:outputStylesheet name="primeflex/primeflex.css" library="primefaces"/> <style type="text/css">
+                .mt-3 {
+                    margin-top: 1rem !important;
+                }
+                .mb-3 {
+                    margin-bottom: 1rem !important;
+                }
+                .font-semibold {
+                    font-weight: 600;
+                }
+                .card {
+                    background: #ffffff;
+                    padding: 1rem;
+                    border-radius: 8px;
+                    margin-bottom: 1rem;
+                    box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+                }
+                body .ui-panelgrid.ui-panelgrid-blank.ui-fluid,
+                body .ui-panelgrid.ui-panelgrid-blank.ui-fluid .ui-panelgrid-cell {
+                    border-style: none;
+                    background: none;
+                }
+                /* Remove borders from panelgrid inside tabs if desired */
+                .ui-tabs-panel .ui-panelgrid.ui-panelgrid-blank,
+                .ui-tabs-panel .ui-panelgrid.ui-panelgrid-blank .ui-panelgrid-cell {
+                    border: none !important;
+                    background-color: transparent !important;
+                }
+                /* Ajustes para os componentes dentro do panelGrid para melhor espaçamento */
+                .ui-panelgrid .ui-panelgrid-cell {
+                    padding: 0.5em 0.25em;
+                }
+                .ui-outputlabel{
+                    margin-right: 0.5em;
+                }
+            </style>
+
+        </ui:define>
+    </ui:composition>
+</html>

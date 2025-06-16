@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <div class="form-wrapper">
+                <div class="form-container card">
+                    <h:form id="formProduto">
+                        <h1 class="form-title">Cadastro de Produto</h1>
+                        <p:growl id="mensagemGrowl" showDetail="true" life="4000" escape="false"/>
+
+                        <p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
+                            <p:outputLabel for="categoria" value="Categoria:" styleClass="font-semibold"/>
+                            <p:selectOneMenu id="categoria" value="#{produtoControle.produto.categoria}"
+                                             converter="#{produtoControle.categoriaConverter}" required="true" requiredMessage="Categoria é obrigatória.">
+                                <f:selectItems value="#{categoriaControle.listaCategorias}" var="categoria"
+                                               itemLabel="#{categoria.categoria}" itemValue="#{categoria}"/>
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="marca" value="Marca:" styleClass="font-semibold mt-3"/>
+                            <p:selectOneMenu id="marca" value="#{produtoControle.produto.marca}"
+                                             converter="#{produtoControle.marcaConverter}" required="true" requiredMessage="Marca é obrigatória.">
+                                <f:selectItems value="#{marcaControle.listaMarcas}" var="marca"
+                                               itemLabel="#{marca.marca}" itemValue="#{marca}"/>
+                            </p:selectOneMenu>
+                            
+                            <p:outputLabel for="ncm" value="NCM:" styleClass="font-semibold mt-3"/>
+                            <p:inputText id="ncm" value="#{produtoControle.produto.ncm}" required="true"
+                                         requiredMessage="O NCM é obrigatório." maxlength="10" placeholder="Digite o NCM do produto"/>
+
+                            <p:outputLabel for="valorVenda" value="Valor de Venda:" styleClass="font-semibold mt-3"/>
+                            <p:inputNumber id="valorVenda" value="#{produtoControle.produto.valorUnitarioVenda}"
+                                           symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                           required="true" requiredMessage="O preço de venda é obrigatório."
+                                           minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
+                        </p:panelGrid>
+
+                        <p:panel header="Derivações (Tamanho, Cor, Estoque)" styleClass="mt-3 mb-3 panel-derivacoes">
+                            <p:panelGrid id="panelNovaDev" columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid"
+                                         columnClasses="ui-grid-col-12 ui-md-grid-col-3, ui-grid-col-12 ui-md-grid-col-9">
+                                
+                                <p:outputLabel for="descricaoDerivacao" value="Descrição: " styleClass="font-semibold"/>
+                                <p:inputText id="descricaoDerivacao" value="#{produtoControle.prodDev.descricao}" placeholder="Ex: Manga Curta, Manga Longa"/>
+
+                                <p:outputLabel for="tamanhoDerivacao" value="Tamanho:" styleClass="font-semibold"/>
+                                <p:inputText id="tamanhoDerivacao" value="#{produtoControle.prodDev.tamanho}" placeholder="Ex: P, M, G, 38"/>
+
+                                <p:outputLabel for="corDerivacao" value="Cor:" styleClass="font-semibold"/>
+                                <p:inputText id="corDerivacao" value="#{produtoControle.prodDev.cor}" placeholder="Ex: Azul, Vermelho"/>
+
+                                <p:outputLabel for="quantidadeDerivacao" value="Quantidade em Estoque:" styleClass="font-semibold"/>
+                                <p:inputNumber id="quantidadeDerivacao" value="#{produtoControle.prodDev.quantidade}"
+                                               minValue="0" decimalPlaces="0" placeholder="0"/>
+                            </p:panelGrid>
+                            <div class="derivacao-add-button-container">
+                                <p:commandButton value="Adicionar Derivação" icon="pi pi-plus"
+                                                 actionListener="#{produtoControle.adicionarDerivacao()}"
+                                                 process="@this descricaoDerivacao tamanhoDerivacao corDerivacao quantidadeDerivacao"
+                                                 update="tabelaDev :formProduto:mensagemGrowl panelNovaDev"
+                                                 styleClass="ui-button-info mt-2"/>
+                            </div>
+
+
+                            <p:dataTable id="tabelaDev" value="#{produtoControle.produto.variacoes}" var="dev"
+                                         emptyMessage="Nenhuma derivação adicionada." rows="3" paginator="true"
+                                         paginatorPosition="bottom" styleClass="mt-3 tabela-derivacoes"
+                                         rowsPerPageTemplate="3,5,10">
+                                <p:column headerText="Descrição" sortBy="#{dev.descricao}">
+                                    <h:outputText value="#{dev.descricao}" />
+                                </p:column>
+                                <p:column headerText="Tamanho" sortBy="#{dev.tamanho}">
+                                    <h:outputText value="#{dev.tamanho}" />
+                                </p:column>
+                                <p:column headerText="Cor" sortBy="#{dev.cor}">
+                                    <h:outputText value="#{dev.cor}" />
+                                </p:column>
+                                <p:column headerText="Qtd. Estoque" sortBy="#{dev.quantidade}" style="text-align:center;">
+                                    <h:outputText value="#{dev.quantidade}" />
+                                </p:column>
+                                <p:column headerText="Ações" style="width:100px; text-align:center;">
+                                    <p:commandButton icon="pi pi-trash" title="Remover Derivação"
+                                                     actionListener="#{produtoControle.removerDerivacao(dev)}"
+                                                     process="@this"
+                                                     update="tabelaDev :formProduto:mensagemGrowl"
+                                                     styleClass="ui-button-danger rounded-button"/>
+                                </p:column>
+                            </p:dataTable>
+                        </p:panel>
+
+                        <div class="button-group mt-3">
+                            <p:commandButton value="Salvar Produto" icon="pi pi-save"
+                                             action="#{produtoControle.salvar()}"
+                                             update="@form :formProduto:mensagemGrowl" styleClass="ui-button-success"/>
+                            <p:commandButton value="Cancelar" icon="pi pi-times"
+                                             action="listaProduto.xhtml?faces-redirect=true" immediate="true"
+                                             styleClass="ui-button-secondary"/>
+                        </div>
+                        <p:divider layout="horizontal" styleClass="mt-3 mb-3"/>
+                        <div class="button-group-secondary">
+                            <p:commandButton value="Nova Categoria" icon="pi pi-tags"
+                                             action="categoriaCadastro.xhtml?faces-redirect=true" immediate="true"
+                                             styleClass="ui-button-help ui-button-outlined"/>
+                            <p:commandButton value="Nova Marca" icon="pi pi-bookmark"
+                                             action="marcaCadastro.xhtml?faces-redirect=true" immediate="true"
+                                             styleClass="ui-button-help ui-button-outlined"/>
+                        </div>
+
+                    </h:form>
+                </div>
+            </div>
+
+            <style type="text/css">
+                body {
+                    font-family: 'Poppins', sans-serif;
+                    background-color: #f8f9fa; /* Lighter gray for background */
+                    color: #495057; /* Darker gray for text */
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .form-wrapper {
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                    min-height: calc(100vh - 40px);
+                    padding: 20px;
+                    box-sizing: border-box;
+                }
+
+                .form-container.card { /* Added .card from PrimeFaces for consistency if desired */
+                    background: #ffffff;
+                    padding: 25px 30px;
+                    border-radius: 12px; /* Softer radius */
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Softer shadow */
+                    width: 100%;
+                    max-width: 750px; /* Slightly wider */
+                }
+
+                .form-title {
+                    text-align: center;
+                    color: #007bff; /* Standard blue, or use var(--primary-color) if theme supports */
+                    margin-bottom: 30px;
+                    font-size: 1.75rem; /* Responsive font size */
+                    font-weight: 600;
+                }
+
+                .font-semibold {
+                    font-weight: 600 !important; /* Ensure it applies */
+                }
+                .mt-3 {
+                    margin-top: 1.5rem !important;
+                }
+                .mb-3 {
+                    margin-bottom: 1.5rem !important;
+                }
+                .mt-2 {
+                    margin-top: 1rem !important;
+                }
+
+                /* Make labels stand out a bit more and ensure consistent bottom margin */
+                .ui-outputlabel {
+                    display: block; /* Already default for p:outputLabel but good to ensure */
+                    margin-bottom: 0.6rem;
+                    color: #343a40;
+                }
+
+                .ui-panelgrid .ui-grid-col-12.ui-md-grid-col-3 { /* For labels in 2-column grid */
+                    /* padding-top: .75em; Adjust vertical alignment of label if needed */
+                }
+
+                /* Ensure inputs take full width within ui-fluid containers */
+                .ui-fluid .ui-selectonemenu,
+                .ui-fluid .ui-inputtext,
+                .ui-fluid .ui-inputnumber .ui-inputtext { /* Target the actual input inside p:inputNumber */
+                    width: 100% !important;
+                }
+
+                .ui-inputtext, .ui-inputnumber .ui-inputtext, .ui-selectonemenu .ui-selectonemenu-label {
+                    padding: 0.6rem 0.75rem !important; /* Consistent padding for inputs */
+                    font-size: 0.95rem;
+                    border-color: #ced4da;
+                }
+                .ui-inputtext:focus, .ui-inputnumber .ui-inputtext:focus {
+                    border-color: #007bff; /* Highlight focus */
+                    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+                }
+
+                .panel-derivacoes .ui-panel-titlebar {
+                    font-size: 1.1rem;
+                }
+                .derivacao-add-button-container {
+                    text-align: right; /* Aligns the "Adicionar Derivação" button to the right */
+                    margin-top: 0.5rem;
+                }
+                .derivacao-add-button-container .ui-button {
+                    min-width: 200px; /* Give the button a decent minimum width */
+                }
+
+
+                .tabela-derivacoes .ui-datatable-header,
+                .tabela-derivacoes .ui-datatable-footer {
+                    padding: 0.75rem;
+                }
+                .tabela-derivacoes .ui-paginator {
+                    padding: 0.5rem;
+                }
+
+
+                .button-group, .button-group-secondary {
+                    display: flex;
+                    gap: 15px; /* Increased gap */
+                }
+                .button-group .ui-button,
+                .button-group-secondary .ui-button {
+                    flex-grow: 1;
+                    font-size: 0.95rem;
+                    padding-top: 0.75rem;
+                    padding-bottom: 0.75rem;
+                }
+
+                .ui-button.ui-button-outlined { /* For secondary actions like New Category/Brand */
+                    border-width: 1.5px;
+                }
+
+                /* Responsive adjustments for small screens */
+                @media (max-width: 768px) {
+                    .form-title {
+                        font-size: 1.5rem;
+                        margin-bottom:20px;
+                    }
+                    .form-container.card {
+                        padding: 20px;
+                        max-width: 100%;
+                    }
+                    .button-group, .button-group-secondary {
+                        flex-direction: column; /* Stack buttons on small screens */
+                        gap: 10px;
+                    }
+                    .derivacao-add-button-container {
+                        text-align: center; /* Center add derivation button */
+                    }
+                    .derivacao-add-button-container .ui-button {
+                        width: 100%;
+                    }
+                    .ui-panelgrid.ui-fluid .ui-grid-col-12.ui-md-grid-col-3,
+                    .ui-panelgrid.ui-fluid .ui-grid-col-12.ui-md-grid-col-9 {
+                        width: 100% !important; /* Ensure columns stack in panelgrid */
+                    }
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

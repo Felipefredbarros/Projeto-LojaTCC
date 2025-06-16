@@ -1,0 +1,49 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formRelatorios">
+                <p:panel header="Relatórios" style="width: 60%; margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+
+                    <!-- Título -->
+                    <h3 style="text-align: center; color: #343a40; margin-bottom: 20px;">Selecione um relatorio Gerencial</h3>
+
+                    <!-- Relatório de Produtos -->
+                    <p:panel header="Relatório de Produtos" style="margin-bottom: 20px; text-align: center;">
+                        <p:commandButton value="Gerar Relatório de Produtos mais Vendido"
+                                         icon="pi pi-box"
+                                         action="#"
+                                         ajax="false"
+                                         styleClass="ui-button-warning"
+                                         style="margin-top: 10px; width: 80%;" />
+                    </p:panel>
+
+                    <!-- Filtro para Relatório de Vendas -->
+                    <p:panel header="Relatório de Vendas" style="margin-bottom: 20px;">
+                       
+                        <p:commandButton value="Gerar Relatório de Vendas"
+                                         icon="pi pi-shopping-cart"
+                                         action="vendaRelatorio.xhtml"
+                                         ajax="true"
+                                         styleClass="ui-button-info"
+                                         style="margin-top: 10px; width: 80%;" />
+                    </p:panel>
+
+                    <!-- Filtro para Relatório de Compras -->
+                    <p:panel header="Relatório de Compras" style="margin-bottom: 20px;">
+                        <p:commandButton value="Gerar Relatório de Compras"
+                                         icon="pi pi-credit-card"
+                                         action="compraRelatorio.xhtml"
+                                         ajax="true"
+                                         styleClass="ui-button-danger"
+                                         style="margin-top: 10px; width: 80%;" />
+                    </p:panel>
+
+                </p:panel>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+</html>

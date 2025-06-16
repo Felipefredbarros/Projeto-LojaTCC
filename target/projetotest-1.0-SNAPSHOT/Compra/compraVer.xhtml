@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h2>Detalhes da Compra</h2>
+            <br/>
+            <h:form>
+                <h:panelGrid columns="2">
+                    <h:outputLabel value="Data da Compra:" />
+                    <h:outputText value="#{compraControle.compra.dataCompra}">
+                        <f:convertDateTime pattern="dd/MM/yyyy"/>
+                    </h:outputText>
+
+                    <h:outputLabel value="Cliente:" />
+                    <h:outputText value="#{compraControle.compra.fornecedor.nome}" />
+                    
+                    <h:outputLabel value="Plano de Pagamento:" />
+                    <h:outputText value="#{compraControle.compra.planoPagamento}" />
+
+                    <h:outputLabel value="Método de Pagamento:" />
+                    <h:outputText value="#{compraControle.compra.metodoPagamento}" />
+                    
+                    <h:outputLabel value="Numero de Parcelas:" />
+                    <h:outputText value="#{compraControle.compra.parcelas}" />
+
+                    <h:outputLabel value="Valor Total:" />
+                    <h:outputText value="#{compraControle.compra.valorTotal}">
+                        <f:convertNumber type="currency"/>
+                    </h:outputText>
+                </h:panelGrid>
+
+                <h:panelGrid>
+                    <h:outputText value="Itens da Compra" styleClass="titulo-itens"/>
+                </h:panelGrid>
+
+                <p:dataTable value="#{compraControle.compra.itensCompra}" var="item" emptyMessage="Nenhum item na compra">
+                    <p:column headerText="Produto">
+                        <h:outputText value="#{item.desc}"/>
+                    </p:column>
+                    <p:column headerText="Quantidade">
+                        <h:outputText value="#{item.quantidade}"/>
+                    </p:column>
+                    <p:column headerText="Preço">
+                        <h:outputText value="#{item.valorUnitario}">
+                            <f:convertNumber type="currency"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="Subtotal">
+                        <h:outputText value="#{item.subTotal}">
+                            <f:convertNumber type="currency"/>
+                        </h:outputText>
+                    </p:column>
+                </p:dataTable>
+
+                <!-- Tabela de Parcelas -->
+                <h:panelGrid>
+                    <h:outputText value="Parcelas da Compra" styleClass="titulo-itens"/>
+                </h:panelGrid>
+
+                <p:dataTable value="#{compraControle.compra.parcelasCompra}" var="parcela" emptyMessage="Nenhuma parcela disponível">
+                    <p:column headerText="Data de Vencimento">
+                        <h:outputText value="#{parcela.dataVencimento}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="Valor da Parcela">
+                        <h:outputText value="#{parcela.valorParcela}">
+                            <f:convertNumber type="currency"/>
+                        </h:outputText>
+                    </p:column>
+                </p:dataTable>
+
+                <p:commandButton value="Voltar" action="listaCompra.xhtml" immediate="true" ajax="false"/>
+            </h:form>
+
+            <style>
+                .titulo-itens {
+                    font-size: x-large;
+                    font-weight: bold;
+                    margin-top: 20px;
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

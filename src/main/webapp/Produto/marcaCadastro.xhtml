@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <div class="form-wrapper">
+                <div class="form-container card">
+                    <h:form id="form">
+                        <h1 class="form-title">Cadastro de Marca</h1>
+                        <p:growl id="growlMessagesMarca" showDetail="true" life="4000" escape="false"/>
+
+                        <p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
+                            <p:outputLabel for="marcaNome" value="Nome da Marca:" styleClass="font-semibold"/>
+                            <p:inputText id="marcaNome" value="#{marcaControle.marca.marca}"
+                                         required="true" requiredMessage="O nome da marca é obrigatório."
+                                         placeholder="Digite o nome da marca"/>
+                        </p:panelGrid>
+
+                        <div class="button-group mt-3">
+                            <p:commandButton value="Salvar Marca" icon="pi pi-save"
+                                             actionListener="#{marcaControle.salvar}"
+                                             update=":form:marcaNome :form:growlMessagesMarca :formListaMarcas:tabelaMarcas"
+                                             styleClass="ui-button-success"/>
+                            <p:commandButton value="Cancelar" icon="pi pi-times"
+                                             action="produtoCadastro.xhtml?faces-redirect=true" immediate="true"
+                                             process="@this"
+                                             styleClass="ui-button-secondary"/>
+                        </div>
+                        <p:divider layout="horizontal" styleClass="mt-3 mb-3"/>
+                        <div class="button-group-secondary">
+                            <p:commandButton value="Ir para Cadastro de Produto" icon="pi pi-box"
+                                             action="produtoCadastro.xhtml?faces-redirect=true" immediate="true"
+                                             styleClass="ui-button-help ui-button-outlined"/>
+                        </div>
+                    </h:form>
+                </div>
+
+                <div class="form-container card mt-3"> <h:form id="formListaMarcas">
+                        <h2 class="form-title-alt">Marcas Cadastradas</h2>
+                        <p:dataTable id="tabelaMarcas" value="#{marcaControle.listaMarcas}" var="mar"
+                                     emptyMessage="Nenhuma marca cadastrada." rows="5" paginator="true"
+                                     paginatorPosition="bottom" styleClass="tabela-marcas"
+                                     rowsPerPageTemplate="5,10,15">
+                            <p:column headerText="Nome da Marca" sortBy="#{mar.marca}" filterBy="#{mar.marca}" filterMatchMode="contains">
+                                <h:outputText value="#{mar.marca}" />
+                            </p:column>
+                            <p:column headerText="Ações" style="width:120px; text-align:center;">
+                                <p:commandButton icon="pi pi-pencil" title="Editar"
+                                                 actionListener="#{marcaControle.editar(mar)}"
+                                                 update=":form" process="@this"
+                                                 styleClass="ui-button-info rounded-button" style="margin-right: 5px;"/>
+                                <p:commandButton icon="pi pi-trash" title="Excluir Marca"
+                                                 actionListener="#{marcaControle.excluir(mar)}"
+                                                 update=":formListaMarcas:tabelaMarcas :form:growlMessagesMarca"
+                                                 process="@this"
+                                                 styleClass="ui-button-danger rounded-button">
+                                    <p:confirm header="Confirmação" message="Deseja realmente excluir a marca '#{mar.marca}'?" icon="pi pi-exclamation-triangle"/>
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </div>
+            </div>
+
+            <h:form id="formConfirmDialog">
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                    <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+                </p:confirmDialog>
+            </h:form>
+
+            <style type="text/css">
+                body {
+                    font-family: 'Poppins', sans-serif;
+                    background-color: #f8f9fa;
+                    color: #495057;
+                    margin: 0;
+                    padding: 0;
+                }
+                .form-wrapper {
+                    display: flex;
+                    flex-direction: column; /* Stack form and list vertically */
+                    align-items: center; /* Center items horizontally */
+                    justify-content: flex-start;
+                    min-height: calc(100vh - 40px);
+                    padding: 20px;
+                    box-sizing: border-box;
+                    gap: 20px; /* Space between form and list containers */
+                }
+                .form-container.card {
+                    background: #ffffff;
+                    padding: 25px 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                    width: 100%;
+                    max-width: 700px; /* Consistent max-width */
+                }
+                .form-title {
+                    text-align: center;
+                    color: #007bff;
+                    margin-bottom: 30px;
+                    font-size: 1.75rem;
+                    font-weight: 600;
+                }
+                .form-title-alt { /* For list title */
+                    text-align: center;
+                    color: #495057; /* Slightly different color for secondary title */
+                    margin-top: 10px; /* Space from top of its container */
+                    margin-bottom: 20px;
+                    font-size: 1.5rem;
+                    font-weight: 500;
+                }
+                .font-semibold {
+                    font-weight: 600 !important;
+                }
+                .mt-3 {
+                    margin-top: 1.5rem !important;
+                }
+                .mb-3 {
+                    margin-bottom: 1.5rem !important;
+                }
+
+                .ui-outputlabel {
+                    display: block;
+                    margin-bottom: 0.6rem;
+                    color: #343a40;
+                }
+                .ui-fluid .ui-inputtext {
+                    width: 100% !important;
+                }
+                .ui-inputtext {
+                    padding: 0.6rem 0.75rem !important;
+                    font-size: 0.95rem;
+                    border-color: #ced4da;
+                }
+                .ui-inputtext:focus {
+                    border-color: #007bff;
+                    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+                }
+
+                .button-group, .button-group-secondary {
+                    display: flex;
+                    gap: 15px;
+                }
+                .button-group .ui-button,
+                .button-group-secondary .ui-button {
+                    flex-grow: 1;
+                    font-size: 0.95rem;
+                    padding-top: 0.75rem;
+                    padding-bottom: 0.75rem;
+                }
+                .ui-button.ui-button-outlined {
+                    border-width: 1.5px;
+                }
+                .tabela-marcas .ui-paginator {
+                    padding: 0.5rem;
+                }
+                .rounded-button.ui-button { /* Ensure PrimeFaces icons in buttons are vertically centered */
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                @media (max-width: 768px) {
+                    .form-title, .form-title-alt {
+                        font-size: 1.4rem;
+                        margin-bottom:20px;
+                    }
+                    .form-container.card {
+                        padding: 20px;
+                        max-width: 100%;
+                    }
+                    .button-group, .button-group-secondary {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>
