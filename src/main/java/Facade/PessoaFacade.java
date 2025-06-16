@@ -43,13 +43,10 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
                     Pessoa.class)
                     .setParameter("id", id)
                     .getSingleResult();
-            System.out.println("PessoaFacade.findWithAll - Pessoa encontrada: " + (p != null ? p.getNome() : "null"));
             return p;
         } catch (javax.persistence.NoResultException nre) {
-            // É uma boa prática tratar NoResultException aqui, talvez retornando null
-            // ou relançando uma exceção específica da aplicação.
-            System.err.println("PessoaFacade.findWithAll - NoResultException para ID " + id + ": " + nre.getMessage());
-            return null; // Retornar null permite ao controlador tratar o caso de "não encontrado"
+            
+            return null; 
         }
     }
 

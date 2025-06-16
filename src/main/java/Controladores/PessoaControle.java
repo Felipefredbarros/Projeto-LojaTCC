@@ -392,30 +392,24 @@ public class PessoaControle implements Serializable {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
 
-        // Sanitize the title to create a valid filename
         String fileName = reportTitle.toLowerCase().replaceAll("[^a-z0-9]", "_") + ".pdf";
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
 
-        // Use landscape (A4.rotate()) for more horizontal space
         Document document = new Document(PageSize.A4.rotate(), 20, 20, 20, 30);
         PdfWriter.getInstance(document, response.getOutputStream());
         document.open();
 
-        // --- Title ---
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
         Paragraph title = new Paragraph(reportTitle + " - Loja São Judas Tadeu", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         title.setSpacingAfter(20);
         document.add(title);
 
-        // --- Main Table ---
-        // Corrected column count and defined relative widths for better layout
         PdfPTable mainTable = new PdfPTable(8);
         mainTable.setWidthPercentage(100);
-        mainTable.setWidths(new float[]{2f ,1.5f ,2.5f, 2f, 1.5f, 1f, 3f, 2f}); // Name, Email, CPF, Status, Addresses, Phones
+        mainTable.setWidths(new float[]{1f ,1f ,2.5f, 3f, 1.5f, 1f, 4f, 2f}); 
 
-        // --- Table Headers ---
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Font.BOLD, Color.WHITE);
         String[] headers = {"Tipo Pessoa","Natureza" ,"Nome", "Email", "CPF/CNPJ", "Status", "Endereços", "Telefones"};
         for (String header : headers) {
@@ -454,7 +448,7 @@ public class PessoaControle implements Serializable {
             if (p.getListaEnderecos() != null && !p.getListaEnderecos().isEmpty()) {
                 PdfPTable addressTable = new PdfPTable(4);
                 addressTable.setWidthPercentage(100);
-                addressTable.setWidths(new float[]{2.5f, 0.8f, 1.5f, 1.2f});
+                addressTable.setWidths(new float[]{4.5f, 1.8f, 2.5f, 3.2f});
 
                 // Headers for the nested address table
                 addressTable.addCell(new PdfPCell(new Phrase("Rua", nestedHeaderFont)));
