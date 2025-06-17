@@ -64,7 +64,6 @@ public class PessoaControle implements Serializable {
 
     public void prepararVisualizacao(Pessoa pes) {
         // Adicione logs para depuração
-        System.out.println("prepararVisualizacao - ID da Pessoa recebida: " + (pes != null ? pes.getId() : "null"));
         if (pes == null || pes.getId() == null) {
             this.pessoaSelecionado = null;
             System.err.println("prepararVisualizacao - Pessoa ou ID nulo. pessoaSelecionado definido como null.");

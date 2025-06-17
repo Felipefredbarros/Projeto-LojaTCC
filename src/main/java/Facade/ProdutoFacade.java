@@ -105,7 +105,7 @@ public class ProdutoFacade extends AbstractFacade<Produto> {
 
     public Produto findWithDerivacoes(Long id) {
         return em.createQuery(
-                "SELECT p FROM Produto p LEFT JOIN FETCH p.variacoes WHERE p.id = :id",
+                "SELECT DISTINCT p FROM Produto p LEFT JOIN FETCH p.variacoes WHERE p.id = :id",
                 Produto.class)
                 .setParameter("id", id)
                 .getSingleResult();

@@ -121,7 +121,31 @@ public class ProdutoControle implements Serializable {
     }
 
     public void prepararVisualizacao(Produto prod) {
-        this.produtoSelecionado = produtoFacade.findWithDerivacoes(prod.getId());
+        if (prod == null || prod.getId() == null) {
+            this.produtoSelecionado = null;
+            System.err.println("prepararVisualizacao - Pessoa ou ID nulo. pessoaSelecionado definido como null.");
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Não foi possível selecionar a pessoa para visualização."));
+            return;
+        }
+
+        try {
+            this.produtoSelecionado = produtoFacade.findWithDerivacoes(prod.getId());
+            if (this.produtoSelecionado != null) {
+                System.out.println("prepararVisualizacao - Produto encontrada: " + this.produtoSelecionado.getTexto());
+            } else {
+                System.out.println("prepararVisualizacao - Nenhuma pessoa encontrada com o ID: " + prod.getId());
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Pessoa não encontrada."));
+            }
+        } catch (javax.persistence.NoResultException nre) {
+            this.produtoSelecionado = null; // Garante que fique nulo se não encontrar
+            System.err.println("prepararVisualizacao - NoResultException ao buscar pessoa com ID " + prod.getId() + ": " + nre.getMessage());
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Pessoa não encontrada com o ID fornecido."));
+        } catch (Exception e) {
+            this.produtoSelecionado = null; // Garante que fique nulo em caso de outros erros
+            System.err.println("prepararVisualizacao - Erro ao buscar Pessoa: " + e.getMessage());
+            e.printStackTrace(); // Importante para ver a causa raiz do erro no console do servidor
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Ocorreu um erro inesperado ao carregar os detalhes da pessoa."));
+        }
     }
 
     public void salvar() {
@@ -325,7 +349,7 @@ public class ProdutoControle implements Serializable {
             derivationsCell.setPadding(2);
 
             // This check is safe ONLY IF you eagerly fetched the list
-            if (prod.getVariacoes()!= null && !prod.getVariacoes().isEmpty()) {
+            if (prod.getVariacoes() != null && !prod.getVariacoes().isEmpty()) {
                 PdfPTable derivationTable = new PdfPTable(3); // 3 columns for derivation details
                 derivationTable.setWidthPercentage(100);
 

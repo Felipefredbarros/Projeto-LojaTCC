@@ -50,7 +50,7 @@ public class VendaControle implements Serializable {
 
     @EJB
     private ProdutoFacade produtoFacade;
-    
+
     @EJB
     private ProdutoDerivacaoFacade produtoDevFacade;
 
@@ -59,6 +59,7 @@ public class VendaControle implements Serializable {
     private ConverterGenerico produtoDevConverter;
     private List<MetodoPagamento> metodosPagamentoFiltrados;
     private List<PlanoPagamento> planosPagamentos;
+    private Venda vendaSelecionado;
 
     @ManagedProperty("#{produtoControle}")
     private ProdutoControle produtoControle;
@@ -95,6 +96,10 @@ public class VendaControle implements Serializable {
                 itensVenda.setValorUnitario(produto.getValorUnitarioVenda());
             }
         }
+    }
+
+    public void prepararVisualizacao(Venda ven) {
+        this.vendaSelecionado = vendaFacade.findWithItens(ven.getId());
     }
 
     public void editar(Venda ven) {
@@ -438,5 +443,17 @@ public class VendaControle implements Serializable {
     public void setEdit(Boolean edit) {
         this.edit = edit;
     }
+
+    public Venda getVendaSelecionado() {
+        return vendaSelecionado;
+    }
+
+    public void setVendaSelecionado(Venda vendaSelecionado) {
+        this.vendaSelecionado = vendaSelecionado;
+    }
+
+    
+    
+    
 
 }

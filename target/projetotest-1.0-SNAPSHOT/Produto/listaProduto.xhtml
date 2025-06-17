@@ -127,20 +127,20 @@
                                 </span>
                             </div>
                         </div>
-                    </p:outputPanel>
-                    <!-- Derivações -->
-                    <h3 class="section-title"><strong>Derivações</strong></h3>
-                    <p:dataTable value="#{produtoControle.produtoSelecionado.variacoes}" var="var" style="width:100%; margin-bottom: 30px;">
-                        <p:column headerText="Descrição"><h:outputText value="#{var.descricao}"/></p:column>
-                        <p:column headerText="Tamanho"><h:outputText value="#{var.tamanho}"/></p:column>
-                        <p:column headerText="Cor"><h:outputText value="#{var.cor}"/></p:column>
-                        <p:column headerText="Quantidade">
-                            <h:outputText value="#{var.quantidade}">
-                                <f:convertNumber integerOnly="true" groupingUsed="true" />
-                            </h:outputText>
-                        </p:column>
-                    </p:dataTable>
+                        <!-- Derivações -->
+                        <h3 class="section-title"><strong>Derivações</strong></h3>
+                        <p:dataTable value="#{produtoControle.produtoSelecionado.variacoes}" var="var" style="width:100%; margin-bottom: 30px;">
+                            <p:column headerText="Tamanho"><h:outputText value="#{var.descricao}"/></p:column>
+                            <p:column headerText="Tamanho"><h:outputText value="#{var.tamanho}"/></p:column>
+                            <p:column headerText="Cor"><h:outputText value="#{var.cor}"/></p:column>
+                            <p:column headerText="Quantidade">
+                                <h:outputText value="#{var.quantidade}">
+                                    <f:convertNumber integerOnly="true" groupingUsed="true" />
+                                </h:outputText>
+                            </p:column>
+                        </p:dataTable>
 
+                    </p:outputPanel>
 
                     <p:commandButton value="Fechar" onclick="PF('produtoDialog').hide()" styleClass="btn-edit"
                                      style="margin-top:30px; float:right"/>
@@ -227,7 +227,7 @@
                 .ui-datatable .ui-datatable-data > tr > td,
                 .ui-datatable .ui-datatable-thead > tr > th {
                     padding: 6px 8px;   /* Reduz o espaçamento interno */
-                    font-size: 1.2rem; /* Fonte um pouco menor */
+                    font-size: 1rem; /* Fonte um pouco menor */
                     line-height: 0.5;   /* Altura de linha menor */
                 }
 
