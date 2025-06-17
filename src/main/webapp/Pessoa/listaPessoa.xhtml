@@ -134,15 +134,39 @@
 
                             <h:panelGroup rendered="#{pessoaControle.pessoaSelecionado.tipo eq 'FUNCIONARIO'}">
                                 <div class="info-box">
-                                    <span class="label"><strong>Salário:</strong></span>
-                                    <span class="value">#{pessoaControle.pessoaSelecionado.salario}</span>
+                                    <span class="label"><strong>Dia de Inicio de Contrato:</strong></span>
+                                    <span class="value">#{pessoaControle.pessoaSelecionado.contrato.dataInicio}</span>
                                 </div>
+
+                                <div class="info-box">
+                                    <span class="label"><strong>Jornada de Trabalho diaria(Horas):</strong></span>
+                                    <span class="value">
+                                        <h:outputText value="#{pessoaControle.pessoaSelecionado.contrato.jornadaDiariaHoras}">
+                                            <f:convertNumber integerOnly="true" groupingUsed="true" />
+                                        </h:outputText>
+                                    </span>
+                                </div>
+
+                                <div class="info-box">
+                                    <span class="label"><strong>Salário:</strong></span>
+                                    <span class="value">
+                                        <h:outputText value="#{pessoaControle.pessoaSelecionado.contrato.salario}">
+                                            <f:convertNumber type="currency"/>
+                                        </h:outputText>
+                                    </span>
+                                </div>
+
+                                <div class="info-box">
+                                    <span class="label"><strong>Cargo:</strong></span>
+                                    <span class="value">#{pessoaControle.pessoaSelecionado.contrato.cargo}</span>
+                                </div>
+
 
                                 <div class="info-box">
                                     <span class="label"><strong>Dia do Pagamento:</strong></span>
                                     <span class="value">
-                                        <h:outputText value="#{pessoaControle.pessoaSelecionado.diaPagamentos}">
-                                            <f:convertDateTime pattern="dd/MM"/>
+                                        <h:outputText value="#{pessoaControle.pessoaSelecionado.contrato.diaPagamentos}">
+                                            <f:convertDateTime pattern="dd/MM/yyyy"/>
                                         </h:outputText>
                                     </span>
                                 </div>

@@ -6,9 +6,9 @@ package Controladores;
 
 import Converters.ConverterGenerico;
 import Entidades.ItensCompra;
-import Entidades.MetodoPagamento;
+import Entidades.Enums.MetodoPagamento;
 import Entidades.Pessoa;
-import Entidades.PlanoPagamento;
+import Entidades.Enums.PlanoPagamento;
 import Entidades.Produto;
 import Entidades.Compra;
 import Entidades.ProdutoDerivacao;
@@ -71,6 +71,8 @@ public class CompraControle implements Serializable {
     private Date dataFim;
     private Boolean edit = false;
     private List<Compra> listaComprasFiltradas = new ArrayList<>();
+    private Compra compraSelecionado;
+
 
     public void filtrarPorPeriodo() {
         List<Compra> todasCompras = compraFacade.listaTodosComItens();
@@ -88,6 +90,10 @@ public class CompraControle implements Serializable {
         dataInicio = null;
         dataFim = null;
         listaComprasFiltradas = compraFacade.listaTodosComItens();
+    }
+    
+    public void prepararVisualizacao(Compra com) {
+        this.compraSelecionado = compraFacade.findWithItens(com.getId());
     }
 
     public CompraControle() {
@@ -438,4 +444,13 @@ public class CompraControle implements Serializable {
         this.edit = edit;
     }
 
+    public Compra getCompraSelecionado() {
+        return compraSelecionado;
+    }
+
+    public void setCompraSelecionado(Compra compraSelecionado) {
+        this.compraSelecionado = compraSelecionado;
+    }
+
+    
 }

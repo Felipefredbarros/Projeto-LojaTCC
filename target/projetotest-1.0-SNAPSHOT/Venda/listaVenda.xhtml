@@ -98,6 +98,14 @@
                                     </h:outputText>
                                 </span>
                             </div>
+                            <div class="info-box">
+                                <span class="label"><strong>Valor Total:</strong></span>
+                                <span class="value">
+                                    <h:outputText value="#{vendaControle.vendaSelecionado.valorTotal}">
+                                        <f:convertNumber type="currency"/>
+                                    </h:outputText>
+                                </span>
+                            </div>
 
                             <div class="info-box">
                                 <span class="label"><strong>Cliente:</strong></span>
@@ -114,14 +122,6 @@
                             <div class="info-box">
                                 <span class="label"><strong>Método de Pagamento:</strong></span>
                                 <span class="value">#{vendaControle.vendaSelecionado.metodoPagamento.descricao}</span>
-                            </div>
-                            <div class="info-box">
-                                <span class="label"><strong>Valor Total:</strong></span>
-                                <span class="value">
-                                    <h:outputText value="#{vendaControle.venda.valorTotal}">
-                                        <f:convertNumber type="currency"/>
-                                    </h:outputText>
-                                </span>
                             </div>
                         </div>
                         <!-- Itens -->

@@ -2,12 +2,15 @@ package Controladores;
 
 import Converters.ConverterGenerico;
 import Entidades.ItensVenda;
-import Entidades.MetodoPagamento;
+import Entidades.Enums.MetodoPagamento;
+import Entidades.MovimentacaoMensalFuncionario;
 import Entidades.Pessoa;
-import Entidades.PlanoPagamento;
+import Entidades.Enums.PlanoPagamento;
 import Entidades.Produto;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
+import Entidades.Enums.TipoBonus;
+import Facade.MovimentacaoMensalFacade;
 import Facade.PessoaFacade;
 import Facade.ProdutoDerivacaoFacade;
 import Facade.ProdutoFacade;
@@ -53,6 +56,9 @@ public class VendaControle implements Serializable {
 
     @EJB
     private ProdutoDerivacaoFacade produtoDevFacade;
+
+    @EJB
+    private MovimentacaoMensalFacade movimentacaoMensalFacade;
 
     private ConverterGenerico pessoaConverter;
     private ConverterGenerico produtoConverter;
@@ -210,7 +216,32 @@ public class VendaControle implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", mensagemErro.toString()));
             return;
         }
+        // SALVAR VENDA PRIMEIRO
+
         vendaFacade.salvarVenda(venda, edit);
+
+        // GARANTIR QUE TEM ID
+        if (venda.getId() == null) {
+            throw new IllegalStateException("Venda não foi persistida corretamente.");
+        }
+
+        // SÓ AGORA CRIA A MOVIMENTAÇÃO
+        if (!edit) {
+            Double valorVenda = venda.getValorTotal();
+
+            MovimentacaoMensalFuncionario mov = new MovimentacaoMensalFuncionario();
+            mov.setFuncionario(venda.getFuncionario());
+            mov.setData(venda.getDataVenda());
+            mov.setTipoBonus(TipoBonus.COMISSAO);
+            
+            mov.setBonus(valorVenda);
+            mov.setVenda(venda); // importante
+
+            movimentacaoMensalFacade.salvar(mov); // salva movimentação
+            venda.setMovimentacao(mov); // conecta movimentação à venda
+            vendaFacade.salvarVenda(venda, false); // atualiza a venda com o ID da movimentação // Agora a venda já está salva
+        }
+
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Venda salva com sucesso!"));
         try {
@@ -436,6 +467,14 @@ public class VendaControle implements Serializable {
         this.vendaFacade = vendaFacade;
     }
 
+    public MovimentacaoMensalFacade getMovimentacaoMensalFacade() {
+        return movimentacaoMensalFacade;
+    }
+
+    public void setMovimentacaoMensalFacade(MovimentacaoMensalFacade movimentacaoMensalFacade) {
+        this.movimentacaoMensalFacade = movimentacaoMensalFacade;
+    }
+
     public Boolean getEdit() {
         return edit;
     }
@@ -451,9 +490,5 @@ public class VendaControle implements Serializable {
     public void setVendaSelecionado(Venda vendaSelecionado) {
         this.vendaSelecionado = vendaSelecionado;
     }
-
-    
-    
-    
 
 }

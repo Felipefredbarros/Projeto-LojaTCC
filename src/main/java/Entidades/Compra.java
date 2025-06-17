@@ -4,6 +4,8 @@
  */
 package Entidades;
 
+import Entidades.Enums.PlanoPagamento;
+import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;

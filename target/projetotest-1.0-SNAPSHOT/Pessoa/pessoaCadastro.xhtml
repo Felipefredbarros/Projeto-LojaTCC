@@ -60,22 +60,28 @@
                     <p:outputPanel id="panelCamposEspecificos">
 
                         <h:panelGroup rendered="#{pessoaControle.pessoa.tipo == 'FUNCIONARIO'}">
-                            <h3 class="section-title">Campos Específicos</h3>
+                            <h3 class="section-title">Contrato de Trabalho</h3>
                         </h:panelGroup> 
 
                         <p:panelGrid columns="4" layout="grid" rendered="#{pessoaControle.pessoa.tipo == 'FUNCIONARIO'}" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
+                            <p:outputLabel for="diaIncio" value="Dia de Inicio de Contrato" styleClass="font-semibold"/>
+                            <p:calendar id="diaIncio" value="#{pessoaControle.pessoa.contrato.dataInicio}" pattern="MM/yyyy" mask="true" locale="pt_BR" required="true" style="width: 100%;"/>
+                            
+                            <p:outputLabel for="jornada" value="Jornada de Trabalho diaria(Horas):" styleClass="font-semibold"/>
+                            <p:inputNumber id="jornada" value="#{pessoaControle.pessoa.contrato.jornadaDiariaHoras}" required="true" minValue="0" decimalPlaces="0" placeholder="0" style="width: 100%;"/>
+                            
                             <p:outputLabel for="salario" value="Salário:" styleClass="font-semibold"/>
-                            <p:inputNumber id="salario" value="#{pessoaControle.pessoa.salario}" symbol="R$ " decimalSeparator="," thousandSeparator="." required="true" minValue="0" style="width: 100%;"/>
+                            <p:inputNumber id="salario" value="#{pessoaControle.pessoa.contrato.salario}" symbol="R$ " decimalSeparator="," thousandSeparator="." required="true" minValue="0" style="width: 100%;"/>
 
                             <p:outputLabel for="cargo" value="Cargo:" styleClass="font-semibold"/>
-                            <p:selectOneMenu id="cargo" value="#{pessoaControle.pessoa.cargo}" required="true" style="width: 100%;">
+                            <p:selectOneMenu id="cargo" value="#{pessoaControle.pessoa.contrato.cargo}" required="true" style="width: 100%;">
                                 <f:selectItem itemLabel="Selecione o Cargo" itemValue="" noSelectionOption="true"/>
                                 <f:selectItem itemLabel="Gerente" itemValue="Gerente"/>
                                 <f:selectItem itemLabel="Funcionário" itemValue="Funcionario"/>
                             </p:selectOneMenu>
 
                             <p:outputLabel for="diaPagamento" value="Dia do Pagamento:" styleClass="font-semibold"/>
-                            <p:calendar id="diaPagamento" value="#{pessoaControle.pessoa.diaPagamentos}" pattern="dd/MM/yyyy" mask="true" locale="pt_BR" required="true" style="width: 100%;"/>
+                            <p:calendar id="diaPagamento" value="#{pessoaControle.pessoa.contrato.diaPagamentos}" pattern="dd/MM/yyyy" mask="true" locale="pt_BR" required="true" style="width: 100%;"/>
                         </p:panelGrid>
                     </p:outputPanel>
 

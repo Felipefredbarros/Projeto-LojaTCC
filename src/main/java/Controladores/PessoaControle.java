@@ -6,13 +6,13 @@ package Controladores;
 
 import Converters.ConverterGenerico;
 import Entidades.Cidade;
+import Entidades.ContratoTrabalho;
 import Entidades.Endereco;
-import Entidades.TipoPessoa;
+import Entidades.Enums.TipoPessoa;
 import javax.faces.application.FacesMessage;
 import Entidades.Pessoa;
-import Entidades.Produto;
 import Entidades.Telefone;
-import Entidades.tipoTelefone;
+import Entidades.Enums.tipoTelefone;
 import Facade.PessoaFacade;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -33,7 +33,6 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -51,6 +50,8 @@ public class PessoaControle implements Serializable {
     private ConverterGenerico pessoaConverter;
     private Endereco novoEndereco = new Endereco();
     private Telefone novoTelefone = new Telefone();
+    private ContratoTrabalho contrato = new ContratoTrabalho();
+
     private List<Cidade> cidadesDisponiveis;
     private Boolean edit = false;
     private Pessoa pessoaSelecionado;
@@ -95,9 +96,12 @@ public class PessoaControle implements Serializable {
 
     //novos
     public void onTipoPessoaChange() {
-        pessoa.setSalario(null);
-        pessoa.setCargo(null);
-        pessoa.setDiaPagamentos(null);
+        //pessoa.setSalario(null);
+        //pessoa.setCargo(null);
+        //pessoa.setDiaPagamentos(null);
+        pessoa.getContrato().setSalario(null);
+        pessoa.getContrato().setCargo(null);
+        pessoa.getContrato().setDiaPagamentos(null);
         pessoa.setRegiao(null);
 
         // Default the nature of the person to FISICA when the main type changes.
@@ -195,18 +199,26 @@ public class PessoaControle implements Serializable {
             pessoa.prepararParaSalvar();
 
             if (pessoa.getTipo() != TipoPessoa.FUNCIONARIO) {
-                pessoa.setSalario(null);
-                pessoa.setCargo(null);
-                pessoa.setDiaPagamentos(null);
+                //pessoa.setSalario(null);
+                //pessoa.setCargo(null);
+                //pessoa.setDiaPagamentos(null);
+                pessoa.getContrato().setSalario(null);
+                pessoa.getContrato().setCargo(null);
+                pessoa.getContrato().setDiaPagamentos(null);
+            } else {
+                // garante vínculo contrato ↔ pessoa
+                if (pessoa.getContrato() != null) {
+                    pessoa.getContrato().setFuncionario(pessoa);
+                }
             }
             if (pessoa.getTipo() != TipoPessoa.FORNECEDOR) {
                 pessoa.setRegiao(null);
             }
-
             pessoaFacade.salvar(pessoa);
             pessoa = new Pessoa();
             novoEndereco = new Endereco();
             novoTelefone = new Telefone();
+            contrato = new ContratoTrabalho();
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Pessoa salva com sucesso! (Simulado)"));
@@ -281,37 +293,40 @@ public class PessoaControle implements Serializable {
     }
 
     public void excluir(Pessoa pessoa) {
-        // Verifica se a pessoa é um cliente ou funcionário
-        if (pessoaFacade.pessoaTemVendas(pessoa) && pessoa.getAtivo()) {
-            pessoa.setAtivo(false); // Marcar a pessoa como inativa
-            pessoaFacade.salvar(pessoa); // Salva as alterações no banco de dados
+        boolean temVinculos = pessoaFacade.pessoaTemVinculos(pessoa);
 
+        if (temVinculos && pessoa.getAtivo()) {
+            pessoa.setAtivo(false);
+            pessoaFacade.salvar(pessoa);
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Pessoa inativada", "A pessoa foi inativada com sucesso e não pode mais ser usada nas vendas/compras."));
-            return; // Sai do método após inativar a pessoa
+                            "Pessoa inativada",
+                            "A pessoa foi inativada com sucesso e não pode mais ser usada no Sistema."));
+            return;
         }
 
         if (!pessoa.getAtivo()) {
-            if (pessoaFacade.pessoaTemVendas(pessoa)) {
+            if (temVinculos) {
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_INFO,
-                                "Erro ao Excluir", "Pessoa inativada, para excluir exclua as vendas/compras relacionadas a ela."));
+                        new FacesMessage(FacesMessage.SEVERITY_WARN,
+                                "Erro ao Excluir",
+                                "Pessoa inativada, mas há vendas/movimentaçoes relacionadas a ela, exclua os vinculos antes de tentar excluir definitivamente"));
                 return;
             } else {
                 pessoaFacade.remover(pessoa);
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_INFO,
-                                "Sucesso", "Pessoa inativada excluída com sucesso!"));
+                                "Sucesso",
+                                "Pessoa inativada excluída com sucesso!"));
                 return;
             }
         }
 
-        // Se não estiver associado a vendas, remove a pessoa da base de dados
         pessoaFacade.remover(pessoa);
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO,
-                        "Sucesso", "Pessoa excluída com sucesso!"));
+                        "Sucesso",
+                        "Pessoa excluída com sucesso!"));
     }
 
     public void editar(Pessoa pes) {
@@ -387,6 +402,14 @@ public class PessoaControle implements Serializable {
 
     public List<Pessoa> getListaPessoaInativa() {
         return pessoaFacade.listaPessoaInativo();
+    }
+
+    public ContratoTrabalho getContrato() {
+        return contrato;
+    }
+
+    public void setContrato(ContratoTrabalho contrato) {
+        this.contrato = contrato;
     }
 
     public void exportarRelatorioClientes() throws DocumentException, IOException {

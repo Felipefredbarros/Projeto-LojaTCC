@@ -5,7 +5,7 @@
 package Facade;
 
 import Entidades.Pessoa;
-import Entidades.TipoPessoa;
+import Entidades.Enums.TipoPessoa;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -45,8 +45,8 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
                     .getSingleResult();
             return p;
         } catch (javax.persistence.NoResultException nre) {
-            
-            return null; 
+
+            return null;
         }
     }
 
@@ -137,25 +137,37 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
         return listaPorTipoInativo(TipoPessoa.FUNCIONARIO);
     }
 
-    public boolean pessoaTemVendas(Pessoa pessoa) {
+    public boolean pessoaTemVinculos(Pessoa pessoa) {
         if (pessoa == null || pessoa.getId() == null) {
             return false;
         }
 
-        String jpql;
+        Long count = 0L;
+
         if (pessoa.getTipo() == TipoPessoa.CLIENTE) {
-            jpql = "SELECT COUNT(v) FROM Venda v WHERE v.cliente.id = :pessoaId"; // Supondo que a chave estrangeira do cliente seja 'cliente.id'
+            count = (Long) em.createQuery("SELECT COUNT(v) FROM Venda v WHERE v.cliente.id = :id")
+                    .setParameter("id", pessoa.getId())
+                    .getSingleResult();
         } else if (pessoa.getTipo() == TipoPessoa.FUNCIONARIO) {
-            jpql = "SELECT COUNT(v) FROM Venda v WHERE v.funcionario.id = :pessoaId"; // Supondo que a chave estrangeira do funcionário seja 'funcionario.id'
+            Long vendas = (Long) em.createQuery("SELECT COUNT(v) FROM Venda v WHERE v.funcionario.id = :id")
+                    .setParameter("id", pessoa.getId())
+                    .getSingleResult();
+
+            Long movimentacoes = (Long) em.createQuery("SELECT COUNT(m) FROM MovimentacaoMensalFuncionario m WHERE m.funcionario.id = :id")
+                    .setParameter("id", pessoa.getId())
+                    .getSingleResult();
+
+            Long folhas = (Long) em.createQuery("SELECT COUNT(f) FROM FolhaPagamento f WHERE f.funcionario.id = :id")
+                    .setParameter("id", pessoa.getId())
+                    .getSingleResult();
+
+            count = vendas + movimentacoes + folhas;
         } else if (pessoa.getTipo() == TipoPessoa.FORNECEDOR) {
-            jpql = "SELECT COUNT(v) FROM Compra v WHERE v.fornecedor.id = :pessoaId"; // Supondo que a chave estrangeira do funcionário seja 'funcionario.id'
-        } else {
-            return false; // Retorna false para tipos que não são cliente ou funcionário ou fornecedor
+            count = (Long) em.createQuery("SELECT COUNT(c) FROM Compra c WHERE c.fornecedor.id = :id")
+                    .setParameter("id", pessoa.getId())
+                    .getSingleResult();
         }
 
-        Query query = em.createQuery(jpql);
-        query.setParameter("pessoaId", pessoa.getId());
-        Long count = (Long) query.getSingleResult();
         return count > 0;
     }
 

@@ -20,11 +20,14 @@ C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entid
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\dataExporterView.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\MarcaFacade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ItensCompra.java
+C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\MovimentacaoMensalControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\AbstractFacade.java
+C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\FolhaPagamento.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Compra.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\CompraControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ItensVenda.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\MetodoPagamento.java
+C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\MovimentacaoMensalFuncionario.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Caixa.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\dashBoardControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\VendaControle.java
@@ -34,6 +37,7 @@ C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entid
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Venda.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\MarcaControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Telefone.java
+C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\MovimentacaoMensalFacade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ClassePai.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Produto.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\MovimentacaoCaixa.java

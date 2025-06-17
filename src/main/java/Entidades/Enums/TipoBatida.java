@@ -2,20 +2,20 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Entidades;
+package Entidades.Enums;
 
 /**
  *
  * @author felip
  */
-public enum TipoPessoa {
-    CLIENTE("Cliente"),
-    FORNECEDOR("Fornecedor"),
-    FUNCIONARIO("Funcionário");
+public enum TipoBatida {
+    ENTRADA("Entrada"),
+    SAIDA("Saida"),
+    PAUSA("Pausa");
 
     private final String label;
 
-    TipoPessoa(String label) {
+    TipoBatida(String label) {
         this.label = label;
     }
 

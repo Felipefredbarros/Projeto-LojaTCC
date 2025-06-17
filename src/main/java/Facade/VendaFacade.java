@@ -6,10 +6,11 @@
 package Facade;
 
 import Entidades.ItensVenda;
-import Entidades.Produto;
+import Entidades.MovimentacaoMensalFuncionario;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
 import java.util.List;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -20,6 +21,9 @@ import javax.persistence.PersistenceContext;
  */
 @Stateless
 public class VendaFacade extends AbstractFacade<Venda> {
+
+    @EJB
+    private MovimentacaoMensalFacade movimentacaoMensalFacade;
 
     @PersistenceContext(unitName = "projetotestPU")
     private EntityManager em;
@@ -50,19 +54,38 @@ public class VendaFacade extends AbstractFacade<Venda> {
                 em.merge(derivacao);
                 iv.setDesc(derivacao.getProduto().getTexto());
             }
-        }
 
-        em.merge(entity);
+            if (entity.getId() == null) {
+                em.persist(entity); // novo
+            } else {
+                em.merge(entity);   // já existe (deve ser atualizado)
+            }
+        } else {
+            em.merge(entity); // edição
+        }
     }
 
     @Override
     public void remover(Venda entity) {
         entity = em.find(Venda.class, entity.getId());
-        entity.getItensVenda().size(); // Força carregar itens
+        entity.getItensVenda().size(); 
+        entity.getMovimentacao(); 
+
+        if (entity.getMovimentacao() != null) {
+            MovimentacaoMensalFuncionario mov = entity.getMovimentacao();
+
+            entity.setMovimentacao(null);
+            mov.setVenda(null);
+
+            em.merge(entity); 
+            em.merge(mov);    
+
+            em.remove(em.contains(mov) ? mov : em.merge(mov)); 
+        }
 
         for (ItensVenda iv : entity.getItensVenda()) {
             ProdutoDerivacao derivacao = iv.getProdutoDerivacao();
-            derivacao.setQuantidade(derivacao.getQuantidade()+ iv.getQuantidade());
+            derivacao.setQuantidade(derivacao.getQuantidade() + iv.getQuantidade());
             em.merge(derivacao);
         }
 

@@ -4,9 +4,8 @@
  */
 package Entidades;
 
+import Entidades.Enums.TipoPessoa;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -21,9 +20,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 /**
  *
@@ -50,15 +48,15 @@ public class Pessoa implements Serializable, ClassePai {
     private String email;
     @Column(name = "pes_cpfcnpj")
     private String cpfcnpj;
-    @Column(name = "pes_salario")
-    private Double salario;
-    @Column(name = "pes_cargo")
-    private String cargo;
+    //@Column(name = "pes_salario")
+    //private Double salario;
+    //@Column(name = "pes_cargo")
+    //private String cargo;
     @Column(name = "pes_regiao")
     private String regiao;
-    @Column(name = "pes_dia_pagamentos")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date diaPagamentos;
+    //@Column(name = "pes_dia_pagamentos")
+    //@Temporal(TemporalType.TIMESTAMP)
+    //private Date diaPagamentos;
     @Column(name = "pes_tipo", nullable = false)
     @Enumerated(EnumType.STRING)
     private TipoPessoa tipo;
@@ -72,11 +70,19 @@ public class Pessoa implements Serializable, ClassePai {
     private Set<Telefone> listaTelefones = new HashSet<>();
     @Column(name = "pes_ativo")
     private Boolean ativo = true;
+    @OneToOne(mappedBy = "funcionario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ContratoTrabalho contrato;
+    @OneToMany(mappedBy = "funcionario", fetch = FetchType.LAZY)
+    private List<MovimentacaoMensalFuncionario> movimentacoes;
+    @OneToMany(mappedBy = "funcionario", fetch = FetchType.LAZY)
+    private List<FolhaPagamento> folhasPagamento;
 
     public Pessoa() {
         this.ativo = true;
         this.listaEnderecos = new HashSet<>();
-        this.listaTelefones = new HashSet<>();        this.tipoPessoa = "FISICA"; // Default to Pessoa Física
+        this.listaTelefones = new HashSet<>();
+        this.contrato = new ContratoTrabalho();
+        this.tipoPessoa = "FISICA"; // Default to Pessoa Física
     }
 
     public void prepararParaSalvar() {
@@ -213,38 +219,31 @@ public class Pessoa implements Serializable, ClassePai {
         this.cpfcnpj = cpfcnpj;
     }
 
-    public Double getSalario() {
-        return salario;
-    }
-
-    public void setSalario(Double salario) {
-        this.salario = salario;
-    }
-
-    public String getCargo() {
-        return cargo;
-    }
-
-    public void setCargo(String cargo) {
-        this.cargo = cargo;
-    }
-
-    public String getRegiao() {
-        return regiao;
-    }
-
+    //public Double getSalario() {
+    //return salario;
+    //}
+    //public void setSalario(Double salario) {
+    //this.salario = salario;
+    //}
+    //public String getCargo() {
+    //  return cargo;
+    //}
+    //public void setCargo(String cargo) {
+    //    this.cargo = cargo;
+    //}
+    // public String getRegiao() {
+    //    return regiao;
+    // }
     public void setRegiao(String regiao) {
         this.regiao = regiao;
     }
 
-    public Date getDiaPagamentos() {
-        return diaPagamentos;
-    }
-
-    public void setDiaPagamentos(Date diaPagamentos) {
-        this.diaPagamentos = diaPagamentos;
-    }
-
+    //public Date getDiaPagamentos() {
+    //   return diaPagamentos;
+    // }
+    // public void setDiaPagamentos(Date diaPagamentos) {
+    //    this.diaPagamentos = diaPagamentos;
+    // }
     public TipoPessoa getTipo() {
         return tipo;
     }
@@ -283,6 +282,30 @@ public class Pessoa implements Serializable, ClassePai {
 
     public void setEnderecoPrincipal(String enderecoPrincipal) {
         this.enderecoPrincipal = enderecoPrincipal;
+    }
+
+    public List<MovimentacaoMensalFuncionario> getMovimentacoes() {
+        return movimentacoes;
+    }
+
+    public void setMovimentacoes(List<MovimentacaoMensalFuncionario> movimentacoes) {
+        this.movimentacoes = movimentacoes;
+    }
+
+    public List<FolhaPagamento> getFolhasPagamento() {
+        return folhasPagamento;
+    }
+
+    public void setFolhasPagamento(List<FolhaPagamento> folhasPagamento) {
+        this.folhasPagamento = folhasPagamento;
+    }
+
+    public ContratoTrabalho getContrato() {
+        return contrato;
+    }
+
+    public void setContrato(ContratoTrabalho contrato) {
+        this.contrato = contrato;
     }
 
     @Override

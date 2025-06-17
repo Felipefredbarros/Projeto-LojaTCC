@@ -4,6 +4,7 @@
  */
 package Entidades;
 
+import Entidades.Enums.tipoTelefone;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.CascadeType;

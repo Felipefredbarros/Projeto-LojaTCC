@@ -4,6 +4,8 @@
  */
 package Entidades;
 
+import Entidades.Enums.PlanoPagamento;
+import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,6 +23,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -38,35 +41,39 @@ public class Venda implements Serializable, ClassePai {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ven_id")
     private Long id;
-    
+
     @Column(name = "ven_metodoPagamento", nullable = false)
     @Enumerated(EnumType.STRING)
     private MetodoPagamento metodoPagamento;
-    
+
     @Column(name = "ven_planoPagamento", nullable = false)
     @Enumerated(EnumType.STRING)
     private PlanoPagamento planoPagamento;
-    
+
     @Column(name = "ven_valorTotal")
     private Double valorTotal = 0d;
-    
+
     @Column(name = "ven_dataVenda", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataVenda;
-    
+
     @Column(name = "ven_dataVencimento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataVencimento;
-    
+
     @ManyToOne
     @JoinColumn(nullable = false, name = "funcionario_id")
     private Pessoa funcionario;
-    
+
     @ManyToOne
     @JoinColumn(nullable = false, name = "cliente_id")
     private Pessoa cliente;
-    
-    @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = false)
+
+    @OneToOne
+    @JoinColumn(name = "movimentacao_id")
+    private MovimentacaoMensalFuncionario movimentacao;
+
+    @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ItensVenda> itensVenda;
 
     public Venda() {
@@ -81,7 +88,6 @@ public class Venda implements Serializable, ClassePai {
         }
         return valorTotal;
     }
-
 
     @Override
     public Long getId() {
@@ -107,8 +113,6 @@ public class Venda implements Serializable, ClassePai {
     public void setPlanoPagamento(PlanoPagamento planoPagamento) {
         this.planoPagamento = planoPagamento;
     }
-
-    
 
     public Double getValorTotal() {
         return valorTotal;
@@ -157,6 +161,16 @@ public class Venda implements Serializable, ClassePai {
     public void setItensVenda(List<ItensVenda> itensVenda) {
         this.itensVenda = itensVenda;
     }
+
+    public MovimentacaoMensalFuncionario getMovimentacao() {
+        return movimentacao;
+    }
+
+    public void setMovimentacao(MovimentacaoMensalFuncionario movimentacao) {
+        this.movimentacao = movimentacao;
+    }
+
+    
 
     @Override
     public int hashCode() {
