@@ -36,6 +36,8 @@ public class ProdutoDerivacao implements Serializable, ClassePai {
     private String cor;
     @Column(name = "prodVar_quantidade")
     private Double quantidade;
+    @Column(name = "prodVar_reservado")
+    private Double reservado = 0.0;
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
@@ -81,6 +83,16 @@ public class ProdutoDerivacao implements Serializable, ClassePai {
     public void setQuantidade(Double quantidade) {
         this.quantidade = quantidade;
     }
+
+    public Double getReservado() {
+        return reservado;
+    }
+
+    public void setReservado(Double reservado) {
+        this.reservado = reservado;
+    }
+    
+    
 
     public Produto getProduto() {
         return produto;

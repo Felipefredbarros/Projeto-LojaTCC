@@ -139,7 +139,6 @@ public class VendaControle implements Serializable {
     }
 
     public void adicionarItem() {
-        // Verificando se os campos estão preenchidos
         if (itensVenda.getProdutoDerivacao() == null || itensVenda.getQuantidade() == null
                 || itensVenda.getValorUnitario() == null) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -152,11 +151,10 @@ public class VendaControle implements Serializable {
         Double estoque = itensVenda.getProdutoDerivacao().getQuantidade();
         ItensVenda itemTemp = null;
 
-        // Verificando se o produto já foi adicionado à venda
         for (ItensVenda it : venda.getItensVenda()) {
             if (it.getProdutoDerivacao().getId().equals(itensVenda.getProdutoDerivacao().getId())) {
                 itemTemp = it;
-                estoque -= it.getQuantidade();  // Subtrai a quantidade já vendida
+                estoque -= it.getQuantidade();
             }
         }
 
@@ -225,23 +223,6 @@ public class VendaControle implements Serializable {
             throw new IllegalStateException("Venda não foi persistida corretamente.");
         }
 
-        // SÓ AGORA CRIA A MOVIMENTAÇÃO
-        if (!edit) {
-            Double valorVenda = venda.getValorTotal();
-
-            MovimentacaoMensalFuncionario mov = new MovimentacaoMensalFuncionario();
-            mov.setFuncionario(venda.getFuncionario());
-            mov.setData(venda.getDataVenda());
-            mov.setTipoBonus(TipoBonus.COMISSAO);
-            
-            mov.setBonus(valorVenda);
-            mov.setVenda(venda); // importante
-
-            movimentacaoMensalFacade.salvar(mov); // salva movimentação
-            venda.setMovimentacao(mov); // conecta movimentação à venda
-            vendaFacade.salvarVenda(venda, false); // atualiza a venda com o ID da movimentação // Agora a venda já está salva
-        }
-
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Venda salva com sucesso!"));
         try {
@@ -251,6 +232,36 @@ public class VendaControle implements Serializable {
         }
         edit = false;
         venda = new Venda();
+    }
+
+    public void fecharVenda(Venda ven) {
+        try {
+            vendaFacade.fecharVenda(ven);
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Venda fechada com sucesso!", null));
+
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro ao fechar a venda!", null));
+        }
+    }
+
+    public void cancelarVenda(Venda venda) {
+        try {
+            vendaFacade.cancelarVenda(venda);
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Venda cancelada e estoque devolvido com sucesso!", null));
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro ao cancelar a venda!", null));
+            e.printStackTrace();
+        }
     }
 
     public void exportarPDF() throws DocumentException, IOException {
@@ -338,6 +349,9 @@ public class VendaControle implements Serializable {
     // Getters e Setters adicionais
     public List<Venda> getListaVendas() {
         return vendaFacade.listaTodos();
+    }
+    public List<Venda> getListaVendasReais() {
+        return vendaFacade.listaTodasReais();
     }
 
     public List<Produto> getListaProdutos() {

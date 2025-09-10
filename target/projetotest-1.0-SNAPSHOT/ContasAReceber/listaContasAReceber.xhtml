@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formListagemContasReceber">
+                <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
+
+                <h1> Contas a Receber</h1>
+
+                <p:dataTable id="tabelaContaReceber"  
+                             widgetVar="tabelaContaReceberWV"
+                             var="contaReceberItem" 
+                             value="#{contaReceberControle.listaContaRecebers}"
+                             emptyMessage="Nenhuma conta a receber gerada."
+                             rows="6" paginator="true"
+                             filterEvent="keyup"
+                             paginatorPosition="bottom"
+                             currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
+
+                    <p:column headerText="Descrição" sortBy="#{contaReceberItem.descricao}" filterBy="#{contaReceberItem.descricao}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.descricao}"/>
+                    </p:column>
+                    
+                    <p:column headerText="Data da Venda" sortBy="#{contaReceberItem.venda.dataVenda}" filterBy="#{contaReceberItem.venda.dataVenda}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.venda.dataVenda}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Cliente" sortBy="#{contaReceberItem.cliente.nome}" filterBy="#{contaReceberItem.cliente.nome}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.cliente.nome}"/>
+                    </p:column>
+
+                    <p:column headerText="Valor" sortBy="#{contaReceberItem.valor}" filterBy="#{contaReceberItem.valor}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.valor}">
+                            <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Vencimento" sortBy="#{contaReceberItem.dataVencimento}" filterBy="#{contaReceberItem.dataVencimento}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.dataVencimento}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Status" style="width:150px;text-align:center">
+                        <h:outputText value="#{contaReceberItem.status}"/>
+                    </p:column>
+
+                    <p:column headerText="Ações" style="width:220px;text-align:center">
+                        <p:commandButton value="Receber" 
+                                         icon="pi pi-check"
+                                         styleClass="btn-edit"
+                                         actionListener="#{contaReceberControle.receberConta(contaReceberItem)}"
+                                         update=":formListagemContasReceber:tabelaContaReceber :formListagemContasReceber:growlMessages"
+                                         rendered="#{contaReceberItem.status eq 'ABERTA'}"/>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+
+            <!-- Estilo -->
+            <style>
+                h1 {
+                    margin-bottom: 20px;
+                    font-size: 1.6rem;
+                    color: #343a40;
+                }
+
+                .btn-edit {
+                    background-color: #003366;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    font-size: 0.85rem;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    transition: background-color 0.2s ease;
+                    margin: 2px;
+                }
+
+                .btn-edit:hover {
+                    background-color: #0055aa;
+                }
+
+                .ui-datatable .ui-datatable-data > tr > td,
+                .ui-datatable .ui-datatable-thead > tr > th {
+                    padding: 8px 10px;
+                    font-size: 0.95rem;
+                    text-align: center;
+                }
+
+                .custom-paginator .ui-paginator {
+                    background-color: #f9f9f9;
+                    border: none;
+                    border-top: 1px solid #dee2e6;
+                    padding: 10px;
+                    font-size: 14px;
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

@@ -1,5 +1,6 @@
 Entidades\Pessoa.class
 Facade\MarcaFacade.class
+Controladores\ContaReceberControle.class
 Facade\AbstractFacade.class
 Entidades\Produto.class
 Entidades\Enums\TipoBatida.class
@@ -32,9 +33,12 @@ Entidades\MovimentacaoCaixa.class
 Entidades\Estado.class
 Facade\CategoriaFacade.class
 Entidades\Categoria.class
+Facade\VendaFacade$1.class
 Entidades\Enums\PlanoPagamento.class
 Entidades\Endereco.class
 Entidades\ParcelaCompra.class
+Facade\ContaReceberFacade.class
+Entidades\ContaReceber.class
 Entidades\ContratoTrabalho.class
 Entidades\Telefone.class
 Controladores\ProdutoControle.class

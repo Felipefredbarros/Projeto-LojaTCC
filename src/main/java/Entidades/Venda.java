@@ -60,6 +60,9 @@ public class Venda implements Serializable, ClassePai {
     @Column(name = "ven_dataVencimento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataVencimento;
+    
+    @Column(name = "ven_status")
+    private String status = "Aberta";
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "funcionario_id")
@@ -75,6 +78,9 @@ public class Venda implements Serializable, ClassePai {
 
     @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ItensVenda> itensVenda;
+    
+    @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ContaReceber> contasReceber = new ArrayList<>();
 
     public Venda() {
         itensVenda = new ArrayList<>();
@@ -169,6 +175,26 @@ public class Venda implements Serializable, ClassePai {
     public void setMovimentacao(MovimentacaoMensalFuncionario movimentacao) {
         this.movimentacao = movimentacao;
     }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public List<ContaReceber> getContasReceber() {
+        return contasReceber;
+    }
+
+    public void setContasReceber(List<ContaReceber> contasReceber) {
+        this.contasReceber = contasReceber;
+    }
+    
+    
+    
+    
 
     
 

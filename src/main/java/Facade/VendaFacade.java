@@ -5,15 +5,21 @@
  */
 package Facade;
 
+import Entidades.ContaReceber;
+import Entidades.Enums.TipoBonus;
 import Entidades.ItensVenda;
 import Entidades.MovimentacaoMensalFuncionario;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 /**
  *
@@ -25,6 +31,9 @@ public class VendaFacade extends AbstractFacade<Venda> {
     @EJB
     private MovimentacaoMensalFacade movimentacaoMensalFacade;
 
+    @EJB
+    private ContaReceberFacade contaReceberFacade;
+
     @PersistenceContext(unitName = "projetotestPU")
     private EntityManager em;
 
@@ -33,13 +42,11 @@ public class VendaFacade extends AbstractFacade<Venda> {
         return em;
     }
 
-    // Total de vendas cadastrados
     public Long totalVendasCadastradas() {
         String jpql = "SELECT COUNT(v) FROM Venda v";
         return em.createQuery(jpql, Long.class).getSingleResult();
     }
 
-    // Valor total somado de todas as vendas
     public Double valorVendaVendido() {
         String jpql = "SELECT SUM(v.valorTotal) FROM Venda v";
         Double result = em.createQuery(jpql, Double.class).getSingleResult();
@@ -65,23 +72,128 @@ public class VendaFacade extends AbstractFacade<Venda> {
         }
     }
 
+    public void fecharVenda(Venda venda) {
+        venda.setStatus("FECHADA");
+
+        List<ContaReceber> contas = new ArrayList<>();
+
+        switch (venda.getPlanoPagamento()) {
+            case PARCELADO_EM_1X:
+                ContaReceber conta1x = new ContaReceber();
+                conta1x.setVenda(venda);
+                conta1x.setCliente(venda.getCliente());
+                conta1x.setDescricao("Venda parcelada em 1x ID:" + venda.getId());
+                conta1x.setValor(venda.getValorTotal());
+                // vencimento no próximo mês
+                conta1x.setDataVencimento(addMonths(venda.getDataVenda(), 1));
+                conta1x.setStatus("ABERTA");
+                contas.add(conta1x);
+                break;
+
+            case PARCELADO_EM_2X:
+                for (int i = 0; i < 2; i++) {
+                    ContaReceber conta = new ContaReceber();
+                    conta.setVenda(venda);
+                    conta.setCliente(venda.getCliente());
+                    conta.setDescricao("Parcela " + (i + 1) + "/2 ID:" + venda.getId());
+                    conta.setValor(venda.getValorTotal() / 2);
+                    // cada parcela em meses subsequentes
+                    conta.setDataVencimento(addMonths(venda.getDataVenda(), i + 1));
+                    conta.setStatus("ABERTA");
+                    contas.add(conta);
+                }
+                break;
+
+            case PARCELADO_EM_3X:
+                for (int i = 0; i < 3; i++) {
+                    ContaReceber conta = new ContaReceber();
+                    conta.setVenda(venda);
+                    conta.setCliente(venda.getCliente());
+                    conta.setDescricao("Parcela " + (i + 1) + "/3 ID:" + venda.getId());
+                    conta.setValor(venda.getValorTotal() / 3);
+                    // cada parcela em meses subsequentes
+                    conta.setDataVencimento(addMonths(venda.getDataVenda(), i + 1));
+                    conta.setStatus("ABERTA");
+                    contas.add(conta);
+                }
+                break;
+        }
+
+        // Associa na venda
+        venda.setContasReceber(contas);
+
+        MovimentacaoMensalFuncionario mov = new MovimentacaoMensalFuncionario();
+        mov.setFuncionario(venda.getFuncionario());
+        mov.setData(venda.getDataVenda());
+        mov.setTipoBonus(TipoBonus.COMISSAO);
+        mov.setBonus(venda.getValorTotal());
+        mov.setVenda(venda);
+
+        movimentacaoMensalFacade.salvar(mov);
+        venda.setMovimentacao(mov);
+
+        // Salva venda com movimentação
+        em.merge(venda);
+    }
+
+    private Date addMonths(Date data, int meses) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(data);
+        cal.add(Calendar.MONTH, meses);
+        return cal.getTime();
+    }
+
+    public void cancelarVenda(Venda venda) {
+        venda = em.find(Venda.class, venda.getId());
+        venda.getItensVenda().size();
+        if (venda.getMovimentacao() != null) {
+            MovimentacaoMensalFuncionario mov = venda.getMovimentacao();
+            venda.setMovimentacao(null);
+            mov.setVenda(null);
+
+            em.merge(venda);
+            movimentacaoMensalFacade.remover(mov);
+        }
+
+        for (ItensVenda iv : venda.getItensVenda()) {
+            ProdutoDerivacao derivacao = iv.getProdutoDerivacao();
+            derivacao.setQuantidade(derivacao.getQuantidade() + iv.getQuantidade());
+            em.merge(derivacao);
+        }
+
+        venda.setStatus("CANCELADA");
+        
+        for (ContaReceber conta : venda.getContasReceber()) {
+            if ("RECEBIDA".equals(conta.getStatus())) {
+                // Já recebida → precisa estornar
+                //LancamentoFinanceiro estorno = new LancamentoFinanceiro();
+                //estorno.setData(new Date());
+                //estorno.setTipo("SAIDA");
+                //estorno.setValor(conta.getValor());
+                //estorno.setDescricao("Estorno de venda cancelada - ID Venda: " + venda.getId());
+
+                //lancamentoFinanceiroFacade.salvar(estorno);
+
+                // Atualiza saldo da empresa (diminuindo)
+                //contaBancariaFacade.atualizarSaldo(estorno.getValor() * -1);
+
+                conta.setStatus("ESTORNADA");
+
+            } else {
+                // Ainda não recebida → apenas cancela
+                conta.setStatus("CANCELADA");
+            }
+
+            contaReceberFacade.salvar(conta);
+        }
+        em.merge(venda);
+    }
+
     @Override
     public void remover(Venda entity) {
         entity = em.find(Venda.class, entity.getId());
-        entity.getItensVenda().size(); 
-        entity.getMovimentacao(); 
-
-        if (entity.getMovimentacao() != null) {
-            MovimentacaoMensalFuncionario mov = entity.getMovimentacao();
-
-            entity.setMovimentacao(null);
-            mov.setVenda(null);
-
-            em.merge(entity); 
-            em.merge(mov);    
-
-            em.remove(em.contains(mov) ? mov : em.merge(mov)); 
-        }
+        entity.getItensVenda().size();
+        entity.getMovimentacao();
 
         for (ItensVenda iv : entity.getItensVenda()) {
             ProdutoDerivacao derivacao = iv.getProdutoDerivacao();
@@ -100,6 +212,11 @@ public class VendaFacade extends AbstractFacade<Venda> {
 
     public List<Venda> listaTodosComItens() {
         return em.createQuery("SELECT DISTINCT v FROM Venda v LEFT JOIN FETCH v.itensVenda", Venda.class).getResultList();
+    }
+
+    public List<Venda> listaTodasReais() {
+        Query q = getEntityManager().createQuery("From Venda as v where v.status != 'CANCELADA' order by v.id desc ");
+        return q.getResultList();
     }
 
     public VendaFacade() {

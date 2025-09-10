@@ -21,12 +21,18 @@
                                          styleClass="ui-button-success"
                                          process="@this"
                                          style="margin-right: 10px"/>
+                        
+                        <p:commandButton value="Vendas Canceladas"
+                                         action="vendasCanceladas.xhtml"
+                                         styleClass="ui-button-success"
+                                         process="@this"
+                                         style="margin-right: 10px"/>
 
                     </p:toolbarGroup>
                 </p:toolbar>
 
                 <p:dataTable id="tabelaVendas"  widgetVar="tabelaVendasWV"
-                             var="vendaItem" value="#{vendaControle.listaVendas}"
+                             var="vendaItem" value="#{vendaControle.listaVendasReais}"
                              emptyMessage="Nenhuma venda cadastrada."
                              rows="6" paginator="true"
                              filterEvent="keyup"
@@ -55,7 +61,7 @@
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Ações" style="width:150px;text-align:center">
+                    <p:column headerText="Ações" style="width:200px;text-align:center">
                         <p:commandButton icon="pi pi-search" title="Visualizar"
                                          actionListener="#{vendaControle.prepararVisualizacao(vendaItem)}"
                                          process="@this"
@@ -68,16 +74,49 @@
                                          actionListener="#{vendaControle.editar(vendaItem)}"
                                          process="@this"
                                          styleClass="rounded-button ui-button-info"
-                                         style="margin-right: 5px;"/>
+                                         style="margin-right: 5px;"
+                                         rendered="#{vendaItem.status eq 'ABERTA'}"/>
 
                         <p:commandButton icon="pi pi-trash" title="Excluir"
                                          action="#{vendaControle.excluir(vendaItem)}"
                                          process="@this"
                                          update=":formListagemVendas:tabelaVendas :formListagemVendas:growlMessages"
-                                         styleClass="rounded-button ui-button-danger">
-                            <p:confirm header="Confirmação" message="Deseja realmente excluir esta venda? " icon="pi pi-exclamation-triangle"/>
+                                         styleClass="rounded-button ui-button-danger"
+                                         rendered="#{vendaItem.status eq 'Aberta'}">
+                            <p:confirm header="Confirmação" message="Deseja realmente excluir esta venda?" icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+
+                        <p:commandButton icon="pi pi-ban" title="Cancelar Venda"
+                                         actionListener="#{vendaControle.cancelarVenda(vendaItem)}"
+                                         process="@this"
+                                         update=":formListagemVendas:tabelaVendas :formListagemVendas:growlMessages"
+                                         styleClass="rounded-button ui-button-warning"
+                                         rendered="#{vendaItem.status eq 'FECHADA'}">
+                            <p:confirm header="Confirmação" message="Deseja realmente cancelar esta venda?" icon="pi pi-exclamation-triangle"/>
                         </p:commandButton>
                     </p:column>
+
+                    <p:column headerText="Status" style="width:150px;text-align:center">
+                        <h:outputText value="FECHADA"
+                                      rendered="#{vendaItem.status eq 'FECHADA'}"
+                                      style="font-weight: bold; color: green;" />
+
+                        <h:outputText value="CANCELADA"
+                                      rendered="#{vendaItem.status eq 'CANCELADA'}"
+                                      style="font-weight: bold; color: red;" />
+
+                        <p:commandButton value="Fechar" icon="pi pi-lock"
+                                         rendered="#{vendaItem.status eq 'Aberta'}"
+                                         actionListener="#{vendaControle.fecharVenda(vendaItem)}"
+                                         process="@this"
+                                         update=":formListagemVendas:tabelaVendas :formListagemVendas:growlMessages"
+                                         styleClass="rounded-button ui-button-success">
+                            <p:confirm header="Confirmação" 
+                                       message="Deseja realmente fechar esta venda?" 
+                                       icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+                    </p:column>
+
                 </p:dataTable>
 
                 <p:dialog id="dialogT" header="Detalhes da Venda" widgetVar="vendaDialog" modal="true" 
