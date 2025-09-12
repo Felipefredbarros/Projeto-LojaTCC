@@ -11,24 +11,25 @@
             <h:form id="formListagemContasReceber">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1> Contas a Receber</h1>
+                <h1>📑 Contas a Receber</h1>
 
                 <p:dataTable id="tabelaContaReceber"  
                              widgetVar="tabelaContaReceberWV"
                              var="contaReceberItem" 
                              value="#{contaReceberControle.listaContaRecebers}"
                              emptyMessage="Nenhuma conta a receber gerada."
-                             rows="6" paginator="true"
+                             rows="8" paginator="true"
                              filterEvent="keyup"
                              paginatorPosition="bottom"
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
-                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
+                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                             styleClass="tabela-contas">
 
                     <p:column headerText="Descrição" sortBy="#{contaReceberItem.descricao}" filterBy="#{contaReceberItem.descricao}" filterMatchMode="contains">
                         <h:outputText value="#{contaReceberItem.descricao}"/>
                     </p:column>
                     
-                    <p:column headerText="Data da Venda" sortBy="#{contaReceberItem.venda.dataVenda}" filterBy="#{contaReceberItem.venda.dataVenda}" filterMatchMode="contains">
+                    <p:column headerText="Data da Venda" sortBy="#{contaReceberItem.venda.dataVenda}">
                         <h:outputText value="#{contaReceberItem.venda.dataVenda}">
                             <f:convertDateTime pattern="dd/MM/yyyy"/>
                         </h:outputText>
@@ -38,27 +39,28 @@
                         <h:outputText value="#{contaReceberItem.cliente.nome}"/>
                     </p:column>
 
-                    <p:column headerText="Valor" sortBy="#{contaReceberItem.valor}" filterBy="#{contaReceberItem.valor}" filterMatchMode="contains">
+                    <p:column headerText="Valor" sortBy="#{contaReceberItem.valor}">
                         <h:outputText value="#{contaReceberItem.valor}">
                             <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Vencimento" sortBy="#{contaReceberItem.dataVencimento}" filterBy="#{contaReceberItem.dataVencimento}" filterMatchMode="contains">
+                    <p:column headerText="Vencimento" sortBy="#{contaReceberItem.dataVencimento}">
                         <h:outputText value="#{contaReceberItem.dataVencimento}">
                             <f:convertDateTime pattern="dd/MM/yyyy"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Status" style="width:150px;text-align:center">
-                        <h:outputText value="#{contaReceberItem.status}"/>
+                    <p:column headerText="Status" style="width:180px;text-align:center">
+                        <h:outputText value="#{contaReceberItem.status}"
+                                      styleClass="status-label #{contaReceberItem.status}"/>
                     </p:column>
 
-                    <p:column headerText="Ações" style="width:220px;text-align:center">
+                    <p:column headerText="Ações" style="width:200px;text-align:center">
                         <p:commandButton value="Receber" 
                                          icon="pi pi-check"
-                                         styleClass="btn-edit"
-                                         actionListener="#{contaReceberControle.receberConta(contaReceberItem)}"
+                                         styleClass="btn-receber"
+                                         actionListener="#{contaReceberControle.contaReceberItem(contaReceberItem)}"
                                          update=":formListagemContasReceber:tabelaContaReceber :formListagemContasReceber:growlMessages"
                                          rendered="#{contaReceberItem.status eq 'ABERTA'}"/>
                     </p:column>
@@ -69,39 +71,53 @@
             <style>
                 h1 {
                     margin-bottom: 20px;
-                    font-size: 1.6rem;
-                    color: #343a40;
+                    font-size: 1.8rem;
+                    color: #003366;
                 }
 
-                .btn-edit {
-                    background-color: #003366;
+                /* Botão */
+                .btn-receber {
+                    background-color: #28a745;
                     color: white;
                     border: none;
                     padding: 6px 12px;
                     font-size: 0.85rem;
                     cursor: pointer;
                     border-radius: 6px;
-                    transition: background-color 0.2s ease;
-                    margin: 2px;
+                    transition: 0.3s;
                 }
 
-                .btn-edit:hover {
-                    background-color: #0055aa;
+                .btn-receber:hover {
+                    background-color: #218838;
                 }
 
-                .ui-datatable .ui-datatable-data > tr > td,
-                .ui-datatable .ui-datatable-thead > tr > th {
-                    padding: 8px 10px;
+                /* Tabela */
+                .tabela-contas .ui-datatable-data > tr > td,
+                .tabela-contas .ui-datatable-thead > tr > th {
+                    padding: 10px;
                     font-size: 0.95rem;
                     text-align: center;
                 }
 
-                .custom-paginator .ui-paginator {
-                    background-color: #f9f9f9;
-                    border: none;
-                    border-top: 1px solid #dee2e6;
-                    padding: 10px;
-                    font-size: 14px;
+                /* Status com cores */
+                .status-label {
+                    font-weight: bold;
+                    padding: 4px 10px;
+                    border-radius: 12px;
+                    color: white;
+                    font-size: 0.85rem;
+                }
+
+                .ABERTA {
+                    background-color: #007bff;
+                }
+
+                .RECEBIDA {
+                    background-color: #28a745;
+                }
+
+                .CANCELADA, .ESTORNADA {
+                    background-color: #dc3545;
                 }
             </style>
         </ui:define>

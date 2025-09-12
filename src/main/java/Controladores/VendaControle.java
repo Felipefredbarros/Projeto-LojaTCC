@@ -132,7 +132,8 @@ public class VendaControle implements Serializable {
     public void atualizarMetodosPagamento() {
         if (venda.getPlanoPagamento() == PlanoPagamento.A_VISTA) {
             this.metodosPagamentoFiltrados = MetodoPagamento.getMetodosPagamentoAVista();
-        } else if (venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_2X
+        } else if (venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_1X
+                || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_2X
                 || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_3X) {
             this.metodosPagamentoFiltrados = MetodoPagamento.getMetodosPagamentoNaoAVista();
         }
@@ -350,6 +351,7 @@ public class VendaControle implements Serializable {
     public List<Venda> getListaVendas() {
         return vendaFacade.listaTodos();
     }
+
     public List<Venda> getListaVendasReais() {
         return vendaFacade.listaTodasReais();
     }

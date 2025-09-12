@@ -28,6 +28,10 @@ public class ContaReceberControle implements Serializable{
         contaReceberFacade.salvar(contaReceber);
         contaReceber = new ContaReceber();
     }
+    
+    public void contaReceberItem(ContaReceber contaSelecionada){
+        contaReceberFacade.receberConta(contaSelecionada);
+    }
 
     public void novo() {
         contaReceber = new ContaReceber();
