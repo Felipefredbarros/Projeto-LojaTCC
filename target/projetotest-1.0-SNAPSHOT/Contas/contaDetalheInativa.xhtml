@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <f:metadata>
+                <f:viewParam name="contaId" value="#{contaControle.paramContaId}" />
+                <f:viewAction action="#{contaControle.initDetalhe}" />
+            </f:metadata>
+            <h:form id="formContaDetalhe">
+                <p:growl id="growl" showDetail="true" life="4000"/>
+
+                <!-- Header / Toolbar -->
+                <p:toolbar styleClass="erp-toolbar">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Voltar" icon="pi pi-arrow-left" 
+                                         styleClass="ui-button-text-only"/>
+                        <span class="divider"></span>
+                        <span class="titulo">
+                            <i class="pi pi-wallet"></i>
+                            <h:outputText value="#{contaControle.contaSelecionada.nome}"/>
+                        </span>
+                        <p:tag styleClass="ml-2"
+                               value="#{contaControle.contaSelecionada.tipoConta}"
+                               severity="#{contaControle.contaSelecionada.tipoConta eq 'BANCO' ? 'info' : 'warning'}"/>
+                    </p:toolbarGroup>
+
+                    <p:toolbarGroup align="right">
+                        <p:splitButton value="Exportar" icon="pi pi-download" styleClass="ml-2">
+                            <p:menuitem value="CSV" icon="pi pi-file" ajax="false">
+                                <p:dataExporter type="csv" target="tabelaMov" fileName="movimentacoes"/>
+                            </p:menuitem>
+                            <p:menuitem value="Excel" icon="pi pi-file-excel" ajax="false">
+                                <p:dataExporter type="xlsx" target="tabelaMov" fileName="movimentacoes"/>
+                            </p:menuitem>
+                            <p:menuitem value="PDF" icon="pi pi-file-pdf" ajax="false">
+                                <p:dataExporter type="pdf" target="tabelaMov" fileName="movimentacoes"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+                <!-- KPI Cards -->
+
+                <p:outputPanel id="painelPrincipal">
+                    <div class="kpi-grid">
+                        <div class="kpi-card saldo">
+                            <div class="kpi-title">Saldo Atual</div>
+                            <div class="kpi-value">
+                                <h:outputText value="#{contaControle.contaSelecionada.saldo}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </div>
+                            <div class="kpi-footer">
+                                <i class="pi pi-shield"></i>
+                                <span>
+                                    <h:outputText value="#{contaControle.contaSelecionada.tipoConta eq 'BANCO' ? 'Conta bancária' : 'Cofre físico'}"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card entrada">
+                            <div class="kpi-title">Entradas (Mês)</div>
+                            <div class="kpi-value">
+                                <h:outputText value="#{contaControle.totalEntradasMes(contaControle.contaSelecionada)}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </div>
+                            <div class="kpi-footer"><i class="pi pi-arrow-down-left"></i><span>Mês corrente</span></div>
+                        </div>
+
+                        <div class="kpi-card saida">
+                            <div class="kpi-title">Saídas (Mês)</div>
+                            <div class="kpi-value">
+                                <h:outputText value="#{contaControle.totalSaidasMes(contaControle.contaSelecionada)}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </div>
+                            <div class="kpi-footer"><i class="pi pi-arrow-up-right"></i><span>Mês corrente</span></div>
+                        </div>
+
+                        <div class="kpi-card ult">
+                            <div class="kpi-title">Última Movimentação</div>
+                            <div class="kpi-value small">
+                                <h:panelGroup rendered="#{not empty contaControle.ultimaMovimentacao(contaControle.contaSelecionada)}">
+                                    <h:outputText value="#{contaControle.ultimaMovimentacao(contaControle.contaSelecionada).dataHora}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                                    </h:outputText>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{empty contaControle.ultimaMovimentacao(contaControle.contaSelecionada)}">
+                                    <span>—</span>
+                                </h:panelGroup>
+                            </div>
+                            <div class="kpi-footer"><i class="pi pi-clock"></i><span>Atualizado em tempo real</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Info Card -->
+                    <p:card styleClass="info-card">
+                        <f:facet name="title">
+                            <h:outputText value="Informações da Conta"/>
+                        </f:facet>
+
+                        <p:panelGrid columns="4" styleClass="grid-clean" columnClasses="label,value,label,value">
+                            <h:outputText value="Nome:"/>
+                            <h:outputText value="#{contaControle.contaSelecionada.nome}"/>
+
+                            <h:outputText value="Tipo:"/>
+                            <h:panelGroup>
+                                <p:tag value="#{contaControle.contaSelecionada.tipoConta}"
+                                       severity="#{contaControle.contaSelecionada.tipoConta eq 'BANCO' ? 'info' : 'warning'}"/>
+                            </h:panelGroup>
+
+                            <h:outputText value="Banco:" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+                            <h:outputText value="#{contaControle.contaSelecionada.banco}" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+
+                            <h:outputText value="Agência:" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+                            <h:outputText value="#{contaControle.contaSelecionada.agencia}" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+
+                            <h:outputText value="Conta:" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+                            <h:outputText value="#{contaControle.contaSelecionada.conta}" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+                        </p:panelGrid>
+                    </p:card>
+
+                    <!-- Movimentações Table -->
+                    <p:card styleClass="mt-3">
+                        <f:facet name="title">
+                            <h:outputText value="Movimentações"/>
+                        </f:facet>
+                        <p:outputPanel styleClass="table-actions" layout="block">
+                            <div class="left">
+                                <p:inputText id="globalFilterTxt" styleClass="gf" placeholder="Filtrar em tudo..."
+                                             onkeyup="PF('tabelaMovWV').filter()"/>
+                            </div>
+
+                            <div class="right">
+                                <p:selectOneMenu value="#{contaControle.filtroTipo}" styleClass="mr-2" placeholder="Tipo">
+                                    <f:selectItem itemLabel="Todos os Tipos" itemValue="#{null}"/>
+                                    <f:selectItem itemLabel="Entradas" itemValue="ENTRADA"/>
+                                    <f:selectItem itemLabel="Saídas" itemValue="SAIDA"/>
+                                    <p:ajax listener="#{contaControle.carregarMovimentacoes}" update="tabelaMov"/>
+                                </p:selectOneMenu>
+
+                            </div>
+                        </p:outputPanel>
+
+                        <p:dataTable id="tabelaMov" widgetVar="tabelaMovWV"
+                                     value="#{contaControle.movimentacoesDaConta}"
+                                     var="mov"
+                                     emptyMessage="Nenhuma movimentação registrada"
+                                     paginator="true" rows="10"
+                                     rowStyleClass="#{mov.tipo eq 'ENTRADA' ? 'row-in' : 'row-out'}"
+                                     styleClass="tabela-conta">
+
+                            <p:column headerText="Data" styleClass="col-sm">
+                                <h:outputText value="#{mov.dataHora}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Descrição" sortBy="#{mov.descricao}" filterBy="#{mov.descricao}" styleClass="col-lg">
+                                <h:outputText value="#{mov.descricao}"/>
+                            </p:column>
+
+                            <p:column headerText="Tipo" styleClass="col-xs center">
+                                <p:tag value="#{mov.tipo}" severity="#{mov.tipo eq 'ENTRADA' ? 'success' : 'danger'}"/>
+                            </p:column>
+
+                            <p:column headerText="Valor" sortBy="#{mov.valor}" filterBy="#{mov.valor}" styleClass="col-md right">
+                                <h:outputText value="#{mov.valor}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <f:facet name="footer">
+                                <div class="table-footer">
+                                    <span>
+                                        Entradas:
+                                        <strong>
+                                            <h:outputText value="#{contaControle.somarEntradas(contaControle.contaSelecionada)}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </strong>
+                                    </span>
+                                    <span>
+                                        Saídas:
+                                        <strong>
+                                            <h:outputText value="#{contaControle.somarSaidas(contaControle.contaSelecionada)}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </strong>
+                                    </span>
+                                    <span class="sep">|</span>
+                                    <span>
+                                        Saldo:
+                                        <strong class="saldo-foot #{contaControle.contaSelecionada.saldo lt 0 ? 'neg' : 'pos'}">
+                                            <h:outputText value="#{contaControle.contaSelecionada.saldo}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </strong>
+                                    </span>
+                                </div>
+                            </f:facet>
+                        </p:dataTable>
+
+                    </p:card>
+                </p:outputPanel>
+
+            </h:form>
+
+           
+            <!-- Styles -->
+            <style>
+                /* Toolbar */
+                .erp-toolbar {
+                    margin-bottom: 16px;
+                    border-radius: 12px;
+                }
+                .erp-toolbar .titulo {
+                    font-weight: 700;
+                    font-size: 1.15rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: .5rem;
+                }
+                .erp-toolbar .divider {
+                    width: 1px;
+                    height: 22px;
+                    background: var(--surface-border);
+                    margin: 0 .75rem;
+                    display: inline-block;
+                }
+                .ml-2 {
+                    margin-left: .5rem;
+                }
+                .mr-2 {
+                    margin-right: .5rem;
+                }
+
+                /* KPI Grid */
+                .kpi-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 16px;
+                    margin-bottom: 18px;
+                }
+                @media (max-width: 1100px) {
+                    .kpi-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                @media (max-width: 600px)  {
+                    .kpi-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .kpi-card {
+                    position: relative;
+                    padding: 18px;
+                    border-radius: 14px;
+                    background: linear-gradient(180deg, var(--surface-card), var(--surface-ground));
+                    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+                }
+                .kpi-card .kpi-title {
+                    font-size: .95rem;
+                    color: var(--text-color-secondary);
+                    margin-bottom: 8px;
+                }
+                .kpi-card .kpi-value {
+                    font-size: 1.8rem;
+                    font-weight: 800;
+                    letter-spacing: .3px;
+                }
+                .kpi-card .kpi-value.small {
+                    font-size: 1.15rem;
+                    font-weight: 700;
+                }
+                .kpi-card .kpi-footer {
+                    margin-top: 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: .5rem;
+                    color: var(--text-color-secondary);
+                    font-size: .85rem;
+                }
+
+                .kpi-card.saldo {
+                    background: linear-gradient(135deg, #0f7bff, #003b95);
+                    color: #fff;
+                }
+                .kpi-card.entrada {
+                    background: linear-gradient(135deg, #27ae60, #0d7a41);
+                    color: #fff;
+                }
+                .kpi-card.saida {
+                    background: linear-gradient(135deg, #e74c3c, #9c2b21);
+                    color: #fff;
+                }
+                .kpi-card.ult {
+                    background: linear-gradient(135deg, #8e44ad, #4b2b63);
+                    color: #fff;
+                }
+
+                /* Info card */
+                .info-card {
+                    border-radius: 14px;
+                }
+                .grid-clean .label {
+                    color: var(--text-color-secondary);
+                    width: 140px;
+                }
+
+                /* Table actions */
+                .table-actions {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                }
+                .table-actions .right {
+                    display: flex;
+                    align-items: center;
+                    gap: .5rem;
+                }
+
+                /* Movimentações table */
+                .tabela-conta .col-xs {
+                    width: 110px;
+                }
+                .tabela-conta .col-sm {
+                    width: 160px;
+                }
+                .tabela-conta .col-md {
+                    width: 180px;
+                }
+                .tabela-conta .col-lg {
+                    width: auto;
+                }
+                .tabela-conta .center {
+                    text-align: center;
+                }
+                .tabela-conta .right {
+                    text-align: right;
+                }
+                .row-in {
+                    background: rgba(39, 174, 96, .06);
+                }
+                .row-out {
+                    background: rgba(231, 76, 60, .06);
+                }
+
+                .table-footer {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 1rem;
+                    padding: .5rem;
+                }
+                .table-footer .sep {
+                    opacity: .6;
+                }
+                .saldo-foot.pos {
+                    color: #1abc9c;
+                }
+                .saldo-foot.neg {
+                    color: #e74c3c;
+                }
+
+                /* Dialogs */
+                .dlg-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: .5rem;
+                }
+
+                /* Utility */
+                .mt-3 {
+                    margin-top: 18px;
+                }
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

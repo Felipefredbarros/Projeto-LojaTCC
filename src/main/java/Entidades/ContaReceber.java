@@ -4,11 +4,14 @@
  */
 package Entidades;
 
+import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -48,6 +51,10 @@ public class ContaReceber implements Serializable, ClassePai {
 
     @Column(name = "contaReceber_valor")
     private Double valor;
+    
+    @Column(name = "contaReceber_metodo")
+    @Enumerated(EnumType.STRING)
+    private MetodoPagamento metodoPagamento;
 
     @Column(name = "contaReceber_dataVencimento")
     @Temporal(TemporalType.TIMESTAMP)
@@ -121,6 +128,16 @@ public class ContaReceber implements Serializable, ClassePai {
     public void setDataRecebimento(Date dataRecebimento) {
         this.dataRecebimento = dataRecebimento;
     }
+
+    public MetodoPagamento getMetodoPagamento() {
+        return metodoPagamento;
+    }
+
+    public void setMetodoPagamento(MetodoPagamento metodoPagamento) {
+        this.metodoPagamento = metodoPagamento;
+    }
+    
+    
 
     @Override
     public int hashCode() {

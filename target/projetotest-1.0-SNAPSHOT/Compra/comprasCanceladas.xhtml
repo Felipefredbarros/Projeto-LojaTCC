@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formListagemCompras">
+                <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
+
+                <h1>Listagem de Compras Canceladas</h1>
+
+                <p:toolbar styleClass="mb-3">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Lista de Compras"
+                                         action="listaCompra.xhtml"
+                                         styleClass="ui-button-success"
+                                         process="@this"
+                                         style="margin-right: 10px"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+                <p:dataTable id="tabelaCompras"  widgetVar="tabelaComprasWV"
+                             var="compraItem" value="#{compraControle.listaComprasCanceladas}"
+                             emptyMessage="Nenhuma compra cadastrada."
+                             rows="6" paginator="true"
+                             filterEvent="keyup"
+                             paginatorPosition="bottom"
+                             currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
+
+
+                    <p:column headerText="Data da Compra" sortBy="#{compraItem.dataCompra}" filterBy="#{compraItem.dataCompra}" filterMatchMode="contains">
+                        <h:outputText value="#{compraItem.dataCompra}" >
+                            <f:convertDateTime pattern="dd/MM/yy"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Cliente" sortBy="#{compraItem.fornecedor.nome}" filterBy="#{compraItem.fornecedor.nome}" filterMatchMode="contains">
+                        <h:outputText value="#{compraItem.fornecedor.nome}"/>
+                    </p:column>
+
+                    <p:column headerText="Valor Total" sortBy="#{compraItem.valorTotal}" filterBy="#{compraItem.valorTotal}" filterMatchMode="contains">
+                        <h:outputText value="#{compraItem.valorTotal}">
+                            <f:convertNumber type="currency"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Ações" style="width:200px;text-align:center">
+                        <p:commandButton icon="pi pi-search" title="Visualizar"
+                                         actionListener="#{compraControle.prepararVisualizacao(compraItem)}"
+                                         process="@this"
+                                         update=":formListagemCompras:compraDetailPanel"
+                                         oncomplete="PF('compraDialog').show()"
+                                         styleClass="rounded-button ui-button-info"
+                                         style="margin-right: 5px;"/>
+                    </p:column>
+
+                    <p:column headerText="Status" style="width:150px;text-align:center">
+                        <h:outputText value="CANCELADA"
+                                      rendered="#{compraItem.status eq 'CANCELADA'}"
+                                      style="font-weight: bold; color: red;" />
+                    </p:column>
+
+                </p:dataTable>
+
+                <p:dialog id="dialogT" header="Detalhes da Compra" widgetVar="compraDialog" modal="true" 
+                          resizable="false" width="800" height="800" closeOnEscape="true"
+                          dynamic="true" responsive="true" styleClass="meu-dialogo">
+
+                    <p:outputPanel id="compraDetailPanel">
+                        <!-- Bloco com informações principais -->
+                        <h3 class="section-title"><strong>Informações Gerais</strong></h3>
+
+                        <div class="info-box-grid" rendered="#{not empty compraControle.compraSelecionado}">
+
+                            <div class="info-box">
+                                <span class="label"><strong>Data da Compra:</strong></span>
+                                <span class="value">
+                                    <h:outputText value="#{compraControle.compraSelecionado.dataCompra}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                    </h:outputText>
+                                </span>
+                            </div>
+                            <div class="info-box">
+                                <span class="label"><strong>Valor Total:</strong></span>
+                                <span class="value">
+                                    <h:outputText value="#{compraControle.compraSelecionado.valorTotal}">
+                                        <f:convertNumber type="currency"/>
+                                    </h:outputText>
+                                </span>
+                            </div>
+
+                            <div class="info-box">
+                                <span class="label"><strong>Cliente:</strong></span>
+                                <span class="value">#{compraControle.compraSelecionado.fornecedor.nome}</span>
+                            </div>
+                            <div class="info-box">
+                                <span class="label"><strong>Plano de Pagamento:</strong></span>
+                                <span class="value">#{compraControle.compraSelecionado.planoPagamento.descricao}</span>
+                            </div>
+                        </div>
+                        <!-- Itens -->
+                        <h3 class="section-title"><strong>Itens</strong></h3>
+                        <p:dataTable value="#{compraControle.compraSelecionado.itensCompra}" var="item" scrollable="true" scrollHeight="300"
+                                     styleClass="tabela-dialogo" style="width:100%; margin-bottom: 30px;">    
+                            <p:column headerText="Descrição"><h:outputText value="#{item.produtoDerivacao.descricao}"/></p:column>
+                            <p:column headerText="Tamanho"><h:outputText value="#{item.produtoDerivacao.tamanho}"/></p:column>
+                            <p:column headerText="Cor"><h:outputText value="#{item.produtoDerivacao.cor}"/></p:column>
+                            <p:column headerText="Quantidade"><h:outputText value="#{item.quantidade}"/></p:column>
+                            <p:column headerText="valorUnitario"><h:outputText value="#{item.valorUnitario}"/></p:column>
+                            <p:column headerText="subTotal"><h:outputText value="#{item.subTotal}"/></p:column>
+                        </p:dataTable>
+
+                    </p:outputPanel>
+
+                    <p:commandButton value="Fechar" onclick="PF('compraDialog').hide()" styleClass="btn-edit"
+                                     style="margin-top:30px; float:right"/>
+                </p:dialog>
+
+
+
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                    <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+                </p:confirmDialog>
+            </h:form>
+            <style>
+                .info-box-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                    gap: 16px;
+                    margin-bottom: 30px;
+                }
+
+                .ui-dialog.meu-dialogo .ui-dialog-titlebar {
+                    background-color: #003366;   /* cor de fundo */
+                    color: #ffffff;              /* cor do texto */
+                    font-weight: bold;           /* negrito */
+                    font-size: 18px;             /* tamanho da fonte */
+                    border-radius: 8px 8px 0 0;  /* cantos arredondados no topo */
+                    padding: 12px;
+                }
+
+                .info-box {
+                    background-color: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 10px;
+                    padding: 15px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+
+                .info-box .label {
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                    color: #495057;
+                }
+
+                .info-box .value {
+                    font-size: 0.95rem;
+                    color: #212529;
+                }
+
+                .section-title {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    color: #343a40;
+                    margin: 30px 0 15px;
+                    border-bottom: 1px solid #dee2e6;
+                    padding-bottom: 5px;
+                }
+
+                /* Botão de fechar estilizado */
+                .btn-edit {
+                    background-color: #6c757d;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    border-radius: 8px;
+                    transition: background-color 0.2s ease;
+                }
+
+                .btn-edit:hover {
+                    background-color: #5a6268;
+                }
+                .custom-paginator .ui-paginator {
+                    background-color: #f9f9f9;
+                    border: none;
+                    border-top: 1px solid #dee2e6;
+                    padding: 10px;
+                    font-size: 14px;
+                }
+
+                .ui-datatable .ui-datatable-data > tr > td,
+                .ui-datatable .ui-datatable-thead > tr > th {
+                    padding: 8px 10px;   /* Reduz o espaçamento interno */
+                    font-size: 1rem; /* Fonte um pouco menor */
+                    line-height: 0.5;   /* Altura de linha menor */
+                }
+
+
+                @media screen and (max-width: 768px) {
+                    .ui-dialog {
+                        width: 95% !important;
+                        left: 2.5% !important;
+                    }
+
+                    .ui-panelgrid {
+                        display: block !important;
+                    }
+
+                    .ui-panelgrid td {
+                        display: block !important;
+                        width: 100% !important;
+                    }
+                }
+
+            </style>
+
+
+        </ui:define>
+    </ui:composition>
+</html>

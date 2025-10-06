@@ -27,12 +27,6 @@
                                     var="cli"
                                     itemLabel="#{cli.nome}" itemValue="#{cli}" />
 
-                    <p:outputLabel value="Método de Pagamento:" />
-                    <p:selectOneMenu id="metodoPagamento" value="#{compraControle.compra.metodoPagamento}">
-                        <f:selectItems value="#{compraControle.metodosParcelados}" var="metodo"
-                                       itemLabel="#{metodo.descricao}" itemValue="#{metodo}" />
-                    </p:selectOneMenu>
-
                     <p:outputLabel value="Parcelas:" />
                     <p:inputNumber id="parcelas" value="#{compraControle.compra.parcelas}" 
                                    minValue="1" maxValue="12"/>

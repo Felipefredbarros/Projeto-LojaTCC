@@ -160,6 +160,15 @@
                                     </h:outputText>
                                 </span>
                             </div>
+                            
+                            <div class="info-box">
+                                <span class="label"><strong>Plano de Pagamento:</strong></span>
+                                <span class="value">#{vendaControle.vendaSelecionado.planoPagamento.descricao}</span>
+                            </div>
+                            <div class="info-box">
+                                <span class="label"><strong>Método de Pagamento:</strong></span>
+                                <span class="value">#{vendaControle.vendaSelecionado.metodoPagamento.descricao}</span>
+                            </div>
 
                             <div class="info-box">
                                 <span class="label"><strong>Cliente:</strong></span>
@@ -168,14 +177,6 @@
                             <div class="info-box">
                                 <span class="label"><strong>Funcionario:</strong></span>
                                 <span class="value">#{vendaControle.vendaSelecionado.funcionario.nome}</span>
-                            </div>
-                            <div class="info-box">
-                                <span class="label"><strong>Plano de Pagamento:</strong></span>
-                                <span class="value">#{vendaControle.vendaSelecionado.planoPagamento.descricao}</span>
-                            </div>
-                            <div class="info-box">
-                                <span class="label"><strong>Método de Pagamento:</strong></span>
-                                <span class="value">#{vendaControle.vendaSelecionado.metodoPagamento.descricao}</span>
                             </div>
                         </div>
                         <!-- Itens -->

@@ -6,9 +6,11 @@ package Facade;
 
 import Entidades.ContaReceber;
 import java.util.Date;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 /**
  *
@@ -37,7 +39,6 @@ public class ContaReceberFacade extends AbstractFacade<ContaReceber> {
         if (!"ABERTA".equals(conta.getStatus())) {
             throw new IllegalStateException("A conta não está em aberto");
         }
-
         conta.setStatus("RECEBIDA");
         conta.setDataRecebimento(new Date());
         em.merge(conta);
@@ -55,6 +56,20 @@ public class ContaReceberFacade extends AbstractFacade<ContaReceber> {
         lancamentoFinanceiroFacade.salvar(lanc);
         contaBancariaFacade.atualizarSaldo(lanc.getValor());
          */
+    }
+
+    public List<ContaReceber> listaTodosReais() {
+        Query q = getEntityManager().createQuery(
+                "FROM ContaReceber v WHERE v.status NOT IN ('CANCELADA', 'ESTORNADA') ORDER BY v.id DESC"
+        );
+        return q.getResultList();
+    }
+
+    public List<ContaReceber> listaTodosCanceladas() {
+        return em.createQuery(
+                "FROM ContaReceber v WHERE v.status IN ('CANCELADA', 'ESTORNADA') ORDER BY v.id DESC",
+                ContaReceber.class
+        ).getResultList();
     }
 
 }

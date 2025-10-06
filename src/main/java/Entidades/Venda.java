@@ -42,7 +42,7 @@ public class Venda implements Serializable, ClassePai {
     @Column(name = "ven_id")
     private Long id;
 
-    @Column(name = "ven_metodoPagamento", nullable = false)
+    @Column(name = "ven_metodoPagamento", nullable = true)
     @Enumerated(EnumType.STRING)
     private MetodoPagamento metodoPagamento;
 

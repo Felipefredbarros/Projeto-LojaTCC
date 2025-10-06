@@ -12,11 +12,36 @@
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
                 <h1>📑 Contas a Receber</h1>
+                <p:commandButton value="Ver Canceladas"
+                                 icon="pi pi-times-circle"
+                                 styleClass="btn-canceladas"
+                                 action="contasCanceladas.xhtml?faces-redirect=true"/>
 
+                <p:tabView id="resumo" style="margin-bottom:1px">
+                    <p:tab title="Resumo">
+                        <h3>💰 Resumo de Contas</h3>
+                        <div class="resumo-container">
+                            <div class="resumo-card receber">
+                                <i class="pi pi-clock icone"></i>
+                                <span class="titulo">A Receber</span>
+                                <h:outputText value="#{contaReceberControle.totalAReceber}" styleClass="valor">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
+                                </h:outputText>
+                            </div>
+                            <div class="resumo-card recebido">
+                                <i class="pi pi-check-circle icone"></i>
+                                <span class="titulo">Recebido</span>
+                                <h:outputText value="#{contaReceberControle.totalRecebidas}" styleClass="valor">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
+                                </h:outputText>
+                            </div>
+                        </div>
+                    </p:tab>
+                </p:tabView>
                 <p:dataTable id="tabelaContaReceber"  
                              widgetVar="tabelaContaReceberWV"
                              var="contaReceberItem" 
-                             value="#{contaReceberControle.listaContaRecebers}"
+                             value="#{contaReceberControle.listaContaReceberReais}"
                              emptyMessage="Nenhuma conta a receber gerada."
                              rows="8" paginator="true"
                              filterEvent="keyup"
@@ -28,7 +53,7 @@
                     <p:column headerText="Descrição" sortBy="#{contaReceberItem.descricao}" filterBy="#{contaReceberItem.descricao}" filterMatchMode="contains">
                         <h:outputText value="#{contaReceberItem.descricao}"/>
                     </p:column>
-                    
+
                     <p:column headerText="Data da Venda" sortBy="#{contaReceberItem.venda.dataVenda}">
                         <h:outputText value="#{contaReceberItem.venda.dataVenda}">
                             <f:convertDateTime pattern="dd/MM/yyyy"/>
@@ -43,6 +68,10 @@
                         <h:outputText value="#{contaReceberItem.valor}">
                             <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
                         </h:outputText>
+                    </p:column>
+                    
+                    <p:column headerText="Metodo de Pagamento" sortBy="#{contaReceberItem.metodoPagamento}" filterBy="#{contaReceberItem.metodoPagamento}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.metodoPagamento}"/>
                     </p:column>
 
                     <p:column headerText="Vencimento" sortBy="#{contaReceberItem.dataVencimento}">
@@ -61,8 +90,14 @@
                                          icon="pi pi-check"
                                          styleClass="btn-receber"
                                          actionListener="#{contaReceberControle.contaReceberItem(contaReceberItem)}"
-                                         update=":formListagemContasReceber:tabelaContaReceber :formListagemContasReceber:growlMessages"
+                                         update=":formListagemContasReceber:resumo :formListagemContasReceber:tabelaContaReceber :formListagemContasReceber:growlMessages"
                                          rendered="#{contaReceberItem.status eq 'ABERTA'}"/>
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-check"
+                                         styleClass="btn-receber"
+                                         actionListener="#{contaReceberControle.contaReceberItem(contaReceberItem)}"
+                                         update=":formListagemContasReceber:resumo :formListagemContasReceber:tabelaContaReceber :formListagemContasReceber:growlMessages"
+                                         rendered="#{contaReceberItem.status eq 'PAGA'}"/>
                     </p:column>
                 </p:dataTable>
             </h:form>
@@ -119,6 +154,75 @@
                 .CANCELADA, .ESTORNADA {
                     background-color: #dc3545;
                 }
+                /* Container flex para os cards */
+                .resumo-container {
+                    display: flex;
+                    gap: 15px;
+                    margin: 15px 0;
+                }
+
+                /* Card base */
+                .resumo-card {
+                    flex: 1;
+                    padding: 10px;
+                    border-radius: 14px;
+                    color: white;
+                    text-align: center;
+                    box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+
+                /* Hover animado */
+                .resumo-card:hover {
+                    transform: translateY(-6px);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+                }
+
+                /* Ícones */
+                .resumo-card .icone {
+                    font-size: 2rem;
+                    margin-bottom: 10px;
+                    display: block;
+                }
+
+                /* Títulos */
+                .resumo-card .titulo {
+                    display: block;
+                    font-size: 1rem;
+                    margin-bottom: 6px;
+                    font-weight: bold;
+                    opacity: 0.9;
+                }
+
+                /* Valores */
+                .resumo-card .valor {
+                    font-size: 1.6rem;
+                    font-weight: bold;
+                }
+
+                /* Cores personalizadas */
+                .resumo-card.receber {
+                    background: linear-gradient(135deg, #007bff, #3399ff);
+                }
+
+                .resumo-card.recebido {
+                    background: linear-gradient(135deg, #28a745, #5cd65c);
+                }
+                
+                .btn-canceladas {
+                    background-color: #dc3545;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    font-size: 0.85rem;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    transition: 0.3s;
+                }
+                .btn-canceladas:hover {
+                    background-color: #b52a38;
+                }
+
             </style>
         </ui:define>
     </ui:composition>

@@ -4,10 +4,13 @@
  */
 package Controladores;
 
+import Entidades.ContaPagar;
 import Entidades.ContaReceber;
 import Facade.ContaReceberFacade;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -18,18 +21,40 @@ import javax.faces.bean.SessionScoped;
  */
 @ManagedBean
 @SessionScoped
-public class ContaReceberControle implements Serializable{
+public class ContaReceberControle implements Serializable {
 
     private ContaReceber contaReceber = new ContaReceber();
     @EJB
     private ContaReceberFacade contaReceberFacade;
 
+    private List<ContaReceber> listaContaRecebers;
+
+    private List<ContaReceber> listaContas = new ArrayList<>();
+
     public void salvar() {
         contaReceberFacade.salvar(contaReceber);
         contaReceber = new ContaReceber();
     }
-    
-    public void contaReceberItem(ContaReceber contaSelecionada){
+
+    public double getTotalRecebidas() {
+        listaContas = contaReceberFacade.listaTodos();
+
+        return listaContas.stream()
+                .filter(c -> "RECEBIDA".equals(c.getStatus()))
+                .mapToDouble(c -> c.getValor())
+                .sum();
+    }
+
+    public double getTotalAReceber() {
+        listaContas = contaReceberFacade.listaTodos();
+
+        return listaContas.stream()
+                .filter(c -> "ABERTA".equals(c.getStatus()))
+                .mapToDouble(c -> c.getValor())
+                .sum();
+    }
+
+    public void contaReceberItem(ContaReceber contaSelecionada) {
         contaReceberFacade.receberConta(contaSelecionada);
     }
 
@@ -60,8 +85,18 @@ public class ContaReceberControle implements Serializable{
     public void setContaReceberFacade(ContaReceberFacade contaReceberFacade) {
         this.contaReceberFacade = contaReceberFacade;
     }
-    
+
     public List<ContaReceber> getListaContaRecebers() {
         return contaReceberFacade.listaTodos();
     }
+    
+    public List<ContaReceber> getListaContaReceberReais() {
+        return contaReceberFacade.listaTodosReais();
+
+    }
+
+    public List<ContaReceber> getListaContaReceberCanceladas() {
+        return contaReceberFacade.listaTodosCanceladas();
+    }
+
 }

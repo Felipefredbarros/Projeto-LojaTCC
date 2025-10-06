@@ -15,8 +15,7 @@ public enum MetodoPagamento {
     DINHEIRO("Dinheiro"),
     CARTAO_CREDITO("Cartão de Crédito"),
     CARTAO_DEBITO("Cartão de Débito"),
-    PIX("PIX"),
-    BOLETO("BOLETO");
+    PIX("PIX");
 
     private final String descricao;
 
@@ -27,8 +26,8 @@ public enum MetodoPagamento {
     public String getDescricao() {
         return descricao;
     }
-    
-     public static List<MetodoPagamento> getMetodosPagamentoAVista() {
+
+    public static List<MetodoPagamento> getMetodosPagamentoAVista() {
         List<MetodoPagamento> metodosAVista = new ArrayList<>();
         metodosAVista.add(PIX);
         metodosAVista.add(CARTAO_DEBITO);
@@ -39,6 +38,9 @@ public enum MetodoPagamento {
     public static List<MetodoPagamento> getMetodosPagamentoNaoAVista() {
         List<MetodoPagamento> metodosNaoAVista = new ArrayList<>();
         metodosNaoAVista.add(CARTAO_CREDITO);
+        metodosNaoAVista.add(PIX);
+        metodosNaoAVista.add(CARTAO_DEBITO);
+        metodosNaoAVista.add(DINHEIRO);
         return metodosNaoAVista;
     }
 

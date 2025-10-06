@@ -21,12 +21,18 @@
                                          styleClass="ui-button-success"
                                          process="@this"
                                          style="margin-right: 10px"/>
+                        
+                        <p:commandButton value="Compras Canceladas"
+                                         action="comprasCanceladas.xhtml"
+                                         styleClass="ui-button-success"
+                                         process="@this"
+                                         style="margin-right: 10px"/>
 
                     </p:toolbarGroup>
                 </p:toolbar>
 
                 <p:dataTable id="tabelaCompras"  widgetVar="tabelaComprasWV"
-                             var="compraItem" value="#{compraControle.listaCompras}"
+                             var="compraItem" value="#{compraControle.listaComprasReais}"
                              emptyMessage="Nenhuma compra cadastrada."
                              rows="6" paginator="true"
                              filterEvent="keyup"
@@ -34,6 +40,11 @@
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
 
+                    <p:column headerText="ID: " sortBy="#{compraItem.id}" filterBy="#{compraItem.id}" filterMatchMode="contains">
+                        <h:outputText value="#{compraItem.id}">
+                            <f:convertNumber integerOnly="true" groupingUsed="true" />
+                        </h:outputText>
+                    </p:column>
 
                     <p:column headerText="Data da Compra" sortBy="#{compraItem.dataCompra}" filterBy="#{compraItem.dataCompra}" filterMatchMode="contains">
                         <h:outputText value="#{compraItem.dataCompra}" >
@@ -53,6 +64,8 @@
                     </p:column>
 
                     <p:column headerText="Ações" style="width:150px;text-align:center">
+
+                        <!-- Visualizar -->
                         <p:commandButton icon="pi pi-search" title="Visualizar"
                                          actionListener="#{compraControle.prepararVisualizacao(compraItem)}"
                                          process="@this"
@@ -61,20 +74,65 @@
                                          styleClass="rounded-button ui-button-info"
                                          style="margin-right: 5px;"/>
 
+                        <!-- Editar -->
                         <p:commandButton icon="pi pi-pencil" title="Editar"
                                          actionListener="#{compraControle.editar(compraItem)}"
                                          process="@this"
                                          styleClass="rounded-button ui-button-info"
+                                         rendered="#{compraItem.status eq 'ABERTA'}"
                                          style="margin-right: 5px;"/>
 
+                        <!-- Excluir -->
                         <p:commandButton icon="pi pi-trash" title="Excluir"
                                          action="#{compraControle.excluir(compraItem)}"
                                          process="@this"
                                          update=":formListagemCompras:tabelaCompras :formListagemCompras:growlMessages"
+                                         rendered="#{compraItem.status eq 'Aberta'}"
                                          styleClass="rounded-button ui-button-danger">
-                            <p:confirm header="Confirmação" message="Deseja realmente excluir esta compra? " icon="pi pi-exclamation-triangle"/>
+                            <p:confirm header="Confirmação" 
+                                       message="Deseja realmente excluir esta compra?" 
+                                       icon="pi pi-exclamation-triangle"/>
                         </p:commandButton>
+
+                        <!-- Cancelar Compra -->
+                        <p:commandButton icon="pi pi-ban" title="Cancelar Compra"
+                                         actionListener="#{compraControle.cancelarCompra(compraItem)}"
+                                         process="@this"
+                                         update=":formListagemCompras:tabelaCompras :formListagemCompras:growlMessages"
+                                         styleClass="rounded-button ui-button-warning"
+                                         rendered="#{compraItem.status eq 'FECHADA'}">
+                            <p:confirm header="Confirmação" 
+                                       message="Deseja realmente cancelar esta compra?" 
+                                       icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+
                     </p:column>
+
+                    <p:column headerText="Status" style="width:150px;text-align:center">
+
+                        <h:outputText value="FECHADA"
+                                      rendered="#{compraItem.status eq 'FECHADA'}"
+                                      style="font-weight: bold; color: green;" />
+
+                        <h:outputText value="CANCELADA"
+                                      rendered="#{compraItem.status eq 'CANCELADA'}"
+                                      style="font-weight: bold; color: red;" />
+
+                        <!-- Fechar Compra -->
+                        <p:commandButton value="Fechar" icon="pi pi-lock"
+                                         rendered="#{compraItem.status eq 'Aberta'}"
+                                         actionListener="#{compraControle.fecharCompra(compraItem)}"
+                                         process="@this"
+                                         update=":formListagemCompras:tabelaCompras :formListagemCompras:growlMessages"
+                                         styleClass="rounded-button ui-button-success">
+                            <p:confirm header="Confirmação" 
+                                       message="Deseja realmente fechar esta compra?" 
+                                       icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+
+                    </p:column>
+
+
                 </p:dataTable>
 
                 <p:dialog id="dialogT" header="Detalhes da Compra" widgetVar="compraDialog" modal="true" 
@@ -111,10 +169,6 @@
                             <div class="info-box">
                                 <span class="label"><strong>Plano de Pagamento:</strong></span>
                                 <span class="value">#{compraControle.compraSelecionado.planoPagamento.descricao}</span>
-                            </div>
-                            <div class="info-box">
-                                <span class="label"><strong>Método de Pagamento:</strong></span>
-                                <span class="value">#{compraControle.compraSelecionado.metodoPagamento.descricao}</span>
                             </div>
 
                         </div>

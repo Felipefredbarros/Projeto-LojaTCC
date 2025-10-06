@@ -36,11 +36,9 @@
                     <p:selectOneMenu id="plano" value="#{vendaControle.venda.planoPagamento}">
                         <f:selectItems value="#{vendaControle.planosPagamentos}" var="plano"
                                        itemLabel="#{plano.descricao}" itemValue="#{plano}" />
-                        <!-- AJAX para atualizar os métodos de pagamento com base no plano selecionado -->
                         <p:ajax event="change" listener="#{vendaControle.atualizarMetodosPagamento}" update="metodos" />
                     </p:selectOneMenu>
 
-                    <!-- Seção de Métodos de Pagamento -->
                     <p:outputLabel value="Metodo de Pagamento:" />
                     <p:selectOneMenu id="metodos" value="#{vendaControle.venda.metodoPagamento}">
                         <f:selectItems value="#{vendaControle.metodosPagamentoFiltrados}" var="metodo"

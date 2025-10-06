@@ -131,11 +131,27 @@ public class VendaControle implements Serializable {
 
     public void atualizarMetodosPagamento() {
         if (venda.getPlanoPagamento() == PlanoPagamento.A_VISTA) {
-            this.metodosPagamentoFiltrados = MetodoPagamento.getMetodosPagamentoAVista();
+            // PIX, Débito e Dinheiro
+            this.metodosPagamentoFiltrados = new ArrayList<>();
+            this.metodosPagamentoFiltrados.add(MetodoPagamento.PIX);
+            this.metodosPagamentoFiltrados.add(MetodoPagamento.CARTAO_DEBITO);
+            this.metodosPagamentoFiltrados.add(MetodoPagamento.DINHEIRO);
+
+        } else if (venda.getPlanoPagamento() == PlanoPagamento.A_PRAZO) {
+            // Apenas PIX e Dinheiro
+            this.metodosPagamentoFiltrados = new ArrayList<>();
+            this.metodosPagamentoFiltrados.add(MetodoPagamento.PIX);
+            this.metodosPagamentoFiltrados.add(MetodoPagamento.DINHEIRO);
+
         } else if (venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_1X
                 || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_2X
                 || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_3X) {
-            this.metodosPagamentoFiltrados = MetodoPagamento.getMetodosPagamentoNaoAVista();
+            // Apenas Crédito
+            this.metodosPagamentoFiltrados = new ArrayList<>();
+            this.metodosPagamentoFiltrados.add(MetodoPagamento.CARTAO_CREDITO);
+        } else {
+            // Se não se enquadrar, não deixa nenhum método
+            this.metodosPagamentoFiltrados = new ArrayList<>();
         }
     }
 
@@ -354,6 +370,10 @@ public class VendaControle implements Serializable {
 
     public List<Venda> getListaVendasReais() {
         return vendaFacade.listaTodasReais();
+    }
+
+    public List<Venda> getListaVendasCanceladas() {
+        return vendaFacade.listaVendasCanceladas();
     }
 
     public List<Produto> getListaProdutos() {

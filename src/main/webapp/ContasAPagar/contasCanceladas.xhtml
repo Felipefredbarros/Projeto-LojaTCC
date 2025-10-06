@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <h:form id="formListagemContasReceber">
+                <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
+
+                <h1>📑 Contas a Pagar Canceladas</h1>
+                <p:commandButton value="Contas a Pagar"
+                                 styleClass="btn-canceladas"
+                                 action="listaContasAPagar.xhtml?faces-redirect=true"/>
+                <p:dataTable id="tabelaContaPagar"  
+                             widgetVar="tabelaContaPagarWV"
+                             var="contaPagarItem" 
+                             value="#{contaPagarControle.listaContaPagarCanceladas}"
+                             emptyMessage="Nenhuma conta a receber gerada."
+                             rows="8" paginator="true"
+                             filterEvent="keyup"
+                             paginatorPosition="bottom"
+                             currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                             paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}"
+                             styleClass="tabela-contas">
+
+                    <p:column headerText="Descrição" sortBy="#{contaPagarItem.descricao}" filterBy="#{contaPagarItem.descricao}" filterMatchMode="contains">
+                        <h:outputText value="#{contaPagarItem.descricao}"/>
+                    </p:column>
+
+                    <p:column headerText="Data da Compra" sortBy="#{contaPagarItem.compra.dataCompra}">
+                        <h:outputText value="#{contaPagarItem.compra.dataCompra}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Fornecedor" sortBy="#{contaPagarItem.fornecedor.nome}" filterBy="#{contaPagarItem.fornecedor.nome}" filterMatchMode="contains">
+                        <h:outputText value="#{contaPagarItem.fornecedor.nome}"/>
+                    </p:column>
+
+                    <p:column headerText="Valor" sortBy="#{contaPagarItem.valor}">
+                        <h:outputText value="#{contaPagarItem.valor}">
+                            <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Vencimento" sortBy="#{contaPagarItem.dataVencimento}">
+                        <h:outputText value="#{contaPagarItem.dataVencimento}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Status" style="width:180px;text-align:center">
+                        <h:outputText value="#{contaPagarItem.status}"
+                                      styleClass="status-label #{contaPagarItem.status}"/>
+                    </p:column>
+
+                    <p:column headerText="Ações" style="width:200px;text-align:center">
+                        <p:commandButton value="Pagar"
+                                         icon="pi pi-check"
+                                         styleClass="btn-receber"
+                                         actionListener="#{contaPagarControle.prepararPagamento(contaPagarItem)}"
+                                         update=":formListagemContasReceber:pagamentoDialogoPanel"
+                                         oncomplete="PF('pagamentoDialog').show()"
+                                         rendered="#{contaPagarItem.status eq 'ABERTA'}"/>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+
+            <!-- Estilo -->
+            <style>
+                h1 {
+                    margin-bottom: 20px;
+                    font-size: 1.8rem;
+                    color: #003366;
+                }
+
+                /* Botão */
+                .btn-receber {
+                    background-color: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    font-size: 0.85rem;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    transition: 0.3s;
+                }
+
+                .btn-receber:hover {
+                    background-color: #218838;
+                }
+
+                /* Tabela */
+                .tabela-contas .ui-datatable-data > tr > td,
+                .tabela-contas .ui-datatable-thead > tr > th {
+                    padding: 10px;
+                    font-size: 0.95rem;
+                    text-align: center;
+                }
+
+                /* Status com cores */
+                .status-label {
+                    font-weight: bold;
+                    padding: 4px 10px;
+                    border-radius: 12px;
+                    color: white;
+                    font-size: 0.85rem;
+                }
+
+                .ABERTA {
+                    background-color: #007bff;
+                }
+
+                .PAGA {
+                    background-color: #28a745;
+                }
+
+                .CANCELADA, .ESTORNADA {
+                    background-color: #dc3545;
+                }
+                /* Container flex para os cards */
+                .resumo-container {
+                    display: flex;
+                    gap: 15px;
+                    margin: 15px 0;
+                }
+
+                /* Card base */
+                .resumo-card {
+                    flex: 1;
+                    padding: 10px;
+                    border-radius: 14px;
+                    color: white;
+                    text-align: center;
+                    box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+
+                /* Hover animado */
+                .resumo-card:hover {
+                    transform: translateY(-6px);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+                }
+
+                /* Ícones */
+                .resumo-card .icone {
+                    font-size: 2rem;
+                    margin-bottom: 10px;
+                    display: block;
+                }
+
+                /* Títulos */
+                .resumo-card .titulo {
+                    display: block;
+                    font-size: 1rem;
+                    margin-bottom: 6px;
+                    font-weight: bold;
+                    opacity: 0.9;
+                }
+
+                /* Valores */
+                .resumo-card .valor {
+                    font-size: 1.6rem;
+                    font-weight: bold;
+                }
+
+                /* Cores personalizadas */
+                .resumo-card.receber {
+                    background: linear-gradient(135deg, #007bff, #3399ff);
+                }
+
+                .resumo-card.recebido {
+                    background: linear-gradient(135deg, #28a745, #5cd65c);
+                }
+
+                .btn-canceladas {
+                    background-color: #dc3545;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    font-size: 0.85rem;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    transition: 0.3s;
+                }
+                .btn-canceladas:hover {
+                    background-color: #b52a38;
+                }
+
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

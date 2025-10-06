@@ -16,6 +16,7 @@ public enum PlanoPagamento {
     PARCELADO_EM_1X("Parcelado em 1x"),
     PARCELADO_EM_2X("Parcelado em 2x"),
     PARCELADO_EM_3X("Parcelado em 3x"),
+    A_PRAZO("A Prazo"),
     PARCELADO_COMPRA("Parcelado");
 
     private final String descricao;
@@ -34,6 +35,7 @@ public enum PlanoPagamento {
         planos.add(PARCELADO_EM_1X);
         planos.add(PARCELADO_EM_2X);
         planos.add(PARCELADO_EM_3X);
+        planos.add(A_PRAZO);
         return planos;
     }
 }

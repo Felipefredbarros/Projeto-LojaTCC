@@ -42,11 +42,11 @@ public class Compra implements Serializable, ClassePai {
     @Column(name = "com_id")
     private Long id;
 
-    @Column(name = "com_metodoPagamento", nullable = false)
+    @Column(name = "com_metodoPagamento", nullable = true)
     @Enumerated(EnumType.STRING)
     private MetodoPagamento metodoPagamento;
 
-    @Column(name = "com_planoPagamento", nullable = false)
+    @Column(name = "com_planoPagamento", nullable = true)
     @Enumerated(EnumType.STRING)
     private PlanoPagamento planoPagamento;
 
@@ -63,16 +63,23 @@ public class Compra implements Serializable, ClassePai {
 
     @Column(name = "com_parcelas", nullable = false)
     private Integer parcelas;
+    
+    @Column(name = "ven_status")
+    private String status = "Aberta";
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "fornecedor_id")
     private Pessoa fornecedor;
-
+    
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ItensCompra> itensCompra;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ParcelaCompra> parcelasCompra;
+    
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ContaPagar> contasPagar = new ArrayList<>();
+
 
     public List<ParcelaCompra> getParcelasCompra() {
         return parcelasCompra;
@@ -194,6 +201,24 @@ public class Compra implements Serializable, ClassePai {
     public void setParcelas(Integer parcelas) {
         this.parcelas = parcelas;
     }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public List<ContaPagar> getContasPagar() {
+        return contasPagar;
+    }
+
+    public void setContasPagar(List<ContaPagar> contasPagar) {
+        this.contasPagar = contasPagar;
+    }
+    
+    
 
     @Override
     public int hashCode() {

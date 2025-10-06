@@ -12,6 +12,7 @@ import Entidades.Enums.PlanoPagamento;
 import Entidades.Produto;
 import Entidades.Compra;
 import Entidades.ProdutoDerivacao;
+import Entidades.Venda;
 import Facade.PessoaFacade;
 import Facade.ProdutoFacade;
 import Facade.CompraFacade;
@@ -268,6 +269,8 @@ public class CompraControle implements Serializable {
                             "Erro", mensagemErro.toString()));
             return;
         }
+        
+        
 
         compra.calcularParcelas();
         compra.setPlanoPagamento(PlanoPagamento.PARCELADO_COMPRA);
@@ -283,11 +286,39 @@ public class CompraControle implements Serializable {
         edit = false;
         compra = new Compra();
     }
+    
+    public void fecharCompra(Compra com) {
+        try {
+            compraFacade.fecharCompra(com);
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Compra fechada com sucesso!", null));
+
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro ao fechar a Compra!", null));
+        }
+    }
+    public void cancelarCompra(Compra com) {
+        try {
+            compraFacade.cancelarCompra(com);
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Compra cancelada e estoque removido com sucesso!", null));
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro ao cancelar a compra!", null));
+            e.printStackTrace();
+        }
+    }
 
     public List<MetodoPagamento> getMetodosParcelados() {
         List<MetodoPagamento> metodosParcelados = new ArrayList<>();
         metodosParcelados.add(MetodoPagamento.CARTAO_CREDITO);
-        metodosParcelados.add(MetodoPagamento.BOLETO);
         return metodosParcelados;
     }
 
@@ -410,6 +441,14 @@ public class CompraControle implements Serializable {
 
     public List<Compra> getListaCompras() {
         return compraFacade.listaTodos();
+    }
+    
+    public List<Compra> getListaComprasReais() {
+        return compraFacade.listaTodasReais();
+    }
+    
+    public List<Compra> getListaComprasCanceladas(){
+        return compraFacade.listaComprasCanceladas();
     }
 
     public List<Produto> getListaProdutos() {
