@@ -6,6 +6,7 @@ import Entidades.Enums.MetodoPagamento;
 import Entidades.MovimentacaoMensalFuncionario;
 import Entidades.Pessoa;
 import Entidades.Enums.PlanoPagamento;
+import static Entidades.Enums.PlanoPagamento.FIADO;
 import Entidades.Produto;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
@@ -74,6 +75,8 @@ public class VendaControle implements Serializable {
     public VendaControle() {
         this.planosPagamentos = PlanoPagamento.getPlanosPagamento();
         this.metodosPagamentoFiltrados = MetodoPagamento.getMetodosPagamentoAVista();
+        atualizarMetodosPagamento();
+
     }
 
     // Métodos de filtro
@@ -137,12 +140,11 @@ public class VendaControle implements Serializable {
             this.metodosPagamentoFiltrados.add(MetodoPagamento.CARTAO_DEBITO);
             this.metodosPagamentoFiltrados.add(MetodoPagamento.DINHEIRO);
 
-        } else if (venda.getPlanoPagamento() == PlanoPagamento.A_PRAZO) {
+        } else if (venda.getPlanoPagamento() == PlanoPagamento.FIADO) {
             // Apenas PIX e Dinheiro
             this.metodosPagamentoFiltrados = new ArrayList<>();
-            this.metodosPagamentoFiltrados.add(MetodoPagamento.PIX);
-            this.metodosPagamentoFiltrados.add(MetodoPagamento.DINHEIRO);
-
+            this.metodosPagamentoFiltrados.add(MetodoPagamento.A_DENIFIR);
+            
         } else if (venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_1X
                 || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_2X
                 || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_3X) {
@@ -247,6 +249,7 @@ public class VendaControle implements Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        atualizarMetodosPagamento();
         edit = false;
         venda = new Venda();
     }

@@ -8,6 +8,7 @@ import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -17,6 +18,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -27,7 +29,8 @@ import javax.persistence.TemporalType;
  */
 @Entity
 @Table(name = "contaPagar")
-public class ContaPagar implements Serializable, ClassePai{
+public class ContaPagar implements Serializable, ClassePai {
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,13 +47,13 @@ public class ContaPagar implements Serializable, ClassePai{
 
     @Column(name = "contaPagar_descricao")
     private String descricao;
-    
+
     @Column(name = "contaPagar_status")
     private String status;
 
     @Column(name = "contaPagar_valor")
     private Double valor;
-    
+
     @Column(name = "contaPagar_metodo")
     @Enumerated(EnumType.STRING)
     private MetodoPagamento metodoPagamento;
@@ -62,8 +65,14 @@ public class ContaPagar implements Serializable, ClassePai{
     @Column(name = "contaPagar_dataRecebimento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataRecebimento;
-    
-    
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "conta_id")
+    private Conta contaPagamento;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, optional = true)
+    @JoinColumn(name = "lancamento_id", unique = true)
+    private LancamentoFinanceiro lancamento;
 
     @Override
     public Long getId() {
@@ -133,8 +142,22 @@ public class ContaPagar implements Serializable, ClassePai{
     public void setMetodoPagamento(MetodoPagamento metodoPagamento) {
         this.metodoPagamento = metodoPagamento;
     }
-    
-    
+
+    public Conta getContaPagamento() {
+        return contaPagamento;
+    }
+
+    public void setContaPagamento(Conta contaPagamento) {
+        this.contaPagamento = contaPagamento;
+    }
+
+    public LancamentoFinanceiro getLancamento() {
+        return lancamento;
+    }
+
+    public void setLancamento(LancamentoFinanceiro lancamento) {
+        this.lancamento = lancamento;
+    }
 
     @Override
     public int hashCode() {
@@ -157,7 +180,10 @@ public class ContaPagar implements Serializable, ClassePai{
         final ContaPagar other = (ContaPagar) obj;
         return Objects.equals(this.id, other.id);
     }
-    
-    
+
+    @Override
+    public String toString() {
+        return "ContaPagar{" + "id=" + id + '}';
+    }
 
 }

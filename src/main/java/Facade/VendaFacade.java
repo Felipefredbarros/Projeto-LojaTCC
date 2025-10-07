@@ -80,10 +80,8 @@ public class VendaFacade extends AbstractFacade<Venda> {
 
         List<ContaReceber> contas = new ArrayList<>();
 
-        // Decisão pelo PLANO (não pelo método)
         switch (venda.getPlanoPagamento()) {
             case A_VISTA:
-                // À vista => RECEBIDA no dia
                 ContaReceber contaAvista = new ContaReceber();
                 contaAvista.setVenda(venda);
                 contaAvista.setCliente(venda.getCliente());
@@ -96,8 +94,7 @@ public class VendaFacade extends AbstractFacade<Venda> {
                 contas.add(contaAvista);
                 break;
 
-            case A_PRAZO:
-                // A prazo (PIX/Dinheiro) => ABERTA (a receber)
+            case FIADO:
                 ContaReceber contaPrazo = new ContaReceber();
                 contaPrazo.setVenda(venda);
                 contaPrazo.setCliente(venda.getCliente());
@@ -110,7 +107,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
                 break;
 
             case PARCELADO_EM_1X:
-                // 1x futura => ABERTA
                 ContaReceber conta1x = new ContaReceber();
                 conta1x.setVenda(venda);
                 conta1x.setCliente(venda.getCliente());

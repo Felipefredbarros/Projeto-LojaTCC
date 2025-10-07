@@ -39,31 +39,13 @@ public class LancamentoFinanceiroFacade extends AbstractFacade<LancamentoFinance
                 .getResultList();
     }
 
-    public List<LancamentoFinanceiro> buscarPorContaETipoEPeriodo(Conta conta, String tipo, Date ini, Date fim) {
-
-        System.out.println(">>> [FACADE] Buscando no banco com os seguintes parâmetros:");
-        System.out.println(">>> [FACADE] Data Início (para query): " + (ini != null ? ini.toString() : "null"));
-        System.out.println(">>> [FACADE] Data Fim (para query): " + (fim != null ? fim.toString() : "null"));
-        System.out.println("=======================================================\n");
-
-        String jpql = "SELECT l FROM LancamentoFinanceiro l WHERE l.conta = :conta"
-                + (tipo != null ? " AND l.tipo = :tipo" : "")
-                + (ini != null ? " AND l.dataHora >= :ini" : "")
-                + (fim != null ? " AND l.dataHora <= :fim" : "")
-                + " ORDER BY l.dataHora DESC";
-
-        TypedQuery<LancamentoFinanceiro> q = em.createQuery(jpql, LancamentoFinanceiro.class);
-        q.setParameter("conta", conta);
-        if (tipo != null) {
-            q.setParameter("tipo", TipoLancamento.valueOf(tipo));
-        }
-        if (ini != null) {
-            q.setParameter("ini", ini);
-        }
-        if (fim != null) {
-            q.setParameter("fim", fim);
-        }
-        return q.getResultList();
+    public List<LancamentoFinanceiro> buscarPorConta(Conta conta) {
+        String jpql = "SELECT l FROM LancamentoFinanceiro l "
+                + "WHERE l.conta = :conta "
+                + "ORDER BY l.dataHora DESC";
+        return em.createQuery(jpql, LancamentoFinanceiro.class)
+                .setParameter("conta", conta)
+                .getResultList();
     }
 
     public Double somarPorContaETipoEPeriodo(Conta conta, TipoLancamento tipo, Date ini, Date fim) {

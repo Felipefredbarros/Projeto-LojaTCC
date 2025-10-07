@@ -6,19 +6,25 @@
 package Facade;
 
 import Entidades.Compra;
+import Entidades.Conta;
 import Entidades.ContaPagar;
+import Entidades.Enums.StatusLancamento;
+import Entidades.Enums.TipoLancamento;
 import Entidades.ItensCompra;
+import Entidades.LancamentoFinanceiro;
 import Entidades.ParcelaCompra;
 import Entidades.Produto;
 import Entidades.ProdutoDerivacao;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import static javax.ws.rs.client.Entity.entity;
 
 /**
  *
@@ -32,6 +38,10 @@ public class CompraFacade extends AbstractFacade<Compra> {
 
     @EJB
     private ContaPagarFacade contaPagarFacade;
+    @EJB
+    private ContaFacade contaFacade;
+    @EJB
+    private LancamentoFinanceiroFacade lancFacade;
 
     @Override
     protected EntityManager getEntityManager() {
@@ -113,31 +123,97 @@ public class CompraFacade extends AbstractFacade<Compra> {
         em.merge(compra);
     }
 
-    public void cancelarCompra(Compra compra) {
-        compra = em.find(Compra.class, compra.getId());
-        compra.getItensCompra().size();
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void cancelarCompra(Compra compraParam) {
+        // 1) Recarrega a compra (só com itens) para não estourar MultipleBagFetch
+        Compra compra = em.createQuery(
+                "select c from Compra c "
+                + "left join fetch c.itensCompra i "
+                + "where c.id = :id", Compra.class)
+                .setParameter("id", compraParam.getId())
+                .getSingleResult();
 
-        // Volta o estoque
+        // 2) Reverte estoque
         for (ItensCompra ic : compra.getItensCompra()) {
-            ProdutoDerivacao derivacao = ic.getProdutoDerivacao();
-            derivacao.setQuantidade(derivacao.getQuantidade() - ic.getQuantidade());
-            em.merge(derivacao);
+            ProdutoDerivacao deriv = ic.getProdutoDerivacao();
+            deriv.setQuantidade(deriv.getQuantidade() - ic.getQuantidade());
+            em.merge(deriv);
         }
 
-        // Atualiza status da compra
-        compra.setStatus("CANCELADA");
+        // 3) Busca as contas a pagar desta compra (com o lançamento + conta do lançamento)
+        List<ContaPagar> contas = em.createQuery(
+                "select cp from ContaPagar cp "
+                + "left join fetch cp.lancamento l "
+                + "left join fetch l.conta "
+                + "where cp.compra = :compra", ContaPagar.class)
+                .setParameter("compra", compra)
+                .getResultList();
 
-        // Atualiza contas a pagar
-        for (ContaPagar conta : compra.getContasPagar()) {
-            if ("PAGA".equals(conta.getStatus())) {
-                conta.setStatus("ESTORNADA");
+        // 4) Para cada conta: cancelar/estornar
+        for (ContaPagar cp : contas) {
+            String st = cp.getStatus();
+            if ("PAGA".equalsIgnoreCase(st)) {
+                estornarContaPagar(cp, "Cancelamento da compra #" + compra.getId());
             } else {
-                conta.setStatus("CANCELADA");
+                cp.setStatus("CANCELADA");
+                contaPagarFacade.salvar(cp);
             }
-            contaPagarFacade.salvar(conta);
         }
 
+        compra.setStatus("CANCELADA");
         em.merge(compra);
+    }
+
+    private void estornarContaPagar(ContaPagar cp, String motivo) {
+        LancamentoFinanceiro original = cp.getLancamento();
+
+        if (original == null) {
+            cp.setStatus("ESTORNADA");
+            contaPagarFacade.salvar(cp);
+            return;
+        }
+
+        original.setStatus(StatusLancamento.ESTORNADO);
+        lancFacade.salvar(original);
+
+        LancamentoFinanceiro reverso = new LancamentoFinanceiro();
+        reverso.setConta(original.getConta());               
+        reverso.setTipo(TipoLancamento.ENTRADA);
+        reverso.setValor(original.getValor());
+        reverso.setDataHora(new Date());
+        reverso.setMetodo(original.getMetodo());
+        reverso.setContaPagar(cp);
+        reverso.setStatus(StatusLancamento.NORMAL);
+
+        String desc = "ESTORNO pagamento ContaPagar #" + cp.getId();
+        if (cp.getDescricao() != null && !cp.getDescricao().trim().isEmpty()) {
+            desc += " - " + cp.getDescricao();
+        }
+        if (motivo != null && !motivo.trim().isEmpty()) {
+            desc += " (" + motivo.trim() + ")";
+        }
+        reverso.setDescricao(desc);
+
+        lancFacade.salvar(reverso);
+
+        cp.setStatus("ESTORNADA");
+        contaPagarFacade.salvar(cp);
+
+        recomputarSaldo(original.getConta());
+    }
+
+    private void recomputarSaldo(Conta conta) {
+        Double inicial = conta.getValorInicial() != null ? conta.getValorInicial() : 0.0;
+        Double entradas = lancFacade.somarPorContaETipoEPeriodo(conta, TipoLancamento.ENTRADA, null, null);
+        Double saidas = lancFacade.somarPorContaETipoEPeriodo(conta, TipoLancamento.SAIDA, null, null);
+        if (entradas == null) {
+            entradas = 0d;
+        }
+        if (saidas == null) {
+            saidas = 0d;
+        }
+        conta.setSaldo(inicial + entradas - saidas);
+        contaFacade.salvar(conta);
     }
 
     public Compra findWithItens(Long id) {

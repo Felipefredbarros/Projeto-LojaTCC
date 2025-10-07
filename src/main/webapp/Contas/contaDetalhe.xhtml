@@ -19,7 +19,9 @@
                 <p:toolbar styleClass="erp-toolbar">
                     <p:toolbarGroup>
                         <p:commandButton value="Voltar" icon="pi pi-arrow-left" 
-                                         styleClass="ui-button-text-only"/>
+                                         styleClass="ui-button-text-only"
+                                         action="contas.xhtml?faces-redirect=true"
+                                         />
                         <span class="divider"></span>
                         <span class="titulo">
                             <i class="pi pi-wallet"></i>
@@ -32,11 +34,24 @@
 
                     <p:toolbarGroup align="right">
                         <p:commandButton value="Transferir" icon="pi pi-exchange" styleClass="ui-button-success"
+                                         style="margin-right: 5px"
                                          oncomplete="PF('dlgTransferencia').show()"/>
-                        <p:commandButton value="Retirada" icon="pi pi-minus-circle" styleClass="ui-button-warning"
+                        <p:commandButton value="Retirada" styleClass="ui-button-warning"
                                          rendered="#{contaControle.contaSelecionada.tipoConta eq 'COFRE'}"
-                                         oncomplete="PF('dlgRetirada').show()"/>
-                        <p:splitButton value="Exportar" icon="pi pi-download" styleClass="ml-2">
+                                         oncomplete="PF('dlgRetirada').show()"
+                                         style="margin-right: 5px"/>
+                        <!-- Botão padrão (para contas que não são cofre) -->
+                        <p:commandButton value="Movimentar" icon="pi pi-exchange" styleClass="ui-button-success"
+                                         style="margin-right: 5px"
+                                         rendered="#{contaControle.contaSelecionada.tipoConta ne 'COFRE'}"
+                                         oncomplete="PF('dlgMovimentacao').show()"/>
+
+                        <!-- Botão específico (quando for COFRE) -->
+                        <p:commandButton value="Adicionar" icon="pi pi-exchange" styleClass="ui-button-success"
+                                         style="margin-right: 5px"
+                                         rendered="#{contaControle.contaSelecionada.tipoConta eq 'COFRE'}"
+                                         oncomplete="PF('dlgMovimentacaoCofre').show()"/>
+                        <p:splitButton value="Exportar" icon="pi pi-download" styleClass="ml-2" style="margin-right: 1px">
                             <p:menuitem value="CSV" icon="pi pi-file" ajax="false">
                                 <p:dataExporter type="csv" target="tabelaMov" fileName="movimentacoes"/>
                             </p:menuitem>
@@ -111,7 +126,12 @@
                             <h:outputText value="Informações da Conta"/>
                         </f:facet>
 
-                        <p:panelGrid columns="4" styleClass="grid-clean" columnClasses="label,value,label,value">
+                        <p:panelGrid columns="6" styleClass="grid-clean" columnClasses="label,value,label,value">
+                            <h:outputText value="Saldo Inicial da Conta: "/>
+                            <h:outputText value="#{contaControle.contaSelecionada.valorInicial}">
+                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                            </h:outputText>
+
                             <h:outputText value="Nome:"/>
                             <h:outputText value="#{contaControle.contaSelecionada.nome}"/>
 
@@ -129,6 +149,7 @@
 
                             <h:outputText value="Conta:" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
                             <h:outputText value="#{contaControle.contaSelecionada.conta}" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+
                         </p:panelGrid>
                     </p:card>
 
@@ -164,7 +185,7 @@
 
                             <p:column headerText="Data" styleClass="col-sm">
                                 <h:outputText value="#{mov.dataHora}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
                                 </h:outputText>
                             </p:column>
 
@@ -180,6 +201,10 @@
                                 <h:outputText value="#{mov.valor}">
                                     <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
                                 </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Status" sortBy="#{mov.status.label}" filterBy="#{mov.status.label}" styleClass="col-xs center">
+                                <p:tag value="#{mov.status.label}" severity="#{mov.status.label eq 'OK' ? 'success' : 'danger'}"/>
                             </p:column>
 
                             <f:facet name="footer">
@@ -235,11 +260,12 @@
 
                         <h:outputText value="Valor"/>
                         <p:inputNumber value="#{contaControle.valorTransferencia}" symbol="R$ " decimalSeparator="," thousandSeparator="."
-                                       required="true" requiredMessage="O preço de venda é obrigatório."
+                                       required="true" requiredMessage="O valor de transferencia é obrigatório."
                                        minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
 
                         <h:outputText value="Data"/>
-                        <p:datePicker value="#{contaControle.dataTransferencia}" showIcon="true"/>
+                        <p:datePicker value="#{contaControle.dataTransferencia}" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                      showTime="true" hourFormat="24"/>
 
                         <h:outputText value="Descrição"/>
                         <p:inputTextarea value="#{contaControle.descricaoTransferencia}" autoResize="true" rows="2"/>
@@ -247,7 +273,7 @@
 
                     <p:separator/>
                     <div class="dlg-actions">
-                        <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgTransferencia').hide()"/>
+                        <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgTransferencia').hide()" actionListener="#{contaControle.limparTransferencia}"/>
                         <p:commandButton value="Confirmar" icon="pi pi-check" styleClass="ui-button-success"
                                          actionListener="#{contaControle.transferir()}"
                                          update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
@@ -267,7 +293,8 @@
                                        minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
 
                         <h:outputText value="Data"/>
-                        <p:datePicker value="#{contaControle.dataRetirada}" showIcon="true"/>
+                        <p:datePicker value="#{contaControle.dataRetirada}" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                      showTime="true" hourFormat="24"/>
 
                         <h:outputText value="Motivo"/>
                         <p:inputTextarea value="#{contaControle.motivoRetirada}" autoResize="true" rows="2"/>
@@ -284,16 +311,48 @@
                 </h:form>
             </p:dialog>
 
-            <!-- Dialog: Nova Movimentação (genérica) -->
             <p:dialog header="Nova movimentação" widgetVar="dlgMovimentacao" modal="true" responsive="true" width="500">
                 <h:form id="frmMov">
                     <p:messages id="msgsM"/>
                     <p:panelGrid columns="2" columnClasses="label,value" styleClass="grid-clean">
                         <h:outputText value="Tipo"/>
-                        <p:selectOneButton value="#{contaControle.tipoMovimentacao}">
+                        <p:selectOneRadio value="#{contaControle.tipoMovimentacao}">
                             <f:selectItem itemLabel="Entrada" itemValue="ENTRADA"/>
                             <f:selectItem itemLabel="Saída" itemValue="SAIDA"/>
-                        </p:selectOneButton>
+                        </p:selectOneRadio>
+
+                        <h:outputText value="Valor"/>
+                        <p:inputNumber value="#{contaControle.valorMovimentacao}" symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                       required="true" requiredMessage="O preço de venda é obrigatório."
+                                       minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
+
+                        <h:outputText value="Data"/>
+                        <p:datePicker value="#{contaControle.dataMovimentacao}" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                      showTime="true" hourFormat="24"/>
+
+                        <h:outputText value="Descrição"/>
+                        <p:inputTextarea value="#{contaControle.descricaoMovimentacao}" autoResize="true" rows="2"/>
+                    </p:panelGrid>
+
+                    <p:separator/>
+                    <div class="dlg-actions">
+                        <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgMovimentacao').hide()"/>
+                        <p:commandButton value="Salvar" icon="pi pi-check" styleClass="ui-button-success"
+                                         actionListener="#{contaControle.salvarMovimentacao()}"
+                                         update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
+                                         oncomplete="if(!args.validationFailed){PF('dlgMovimentacao').hide()}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog header="Nova movimentação" widgetVar="dlgMovimentacaoCofre" modal="true" responsive="true" width="500">
+                <h:form id="frmMovCofre">
+                    <p:messages id="msgsMCofre"/>
+                    <p:panelGrid columns="2" columnClasses="label,value" styleClass="grid-clean">
+                        <h:outputText value="Tipo"/>
+                        <p:selectOneRadio value="#{contaControle.tipoMovimentacao}">
+                            <f:selectItem itemLabel="Entrada" itemValue="ENTRADA"/>
+                        </p:selectOneRadio>
 
                         <h:outputText value="Valor"/>
                         <p:inputNumber value="#{contaControle.valorMovimentacao}" symbol="R$ " decimalSeparator="," thousandSeparator="."
@@ -311,9 +370,9 @@
                     <div class="dlg-actions">
                         <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgMovimentacao').hide()"/>
                         <p:commandButton value="Salvar" icon="pi pi-check" styleClass="ui-button-success"
-                                         actionListener="#{contaControle.salvarMovimentacao()}"
+                                         actionListener="#{contaControle.adicionarNoCofre()}"
                                          update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
-                                         oncomplete="if(!args.validationFailed){PF('dlgMovimentacao').hide()}"/>
+                                         oncomplete="if(!args.validationFailed){PF('dlgMovimentacaoCofre').hide()}"/>
                     </div>
                 </h:form>
             </p:dialog>
@@ -366,15 +425,16 @@
 
                 .kpi-card {
                     position: relative;
-                    padding: 18px;
+                    padding: 10px;
                     border-radius: 14px;
                     background: linear-gradient(180deg, var(--surface-card), var(--surface-ground));
                     box-shadow: 0 6px 18px rgba(0,0,0,.06);
                 }
                 .kpi-card .kpi-title {
                     font-size: .95rem;
-                    color: var(--text-color-secondary);
+                    color: #212529;
                     margin-bottom: 8px;
+                    font-weight: bold;
                 }
                 .kpi-card .kpi-value {
                     font-size: 1.8rem;
@@ -390,7 +450,8 @@
                     display: flex;
                     align-items: center;
                     gap: .5rem;
-                    color: var(--text-color-secondary);
+                    color: #212529;
+                    font-weight: bold;
                     font-size: .85rem;
                 }
 
@@ -487,6 +548,8 @@
                 .mt-3 {
                     margin-top: 18px;
                 }
+
+
             </style>
         </ui:define>
     </ui:composition>

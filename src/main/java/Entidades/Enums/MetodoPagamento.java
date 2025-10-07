@@ -15,7 +15,8 @@ public enum MetodoPagamento {
     DINHEIRO("Dinheiro"),
     CARTAO_CREDITO("Cartão de Crédito"),
     CARTAO_DEBITO("Cartão de Débito"),
-    PIX("PIX");
+    PIX("PIX"),
+    A_DENIFIR("A Definir");
 
     private final String descricao;
 
@@ -43,5 +44,6 @@ public enum MetodoPagamento {
         metodosNaoAVista.add(DINHEIRO);
         return metodosNaoAVista;
     }
+
 
 }

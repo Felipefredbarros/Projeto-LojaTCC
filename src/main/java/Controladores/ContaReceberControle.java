@@ -31,6 +31,7 @@ public class ContaReceberControle implements Serializable {
 
     private List<ContaReceber> listaContas = new ArrayList<>();
 
+
     public void salvar() {
         contaReceberFacade.salvar(contaReceber);
         contaReceber = new ContaReceber();
@@ -56,6 +57,14 @@ public class ContaReceberControle implements Serializable {
 
     public void contaReceberItem(ContaReceber contaSelecionada) {
         contaReceberFacade.receberConta(contaSelecionada);
+    }
+    public void cancelarConta(ContaReceber contaSelecionada){
+        if ("RECEBIDA".equals(contaSelecionada.getStatus())) {
+                contaSelecionada.setStatus("ESTORNADA");
+            } else {
+                contaSelecionada.setStatus("CANCELADA");
+            }
+        contaReceberFacade.salvar(contaSelecionada);
     }
 
     public void novo() {

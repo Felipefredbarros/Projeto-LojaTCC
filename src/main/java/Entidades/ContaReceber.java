@@ -7,6 +7,7 @@ package Entidades;
 import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,6 +18,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -45,13 +47,13 @@ public class ContaReceber implements Serializable, ClassePai {
 
     @Column(name = "contaReceber_descricao")
     private String descricao;
-    
+
     @Column(name = "contaReceber_status")
     private String status;
 
     @Column(name = "contaReceber_valor")
     private Double valor;
-    
+
     @Column(name = "contaReceber_metodo")
     @Enumerated(EnumType.STRING)
     private MetodoPagamento metodoPagamento;
@@ -63,6 +65,7 @@ public class ContaReceber implements Serializable, ClassePai {
     @Column(name = "contaReceber_dataRecebimento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataRecebimento;
+
 
     @Override
     public Long getId() {
@@ -165,8 +168,5 @@ public class ContaReceber implements Serializable, ClassePai {
     public String toString() {
         return "ContaReceber{" + "id=" + id + '}';
     }
-    
-    
 
-   
 }

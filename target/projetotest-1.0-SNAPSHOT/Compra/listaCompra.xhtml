@@ -97,7 +97,7 @@
                         <!-- Cancelar Compra -->
                         <p:commandButton icon="pi pi-ban" title="Cancelar Compra"
                                          actionListener="#{compraControle.cancelarCompra(compraItem)}"
-                                         process="@this"
+                                         process="@form"
                                          update=":formListagemCompras:tabelaCompras :formListagemCompras:growlMessages"
                                          styleClass="rounded-button ui-button-warning"
                                          rendered="#{compraItem.status eq 'FECHADA'}">

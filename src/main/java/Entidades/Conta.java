@@ -5,12 +5,12 @@
 package Entidades;
 
 import Entidades.Enums.TipoConta;
-import Entidades.Enums.TipoLancamento;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -62,13 +62,12 @@ public class Conta implements Serializable, ClassePai {
     @Column(name = "conta_status")
     private String status;
     @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LancamentoFinanceiro> lancamentos = new ArrayList<>();  
-    
+    private Set<LancamentoFinanceiro> lancamentos = new LinkedHashSet<>();
+
     @Override
     public Long getId() {
         return id;
     }
-    
 
     public void setId(Long id) {
         this.id = id;
@@ -162,14 +161,14 @@ public class Conta implements Serializable, ClassePai {
         this.status = status;
     }
 
-    public List<LancamentoFinanceiro> getLancamentos() {
+    public Set<LancamentoFinanceiro> getLancamentos() {
         return lancamentos;
     }
 
-    public void setLancamentos(List<LancamentoFinanceiro> lancamentos) {
+    public void setLancamentos(Set<LancamentoFinanceiro> lancamentos) {
         this.lancamentos = lancamentos;
     }
-    
+
     
 
     @Override

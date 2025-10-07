@@ -11,7 +11,7 @@
             <h:form id="formListagemContas">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1 style="font-size: 2rem; color: #003366; margin-bottom: 20px;">
+                <h1 style="color: #003366; margin-bottom: 20px;">
                     📑 Listagem de Contas
                 </h1>
 
@@ -69,7 +69,8 @@
                                          action="#{contaControle.irParaDetalhe(contaItem)}"
                                          process="@this"
                                          update="@none"
-                                         styleClass="ui-button-info" />
+                                         styleClass="ui-button-info" 
+                                         style="margin-right: 3px"/>
 
                         <p:commandButton icon="pi pi-trash" title="Excluir / Inativar"
                                          actionListener="#{contaControle.excluirOuInativar(contaItem)}"

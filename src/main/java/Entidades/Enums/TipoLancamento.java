@@ -13,6 +13,7 @@ public enum TipoLancamento {
     ENTRADA("Entrada"),
     SAIDA("Saida");
     
+    
     private final String label;
     
     TipoLancamento(String label) {

@@ -66,6 +66,14 @@
                             <f:convertNumber type="currency"/>
                         </h:outputText>
                     </p:column>
+                    
+                    <p:column headerText="Plano de Pagamento" sortBy="#{vendaItem.planoPagamento.descricao}" filterBy="#{vendaItem.planoPagamento.descricao}" filterMatchMode="contains">
+                        <h:outputText value="#{vendaItem.planoPagamento.descricao}"/>
+                    </p:column>
+                    
+                    <p:column headerText="Metodo de Pagamento" sortBy="#{vendaItem.metodoPagamento.descricao}" filterBy="#{vendaItem.metodoPagamento.descricao}" filterMatchMode="contains">
+                        <h:outputText value="#{vendaItem.metodoPagamento.descricao}"/>
+                    </p:column>
 
                     <p:column headerText="Ações" style="width:200px;text-align:center">
                         <p:commandButton icon="pi pi-search" title="Visualizar"

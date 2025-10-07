@@ -2,6 +2,7 @@ package Controladores;
 
 import Converters.ConverterGenerico;
 import Entidades.Conta;
+import Entidades.Enums.StatusLancamento;
 import Entidades.Enums.TipoConta;
 import static Entidades.Enums.TipoConta.COFRE;
 import Entidades.Enums.TipoLancamento;
@@ -71,31 +72,12 @@ public class ContaControle implements Serializable {
     }
 
     public void carregarMovimentacoes() {
-        System.out.println("\n=======================================================");
-        System.out.println(">>> MÉTODO 'carregarMovimentacoes' ACIONADO");
-        if (filtroPeriodo != null && filtroPeriodo.length > 0) {
-            System.out.println(">>> [CONTROLLER] O filtroPeriodo NÃO está nulo. Tamanho: " + filtroPeriodo.length);
-            System.out.println(">>> [CONTROLLER] Data Inicial recebida: " + (filtroPeriodo[0] != null ? filtroPeriodo[0].toString() : "null"));
-            if (filtroPeriodo.length > 1) {
-                System.out.println(">>> [CONTROLLER] Data Final recebida: " + (filtroPeriodo[1] != null ? filtroPeriodo[1].toString() : "null"));
-            }
-        } else {
-            System.out.println(">>> [CONTROLLER] ALERTA: O filtroPeriodo chegou como NULO ou VAZIO.");
-        }
         if (contaSelecionada == null || contaSelecionada.getId() == null) {
             this.movimentacoesDaConta = Collections.emptyList();
             return;
         }
-
-        Date ini = null, fim = null;
-        if (filtroPeriodo != null && filtroPeriodo.length == 2) {
-            ini = atStartOfDay(filtroPeriodo[0]);
-            fim = atEndOfDay(filtroPeriodo[1]);
-        }
-
-        // Popula a nossa lista interna
         this.movimentacoesDaConta = lancamentoFinanceiroFacade
-                .buscarPorContaETipoEPeriodo(contaSelecionada, vazioComoNull(filtroTipo), ini, fim);
+                .buscarPorConta(contaSelecionada);
     }
 
     public List<LancamentoFinanceiro> getMovimentacoesDaConta() {
@@ -181,6 +163,7 @@ public class ContaControle implements Serializable {
         saida.setTipo(TipoLancamento.SAIDA);
         saida.setValor(valorTransferencia);
         saida.setDataHora(quando);
+        saida.setStatus(StatusLancamento.NORMAL);
         saida.setDescricao(!isBlank(descricaoTransferencia)
                 ? "Transferência para " + contaDestino.getNome() + " - " + descricaoTransferencia
                 : "Transferência para " + contaDestino.getNome());
@@ -192,6 +175,7 @@ public class ContaControle implements Serializable {
         entrada.setTipo(TipoLancamento.ENTRADA);
         entrada.setValor(valorTransferencia);
         entrada.setDataHora(quando);
+        entrada.setStatus(StatusLancamento.NORMAL);
         entrada.setDescricao(!isBlank(descricaoTransferencia)
                 ? "Transferência de " + contaSelecionada.getNome() + " - " + descricaoTransferencia
                 : "Transferência de " + contaSelecionada.getNome());
@@ -219,8 +203,8 @@ public class ContaControle implements Serializable {
         }
         if (contaSelecionada.getTipoConta() == TipoConta.COFRE) {
             double saldoAtual = contaSelecionada.getSaldo() != null ? contaSelecionada.getSaldo() : 0.0;
-            if (valorTransferencia > saldoAtual) {
-                addMsg(FacesMessage.SEVERITY_ERROR, "Saldo insuficiente no cofre para realizar a transferência. Saldo atual: R$ " + String.format("%.2f", saldoAtual));
+            if (valorRetirada > saldoAtual) {
+                addMsg(FacesMessage.SEVERITY_ERROR, "Saldo insuficiente no cofre para realizar a retirada. Saldo atual: R$ " + String.format("%.2f", saldoAtual));
                 return;
             }
         }
@@ -231,6 +215,7 @@ public class ContaControle implements Serializable {
         saida.setTipo(TipoLancamento.SAIDA);
         saida.setValor(valorRetirada);
         saida.setDataHora(quando);
+        saida.setStatus(StatusLancamento.NORMAL);
         saida.setDescricao(!isBlank(motivoRetirada)
                 ? "Retirada do cofre - " + motivoRetirada
                 : "Retirada do cofre");
@@ -244,9 +229,9 @@ public class ContaControle implements Serializable {
         addMsg(FacesMessage.SEVERITY_INFO, "Retirada registrada.");
     }
 
-    public void salvarMovimentacao() {
-        if (contaSelecionada == null) {
-            addMsg(FacesMessage.SEVERITY_WARN, "Selecione uma conta.");
+    public void adicionarNoCofre() {
+        if (contaSelecionada == null || contaSelecionada.getTipoConta() != TipoConta.COFRE) {
+            addMsg(FacesMessage.SEVERITY_WARN, "Esta ação é permitida apenas para o Cofre.");
             return;
         }
         if (valorMovimentacao == null || valorMovimentacao <= 0) {
@@ -254,10 +239,37 @@ public class ContaControle implements Serializable {
             return;
         }
 
+        Date quando = (dataRetirada != null) ? dataRetirada : new Date();
+
+        LancamentoFinanceiro entrada = new LancamentoFinanceiro();
+        entrada.setConta(contaSelecionada);
+        entrada.setTipo(TipoLancamento.ENTRADA);
+        entrada.setValor(valorMovimentacao);
+        entrada.setDataHora(quando);
+        entrada.setStatus(StatusLancamento.NORMAL);
+        entrada.setDescricao(!isBlank(motivoRetirada)
+                ? "Entrada no cofre - " + motivoRetirada
+                : "Entrada no cofre");
+        lancamentoFinanceiroFacade.salvar(entrada);
+
+        atualizarSaldoMaterializado(contaSelecionada);
+
+        carregarMovimentacoes();
+
+        limparRetirada();
+        addMsg(FacesMessage.SEVERITY_INFO, "Entrada registrada.");
+    }
+
+    public void salvarMovimentacao() {
+        if (valorMovimentacao == null || valorMovimentacao <= 0) {
+            addMsg(FacesMessage.SEVERITY_WARN, "Informe um valor válido.");
+            return;
+        }
+
         if (contaSelecionada.getTipoConta() == TipoConta.COFRE) {
             double saldoAtual = contaSelecionada.getSaldo() != null ? contaSelecionada.getSaldo() : 0.0;
-            if (valorTransferencia > saldoAtual) {
-                addMsg(FacesMessage.SEVERITY_ERROR, "Saldo insuficiente no cofre para realizar a transferência. Saldo atual: R$ " + String.format("%.2f", saldoAtual));
+            if (valorMovimentacao > saldoAtual) {
+                addMsg(FacesMessage.SEVERITY_ERROR, "Saldo insuficiente no cofre para realizar a movimentação. Saldo atual: R$ " + String.format("%.2f", saldoAtual));
                 return;
             }
         }
@@ -269,10 +281,12 @@ public class ContaControle implements Serializable {
         mov.setTipo(tipo);
         mov.setValor(valorMovimentacao);
         mov.setDataHora((dataMovimentacao != null) ? dataMovimentacao : new Date());
+        mov.setStatus(StatusLancamento.NORMAL);
         mov.setDescricao(!isBlank(descricaoMovimentacao)
                 ? descricaoMovimentacao
                 : (tipo == TipoLancamento.ENTRADA ? "Entrada manual" : "Saída manual"));
 
+        lancamentoFinanceiroFacade.salvar(mov);
         atualizarSaldoMaterializado(contaSelecionada);
 
         carregarMovimentacoes();
@@ -380,7 +394,7 @@ public class ContaControle implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(s, msg, null));
     }
 
-    private void limparTransferencia() {
+    public void limparTransferencia() {
         contaDestino = null;
         valorTransferencia = null;
         descricaoTransferencia = null;
@@ -470,6 +484,32 @@ public class ContaControle implements Serializable {
 
     public void selecionarConta(Conta conta) {
         this.contaSelecionada = conta;
+    }
+
+    public List<Conta> getContasBancoAtivas() {
+        List<Conta> todas = getListaContaAtiva();
+        List<Conta> out = new ArrayList<>();
+        if (todas != null) {
+            for (Conta c : todas) {
+                if (c != null && c.getTipoConta() == Entidades.Enums.TipoConta.BANCO) {
+                    out.add(c);
+                }
+            }
+        }
+        return out;
+    }
+
+    public List<Conta> getContasCofreAtivas() {
+        List<Conta> todas = getListaContaAtiva();
+        List<Conta> out = new ArrayList<>();
+        if (todas != null) {
+            for (Conta c : todas) {
+                if (c != null && c.getTipoConta() == Entidades.Enums.TipoConta.COFRE) {
+                    out.add(c);
+                }
+            }
+        }
+        return out;
     }
 
     /* ============================ Getters/Setters ======================= */

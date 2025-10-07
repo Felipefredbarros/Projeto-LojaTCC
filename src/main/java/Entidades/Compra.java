@@ -24,6 +24,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -71,10 +72,11 @@ public class Compra implements Serializable, ClassePai {
     @JoinColumn(nullable = false, name = "fornecedor_id")
     private Pessoa fornecedor;
     
-    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ItensCompra> itensCompra;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderColumn(name="ordem")
     private List<ParcelaCompra> parcelasCompra;
     
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)

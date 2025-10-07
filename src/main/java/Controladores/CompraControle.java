@@ -74,7 +74,6 @@ public class CompraControle implements Serializable {
     private List<Compra> listaComprasFiltradas = new ArrayList<>();
     private Compra compraSelecionado;
 
-
     public void filtrarPorPeriodo() {
         List<Compra> todasCompras = compraFacade.listaTodosComItens();
         listaComprasFiltradas = new ArrayList<>();
@@ -92,7 +91,7 @@ public class CompraControle implements Serializable {
         dataFim = null;
         listaComprasFiltradas = compraFacade.listaTodosComItens();
     }
-    
+
     public void prepararVisualizacao(Compra com) {
         this.compraSelecionado = compraFacade.findWithItens(com.getId());
     }
@@ -269,8 +268,6 @@ public class CompraControle implements Serializable {
                             "Erro", mensagemErro.toString()));
             return;
         }
-        
-        
 
         compra.calcularParcelas();
         compra.setPlanoPagamento(PlanoPagamento.PARCELADO_COMPRA);
@@ -286,8 +283,10 @@ public class CompraControle implements Serializable {
         edit = false;
         compra = new Compra();
     }
-    
+
     public void fecharCompra(Compra com) {
+        com = compraFacade.findWithItens(com.getId());
+
         try {
             compraFacade.fecharCompra(com);
 
@@ -301,6 +300,7 @@ public class CompraControle implements Serializable {
                             "Erro ao fechar a Compra!", null));
         }
     }
+
     public void cancelarCompra(Compra com) {
         try {
             compraFacade.cancelarCompra(com);
@@ -442,12 +442,12 @@ public class CompraControle implements Serializable {
     public List<Compra> getListaCompras() {
         return compraFacade.listaTodos();
     }
-    
+
     public List<Compra> getListaComprasReais() {
         return compraFacade.listaTodasReais();
     }
-    
-    public List<Compra> getListaComprasCanceladas(){
+
+    public List<Compra> getListaComprasCanceladas() {
         return compraFacade.listaComprasCanceladas();
     }
 
@@ -491,5 +491,4 @@ public class CompraControle implements Serializable {
         this.compraSelecionado = compraSelecionado;
     }
 
-    
 }

@@ -39,15 +39,12 @@ public class ContaPagarFacade extends AbstractFacade<ContaPagar> {
         if (!"ABERTA".equals(conta.getStatus())) {
             throw new IllegalStateException("A conta não está em aberto");
         }
-
-        conta.setStatus("PAGA");
-        conta.setDataRecebimento(new Date());
         em.merge(conta);
     }
 
     public List<ContaPagar> listaTodosReais() {
         Query q = getEntityManager().createQuery(
-                "FROM ContaPagar v WHERE v.status NOT IN ('CANCELADA', 'ESTORNADA') ORDER BY v.id DESC"
+                "FROM ContaPagar v WHERE v.status NOT IN ('CANCELADA') ORDER BY v.id DESC"
         );
         return q.getResultList();
     }

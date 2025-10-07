@@ -11,11 +11,17 @@
             <h:form id="formListagemContasReceber">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1>📑 Contas a Receber</h1>
-                <p:commandButton value="Ver Canceladas"
-                                 icon="pi pi-times-circle"
-                                 styleClass="btn-canceladas"
-                                 action="contasCanceladas.xhtml?faces-redirect=true"/>
+                <h1 style="color: #003366; margin-bottom: 20px;">
+                    📑 Contas a Receber
+                </h1>
+                <p:toolbar style="margin-bottom:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Ver Canceladas"
+                                         icon="pi pi-times-circle"
+                                         styleClass="btn-canceladas"
+                                         action="contasCanceladas.xhtml?faces-redirect=true"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
 
                 <p:tabView id="resumo" style="margin-bottom:1px">
                     <p:tab title="Resumo">
@@ -69,9 +75,9 @@
                             <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
                         </h:outputText>
                     </p:column>
-                    
-                    <p:column headerText="Metodo de Pagamento" sortBy="#{contaReceberItem.metodoPagamento}" filterBy="#{contaReceberItem.metodoPagamento}" filterMatchMode="contains">
-                        <h:outputText value="#{contaReceberItem.metodoPagamento}"/>
+
+                    <p:column headerText="Metodo de Pagamento" sortBy="#{contaReceberItem.metodoPagamento.descricao}" filterBy="#{contaReceberItem.metodoPagamento.descricao}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.metodoPagamento.descricao}"/>
                     </p:column>
 
                     <p:column headerText="Vencimento" sortBy="#{contaReceberItem.dataVencimento}">
@@ -85,21 +91,43 @@
                                       styleClass="status-label #{contaReceberItem.status}"/>
                     </p:column>
 
-                    <p:column headerText="Ações" style="width:200px;text-align:center">
-                        <p:commandButton value="Receber" 
-                                         icon="pi pi-check"
-                                         styleClass="btn-receber"
+                    <p:column headerText="Ações" style="width:180px; text-align:center">
+                        <p:commandButton icon="pi pi-check"
+                                         title="Receber conta"
+                                         styleClass="btn-acao btn-receber-icone"
                                          actionListener="#{contaReceberControle.contaReceberItem(contaReceberItem)}"
-                                         update=":formListagemContasReceber:resumo :formListagemContasReceber:tabelaContaReceber :formListagemContasReceber:growlMessages"
-                                         rendered="#{contaReceberItem.status eq 'ABERTA'}"/>
-                        <p:commandButton value="Cancelar" 
-                                         icon="pi pi-check"
-                                         styleClass="btn-receber"
-                                         actionListener="#{contaReceberControle.contaReceberItem(contaReceberItem)}"
-                                         update=":formListagemContasReceber:resumo :formListagemContasReceber:tabelaContaReceber :formListagemContasReceber:growlMessages"
-                                         rendered="#{contaReceberItem.status eq 'PAGA'}"/>
+                                         update=":formListagemContasReceber:resumo 
+                                         :formListagemContasReceber:tabelaContaReceber 
+                                         :formListagemContasReceber:growlMessages"
+                                         rendered="#{contaReceberItem.status eq 'ABERTA'}" />
+
+                        <p:commandButton icon="pi pi-times"
+                                         title="Cancelar conta"
+                                         styleClass="btn-acao btn-cancelar-icone"
+                                         actionListener="#{contaReceberControle.cancelarConta(contaReceberItem)}"
+                                         update=":formListagemContasReceber:resumo 
+                                         :formListagemContasReceber:tabelaContaReceber 
+                                         :formListagemContasReceber:growlMessages"
+                                         rendered="#{contaReceberItem.status ne 'CANCELADA' and contaReceberItem.status ne 'ESTORNADA'}"
+                                         onclick="PF('confirmCancelDialog').show(); return false;" />
                     </p:column>
                 </p:dataTable>
+                <p:confirmDialog widgetVar="confirmCancelDialog" header="Confirmar Cancelamento"
+                                 message="Tem certeza que deseja cancelar esta conta? Esta ação não poderá ser desfeita. É recomendado cancelar a venda relacionada a essa conta."
+                                 severity="warn" closable="true" showEffect="fade" hideEffect="fade">
+
+                    <p:commandButton value="Sim, cancelar" icon="pi pi-check"
+                                     styleClass="ui-button-danger"
+                                     actionListener="#{contaReceberControle.cancelarConta(contaReceberItem)}"
+                                     update=":formListagemContasReceber:resumo 
+                                     :formListagemContasReceber:tabelaContaReceber 
+                                     :formListagemContasReceber:growlMessages"
+                                     oncomplete="PF('confirmCancelDialog').hide()"/>
+
+                    <p:commandButton value="Não" icon="pi pi-times" 
+                                     onclick="PF('confirmCancelDialog').hide()" 
+                                     type="button" styleClass="ui-button-secondary"/>
+                </p:confirmDialog>
             </h:form>
 
             <!-- Estilo -->
@@ -208,7 +236,7 @@
                 .resumo-card.recebido {
                     background: linear-gradient(135deg, #28a745, #5cd65c);
                 }
-                
+
                 .btn-canceladas {
                     background-color: #dc3545;
                     color: white;
@@ -221,6 +249,36 @@
                 }
                 .btn-canceladas:hover {
                     background-color: #b52a38;
+                }
+
+                /* estilo base dos botões de ação */
+                .btn-acao {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    border: none;
+                    margin: 0 5px;
+                    cursor: pointer;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    font-size: 1.1rem;
+                }
+
+                /* animação hover */
+                .btn-acao:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                }
+
+                /* botão verde de receber */
+                .btn-receber-icone {
+                    background: linear-gradient(135deg, #28a745, #34d058);
+                    color: #fff;
+                }
+
+                /* botão vermelho de cancelar */
+                .btn-cancelar-icone {
+                    background: linear-gradient(135deg, #dc3545, #f35a5a);
+                    color: #fff;
                 }
 
             </style>

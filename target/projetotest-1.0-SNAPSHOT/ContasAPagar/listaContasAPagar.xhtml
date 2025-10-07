@@ -77,6 +77,10 @@
                         </h:outputText>
                     </p:column>
 
+                    <p:column headerText="Metodo de Pagamento" sortBy="#{contaPagarItem.metodoPagamento.descricao}" filterBy="#{contaPagarItem.metodoPagamento.descricao}" filterMatchMode="contains">
+                        <h:outputText value="#{contaPagarItem.metodoPagamento.descricao}"/>
+                    </p:column>
+
                     <p:column headerText="Vencimento" sortBy="#{contaPagarItem.dataVencimento}">
                         <h:outputText value="#{contaPagarItem.dataVencimento}">
                             <f:convertDateTime pattern="dd/MM/yyyy"/>
@@ -91,36 +95,23 @@
                     <p:column headerText="Ações" style="width:200px;text-align:center">
                         <p:commandButton value="Pagar"
                                          icon="pi pi-check"
-                                         styleClass="btn-receber"
+                                         process="@this"
+                                         styleClass="btn-acao btn-receber-icone"
                                          actionListener="#{contaPagarControle.prepararPagamento(contaPagarItem)}"
-                                         update=":formListagemContasReceber:pagamentoDialogoPanel"
+                                         update=":frmPagamento:pagamentoDialogoPanel :frmPagamento:msgsPag"
                                          oncomplete="PF('pagamentoDialog').show()"
                                          rendered="#{contaPagarItem.status eq 'ABERTA'}"/>
+
+                        <p:commandButton icon="pi pi-times"
+                                         title="Cancelar conta"
+                                         styleClass="btn-acao btn-cancelar-icone"
+                                         process="@this"
+                                         actionListener="#{contaPagarControle.prepararCancelamento(contaPagarItem)}"
+                                         update=":confirmCancelForm"
+                                         oncomplete="PF('confirmCancelDialog').show()"
+                                         rendered="#{contaPagarItem.status ne 'CANCELADA' and contaPagarItem.status ne 'ESTORNADA'}"/>
                     </p:column>
                 </p:dataTable>
-                <p:dialog id="pagamentoDialog" widgetVar="pagamentoDialog" modal="true"
-                          header="Pagar Conta" resizable="false" closable="true" width="400">
-
-                    <p:outputPanel id="pagamentoDialogoPanel">
-                        <h:panelGrid columns="1" cellpadding="5" style="width:100%">
-
-                            <h:outputText value="Selecione o método de pagamento:" style="font-weight:bold"/>
-
-                            <p:selectOneRadio value="#{contaPagarControle.metodoSelecionado}" layout="pageDirection">
-                                <f:selectItems value="#{contaPagarControle.metodosPagamento}" var="m"
-                                               itemValue="#{m}" itemLabel="#{m.descricao}"/>
-                            </p:selectOneRadio>
-
-                            <p:commandButton value="Confirmar Pagamento"
-                                             actionListener="#{contaPagarControle.confirmarPagamento()}"
-                                             process="@this pagamentoDialog"
-                                             update=":formListagemContasReceber:tabelaContaPagar :formListagemContasReceber:resumo :formListagemContasReceber:growlMessages"
-                                             oncomplete="PF('pagamentoDialog').hide()"
-                                             styleClass="btn-receber"
-                                             style="margin-top:15px"/>
-                        </h:panelGrid>
-                    </p:outputPanel>
-                </p:dialog>
                 <p:dialog id="cadastroContaDialog" 
                           widgetVar="cadastroContaDialog" 
                           modal="true" 
@@ -154,6 +145,81 @@
                     </p:outputPanel>
                 </p:dialog>
             </h:form>
+            <p:dialog header="Pagamento" widgetVar="pagamentoDialog"
+                      modal="true" width="460" appendTo="@(body)" dynamic="true" cache="false">
+                <h:form id="frmPagamento">
+                    <p:messages id="msgsPag"/>
+
+                    <p:outputPanel id="pagamentoDialogoPanel">
+
+                        <h:outputText value="Selecione o método de pagamento:" style="font-weight:bold"/>
+                        <p:selectOneRadio value="#{contaPagarControle.metodoSelecionado}"
+                                          layout="pageDirection"
+                                          required="true"
+                                          requiredMessage="Selecione um método de pagamento.">
+                            <f:selectItems value="#{contaPagarControle.metodosPagamento}" var="m"
+                                           itemValue="#{m}" itemLabel="#{m.descricao}"/>
+                            <!-- quando mudar o método, limpa conta e re-renderiza a área de conta -->
+                            <p:ajax listener="#{contaPagarControle.onMetodoChange}"
+                                    update="contaPanel :frmPagamento:msgsPag"/>
+                        </p:selectOneRadio>
+
+                        <p:outputPanel id="contaPanel" styleClass="mt-2" layout="block">
+
+                            <h:panelGroup rendered="#{contaPagarControle.dinheiroSelecionado}">
+                                <h:outputText value="Conta (cofre)" style="font-weight:bold; display:block; margin-top:8px"/>
+                                <p:selectOneMenu value="#{contaPagarControle.contaParaPagar}"
+                                                 converter="#{contaControle.contaConverter}"
+                                                 required="true"
+                                                 requiredMessage="Selecione um cofre.">
+                                    <f:selectItem itemLabel="Selecione" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contaControle.contasCofreAtivas}" var="c"
+                                                   itemLabel="#{c.nome}" itemValue="#{c}"/>
+                                </p:selectOneMenu>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not contaPagarControle.dinheiroSelecionado}">
+                                <h:outputText value="Conta (banco)" style="font-weight:bold; display:block; margin-top:8px"/>
+                                <p:selectOneMenu value="#{contaPagarControle.contaParaPagar}"
+                                                 converter="#{contaControle.contaConverter}"
+                                                 required="true"
+                                                 requiredMessage="Selecione uma conta bancária.">
+                                    <f:selectItem itemLabel="Selecione" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contaControle.contasBancoAtivas}" var="c"
+                                                   itemLabel="#{c.nome}" itemValue="#{c}"/>
+                                </p:selectOneMenu>
+                            </h:panelGroup>
+
+                        </p:outputPanel>
+
+                        <p:commandButton value="Confirmar Pagamento"
+                                         actionListener="#{contaPagarControle.confirmarPagamento}"
+                                         process="@form"
+                                         update=":formListagemContasReceber:tabelaContaPagar
+                                         :formListagemContasReceber:resumo
+                                         :formListagemContasReceber:growlMessages
+                                         :frmPagamento:msgsPag"
+                                         oncomplete="if(!args.validationFailed){PF('pagamentoDialog').hide()}"/>
+                    </p:outputPanel>
+                </h:form>
+            </p:dialog>
+            <p:confirmDialog widgetVar="confirmCancelDialog" header="Confirmar Cancelamento"
+                             message="Tem certeza que deseja cancelar esta conta? Esta ação não poderá ser desfeita. É recomendado cancelar a compra relacionada a essa conta."
+                             severity="warn" closable="true" showEffect="fade" hideEffect="fade">
+                <h:form id="confirmCancelForm">
+                    <p:commandButton value="Sim, cancelar" icon="pi pi-check"
+                                     styleClass="ui-button-danger"
+                                     actionListener="#{contaPagarControle.cancelarConta}"
+                                     update=":formListagemContasReceber:resumo 
+                                     :formListagemContasReceber:tabelaContaPagar
+                                     :formListagemContasReceber:growlMessages"
+                                     oncomplete="PF('confirmCancelDialog').hide()"/>
+                    <p:commandButton value="Não" icon="pi pi-times"
+                                     type="button" styleClass="ui-button-secondary"
+                                     onclick="PF('confirmCancelDialog').hide()"/>
+                </h:form>
+            </p:confirmDialog>
+
 
             <!-- Estilo -->
             <style>
@@ -274,6 +340,36 @@
                 }
                 .btn-canceladas:hover {
                     background-color: #b52a38;
+                }
+
+                /* estilo base dos botões de ação */
+                .btn-acao {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    border: none;
+                    margin: 0 5px;
+                    cursor: pointer;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    font-size: 1.1rem;
+                }
+
+                /* animação hover */
+                .btn-acao:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                }
+
+                /* botão verde de receber */
+                .btn-receber-icone {
+                    background: linear-gradient(135deg, #28a745, #34d058);
+                    color: #fff;
+                }
+
+                /* botão vermelho de cancelar */
+                .btn-cancelar-icone {
+                    background: linear-gradient(135deg, #dc3545, #f35a5a);
+                    color: #fff;
                 }
 
             </style>

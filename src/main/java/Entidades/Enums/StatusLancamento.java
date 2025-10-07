@@ -9,7 +9,7 @@ package Entidades.Enums;
  * @author felip
  */
 public enum StatusLancamento {
-    NORMAL("Normal"),
+    NORMAL("OK"),
     ESTORNADO("Estornado");
     
     private final String label;

@@ -4,9 +4,15 @@
  */
 package Controladores;
 
+import Entidades.Conta;
 import Entidades.ContaPagar;
 import Entidades.Enums.MetodoPagamento;
+import Entidades.Enums.StatusLancamento;
+import Entidades.Enums.TipoConta;
+import Entidades.Enums.TipoLancamento;
+import Entidades.LancamentoFinanceiro;
 import Facade.ContaPagarFacade;
+import Facade.LancamentoFinanceiroFacade;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,15 +20,15 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.bean.ViewScoped;
 
 /**
  *
  * @author felip
  */
 @ManagedBean
-@SessionScoped
+@ViewScoped
 public class ContaPagarControle implements Serializable {
 
     private ContaPagar contaPagar = new ContaPagar();
@@ -30,12 +36,23 @@ public class ContaPagarControle implements Serializable {
     @EJB
     private ContaPagarFacade contaPagarFacade;
 
+    @EJB
+
+    private LancamentoFinanceiroFacade lancamentoFinanceiroFacade;
+    @EJB
+
+    private Facade.ContaFacade contaFacade;
+
     private List<ContaPagar> listaContaPagar;
 
     private List<ContaPagar> listaContas = new ArrayList<>();
 
     private ContaPagar contaSelecionada;
     private MetodoPagamento metodoSelecionado;
+
+    private Conta contaParaPagar;
+
+    private String obsPagamento;
 
     public void salvar() {
         contaPagar.setStatus("ABERTA");
@@ -62,26 +79,164 @@ public class ContaPagarControle implements Serializable {
     }
 
     public void prepararPagamento(ContaPagar conta) {
+        System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
         this.contaSelecionada = conta;
+        System.out.println("CONTA: " + contaSelecionada.getDescricao() + "contacuzaopreto:" + contaSelecionada.getStatus());
         this.metodoSelecionado = null; // limpa seleção anterior
     }
 
+    public void prepararCancelamento(ContaPagar c) {
+        this.contaSelecionada = c;
+    }
+
     public void confirmarPagamento() {
-        if (contaSelecionada != null && metodoSelecionado != null) {
-            contaSelecionada.setMetodoPagamento(metodoSelecionado);
-            contaPagarFacade.pagarConta(contaSelecionada);
+        System.out.println("== confirmarPagamento ==");
+        System.out.println("contaSelecionada: " + (contaSelecionada == null ? "NULL" : contaSelecionada.getId()));
+        System.out.println("metodoSelecionado: " + metodoSelecionado);
+        System.out.println("contaParaPagar: " + (contaParaPagar == null ? "NULL" : contaParaPagar.getId()));
+
+        // 1) Validações básicas
+        if (contaSelecionada == null) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Conta paga via " + metodoSelecionado.getDescricao(), null));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Nenhuma conta a pagar selecionada.", null));
+            return;
+        }
+        if (metodoSelecionado == null) {
+            // required no diálogo já acusa; só não prossegue
+            return;
+        }
+        if (contaParaPagar == null || contaParaPagar.getId() == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Selecione a conta (cofre/banco) para pagar.", null));
+            return;
+        }
+
+        // 2) Regras: método x tipo de conta
+        boolean isDinheiro = MetodoPagamento.DINHEIRO.equals(metodoSelecionado);
+        if (isDinheiro && contaParaPagar.getTipoConta() != TipoConta.COFRE) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Para pagamento em dinheiro selecione um Cofre.", null));
+            return;
+        }
+        if (!isDinheiro && contaParaPagar.getTipoConta() != TipoConta.BANCO) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Para este método selecione uma Conta Bancária.", null));
+            return;
+        }
+
+        // 3) Regra de saldo quando for cofre
+        if (contaParaPagar.getTipoConta() == TipoConta.COFRE) {
+            double saldoAtual = contaParaPagar.getSaldo() != null ? contaParaPagar.getSaldo() : 0d;
+            if (contaSelecionada.getValor() > saldoAtual) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Saldo insuficiente no cofre selecionado. Saldo: R$ " + String.format("%.2f", saldoAtual), null));
+                return;
+            }
+        }
+
+        // 4) Criar e persistir o lançamento primeiro (SAÍDA)
+        LancamentoFinanceiro lanc = new LancamentoFinanceiro();
+        lanc.setConta(contaParaPagar);
+        lanc.setTipo(TipoLancamento.SAIDA);
+        lanc.setValor(contaSelecionada.getValor());
+        lanc.setDataHora(new Date());
+        lanc.setStatus(StatusLancamento.NORMAL);
+        lanc.setMetodo(metodoSelecionado);
+        lanc.setContaPagar(contaSelecionada);
+
+        String desc = "Pagamento conta #" + contaSelecionada.getId()
+                + (contaSelecionada.getDescricao() != null ? " - " + contaSelecionada.getDescricao() : "");
+        if (obsPagamento != null && !obsPagamento.trim().isEmpty()) {
+            desc += " (" + obsPagamento.trim() + ")";
+        }
+        lanc.setDescricao(desc);
+
+        contaSelecionada.setMetodoPagamento(metodoSelecionado);
+        contaSelecionada.setStatus("PAGA");
+        contaSelecionada.setDataRecebimento(new Date());
+        contaSelecionada.setLancamento(lanc);
+        contaPagarFacade.salvar(contaSelecionada);
+
+        recomputarSaldo(contaParaPagar);
+
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO,
+                        "Conta paga via " + metodoSelecionado.getDescricao(), null));
+
+        metodoSelecionado = null;
+        contaParaPagar = null;
+        obsPagamento = null;
+    }
+
+    private void recomputarSaldo(Conta conta) {
+        Double inicial = conta.getValorInicial() != null ? conta.getValorInicial() : 0.0;
+        Double entradas = lancamentoFinanceiroFacade.somarPorContaETipoEPeriodo(conta, Entidades.Enums.TipoLancamento.ENTRADA, null, null);
+        Double saidas = lancamentoFinanceiroFacade.somarPorContaETipoEPeriodo(conta, Entidades.Enums.TipoLancamento.SAIDA, null, null);
+        if (entradas == null) {
+            entradas = 0d;
+        }
+        if (saidas == null) {
+            saidas = 0d;
+        }
+        conta.setSaldo(inicial + entradas - saidas);
+        contaFacade.salvar(conta);
+    }
+
+    public void cancelarConta() {
+        ContaPagar cp = this.contaSelecionada;
+
+        if ("PAGA".equals(cp.getStatus())) {
+            LancamentoFinanceiro original = cp.getLancamento();
+            if (original == null) {
+                cp.setStatus("ESTORNADA");
+                contaPagarFacade.salvar(cp);
+                return;
+            }
+            original.setStatus(StatusLancamento.ESTORNADO);
+            lancamentoFinanceiroFacade.salvar(original);
+
+            LancamentoFinanceiro reverso = new LancamentoFinanceiro();
+            reverso.setConta(original.getConta());
+            reverso.setTipo(TipoLancamento.ENTRADA);
+            reverso.setValor(original.getValor());
+            reverso.setDataHora(new Date());
+            reverso.setMetodo(original.getMetodo());
+            reverso.setContaPagar(cp);
+            reverso.setStatus(StatusLancamento.NORMAL);
+
+            String desc = "ESTORNO pagamento ContaPagar #" + cp.getId();
+            if (cp.getDescricao() != null && !cp.getDescricao().trim().isEmpty()) {
+                desc += " - " + cp.getDescricao();
+            }
+
+            reverso.setDescricao(desc);
+
+            lancamentoFinanceiroFacade.salvar(reverso);
+            cp.setStatus("ESTORNADA");
+            contaPagarFacade.salvar(cp);
+            recomputarSaldo(original.getConta());
+
         } else {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Selecione um método de pagamento!", null));
+            cp.setStatus("CANCELADA");
+            contaPagarFacade.salvar(cp);
+
         }
     }
 
-    public MetodoPagamento[] getMetodosPagamento() {
-        return MetodoPagamento.values();
+    public List<MetodoPagamento> getMetodosPagamento() {
+        return MetodoPagamento.getMetodosPagamentoNaoAVista();
+    }
+
+    public void onMetodoChange() {
+        // sempre que trocar o método, limpamos a conta escolhida
+        this.contaParaPagar = null;
+    }
+
+    public boolean isDinheiroSelecionado() {
+        return this.metodoSelecionado == Entidades.Enums.MetodoPagamento.DINHEIRO;
     }
 
     public void novo() {
@@ -139,6 +294,22 @@ public class ContaPagarControle implements Serializable {
 
     public void setMetodoSelecionado(MetodoPagamento metodoSelecionado) {
         this.metodoSelecionado = metodoSelecionado;
+    }
+
+    public Conta getContaParaPagar() {
+        return contaParaPagar;
+    }
+
+    public void setContaParaPagar(Conta contaParaPagar) {
+        this.contaParaPagar = contaParaPagar;
+    }
+
+    public String getObsPagamento() {
+        return obsPagamento;
+    }
+
+    public void setObsPagamento(String obsPagamento) {
+        this.obsPagamento = obsPagamento;
     }
 
 }

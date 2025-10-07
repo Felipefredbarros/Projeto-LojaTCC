@@ -19,6 +19,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -35,34 +36,37 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "lancamento_id")
     private Long id;
-    
+
     @Column(name = "lancamento_datahora")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataHora;
-    
+
     @Column(name = "lancamento_valor")
     private Double valor;
-    
+
     @Column(name = "lancamento_tipoLancamento")
     @Enumerated(EnumType.STRING)
     private TipoLancamento tipo;
-    
+
     @Column(name = "lancamento_descricao")
     private String descricao;
-    
+
     @Column(name = "lancamento_categoria")
     private String categoria;
-    
+
     @Column(name = "lancamento_metodo")
     private MetodoPagamento metodo;
-    
-    @Column (name = "status")
-    @Enumerated
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private StatusLancamento status;
-    
+
     @ManyToOne
     @JoinColumn(name = "conta_id")
-    private Conta  conta;
+    private Conta conta;
+
+    @OneToOne(mappedBy = "lancamento")
+    private ContaPagar contaPagar;
 
     @Override
     public Long getId() {
@@ -129,6 +133,22 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
         this.conta = conta;
     }
 
+    public StatusLancamento getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusLancamento status) {
+        this.status = status;
+    }
+
+    public ContaPagar getContaPagar() {
+        return contaPagar;
+    }
+
+    public void setContaPagar(ContaPagar contaPagar) {
+        this.contaPagar = contaPagar;
+    }
+
     @Override
     public int hashCode() {
         int hash = 5;
@@ -155,6 +175,5 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
     public String toString() {
         return "LancamentoFinanceiro{" + "id=" + id + '}';
     }
-    
-    
+
 }
