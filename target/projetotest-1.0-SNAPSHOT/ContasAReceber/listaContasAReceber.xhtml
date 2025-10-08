@@ -56,6 +56,12 @@
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                              styleClass="tabela-contas">
 
+                    <p:column headerText="ID: " sortBy="#{contaReceberItem.id}" filterBy="#{contaReceberItem.id}" filterMatchMode="contains">
+                        <h:outputText value="#{contaReceberItem.id}">
+                            <f:convertNumber integerOnly="true" groupingUsed="true" />
+                        </h:outputText>
+                    </p:column>
+                    
                     <p:column headerText="Descrição" sortBy="#{contaReceberItem.descricao}" filterBy="#{contaReceberItem.descricao}" filterMatchMode="contains">
                         <h:outputText value="#{contaReceberItem.descricao}"/>
                     </p:column>
@@ -95,40 +101,97 @@
                         <p:commandButton icon="pi pi-check"
                                          title="Receber conta"
                                          styleClass="btn-acao btn-receber-icone"
-                                         actionListener="#{contaReceberControle.contaReceberItem(contaReceberItem)}"
-                                         update=":formListagemContasReceber:resumo 
-                                         :formListagemContasReceber:tabelaContaReceber 
-                                         :formListagemContasReceber:growlMessages"
+                                         process="@this"
+                                         actionListener="#{contaReceberControle.prepararRecebimento(contaReceberItem)}"
+                                         update=":frmPagamento:pagamentoDialogoPanel :frmPagamento:msgsPag"
+                                         oncomplete="PF('pagamentoDialog').show()"
                                          rendered="#{contaReceberItem.status eq 'ABERTA'}" />
 
                         <p:commandButton icon="pi pi-times"
                                          title="Cancelar conta"
                                          styleClass="btn-acao btn-cancelar-icone"
-                                         actionListener="#{contaReceberControle.cancelarConta(contaReceberItem)}"
-                                         update=":formListagemContasReceber:resumo 
-                                         :formListagemContasReceber:tabelaContaReceber 
-                                         :formListagemContasReceber:growlMessages"
-                                         rendered="#{contaReceberItem.status ne 'CANCELADA' and contaReceberItem.status ne 'ESTORNADA'}"
-                                         onclick="PF('confirmCancelDialog').show(); return false;" />
+                                         actionListener="#{contaReceberControle.prepararCancelamento(contaReceberItem)}"
+                                         update=":confirmCancelForm"
+                                         oncomplete="PF('confirmCancelDialog').show()"
+                                         rendered="#{contaReceberItem.status ne 'CANCELADA' and contaReceberItem.status ne 'ESTORNADA'}"/>
                     </p:column>
                 </p:dataTable>
-                <p:confirmDialog widgetVar="confirmCancelDialog" header="Confirmar Cancelamento"
-                                 message="Tem certeza que deseja cancelar esta conta? Esta ação não poderá ser desfeita. É recomendado cancelar a venda relacionada a essa conta."
-                                 severity="warn" closable="true" showEffect="fade" hideEffect="fade">
-
+            </h:form>
+            <p:confirmDialog widgetVar="confirmCancelDialog" header="Confirmar Cancelamento"
+                             message="Tem certeza que deseja cancelar esta conta? Esta ação não poderá ser desfeita. É recomendado cancelar a compra relacionada a essa conta."
+                             severity="warn" closable="true" showEffect="fade" hideEffect="fade">
+                <h:form id="confirmCancelForm">
                     <p:commandButton value="Sim, cancelar" icon="pi pi-check"
                                      styleClass="ui-button-danger"
-                                     actionListener="#{contaReceberControle.cancelarConta(contaReceberItem)}"
+                                     actionListener="#{contaReceberControle.cancelarConta}"
                                      update=":formListagemContasReceber:resumo 
-                                     :formListagemContasReceber:tabelaContaReceber 
+                                     :formListagemContasReceber:tabelaContaReceber
                                      :formListagemContasReceber:growlMessages"
                                      oncomplete="PF('confirmCancelDialog').hide()"/>
+                    <p:commandButton value="Não" icon="pi pi-times"
+                                     type="button" styleClass="ui-button-secondary"
+                                     onclick="PF('confirmCancelDialog').hide()"/>
+                </h:form>
+            </p:confirmDialog>
+            <p:dialog header="Pagamento" widgetVar="pagamentoDialog"
+                      modal="true" width="460" appendTo="@(body)" dynamic="true" cache="false">
+                <h:form id="frmPagamento">
+                    <p:messages id="msgsPag"/>
 
-                    <p:commandButton value="Não" icon="pi pi-times" 
-                                     onclick="PF('confirmCancelDialog').hide()" 
-                                     type="button" styleClass="ui-button-secondary"/>
-                </p:confirmDialog>
-            </h:form>
+                    <p:outputPanel id="pagamentoDialogoPanel">
+
+                        <h:panelGroup rendered="#{contaReceberControle.metodoEmDefinicao}">
+                            <h:outputText value="Selecione o método de pagamento:" style="font-weight:bold"/>
+                            <p:selectOneRadio value="#{contaReceberControle.metodoSelecionado}"
+                                              layout="pageDirection"
+                                              required="true"
+                                              requiredMessage="Selecione um método de pagamento.">
+                                <f:selectItems value="#{contaReceberControle.metodosPagamento}" var="m"
+                                               itemValue="#{m}" itemLabel="#{m.descricao}"/>
+                                <p:ajax listener="#{contaReceberControle.onMetodoChange}"
+                                        update="contaPanel :frmPagamento:msgsPag"/>
+                            </p:selectOneRadio>
+                        </h:panelGroup>
+
+                        <p:outputPanel id="contaPanel" styleClass="mt-2" layout="block">
+
+                            <h:panelGroup rendered="#{contaReceberControle.dinheiroSelecionado}">
+                                <h:outputText value="Conta (cofre)" style="font-weight:bold; display:block; margin-top:8px"/>
+                                <p:selectOneMenu value="#{contaReceberControle.contaParaReceber}"
+                                                 converter="#{contaControle.contaConverter}"
+                                                 required="true"
+                                                 requiredMessage="Selecione um cofre.">
+                                    <f:selectItem itemLabel="Selecione" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contaControle.contasCofreAtivas}" var="c"
+                                                   itemLabel="#{c.nome}" itemValue="#{c}"/>
+                                </p:selectOneMenu>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not contaReceberControle.dinheiroSelecionado}">
+                                <h:outputText value="Conta (banco)" style="font-weight:bold; display:block; margin-top:8px"/>
+                                <p:selectOneMenu value="#{contaReceberControle.contaParaReceber}"
+                                                 converter="#{contaControle.contaConverter}"
+                                                 required="true"
+                                                 requiredMessage="Selecione uma conta bancária.">
+                                    <f:selectItem itemLabel="Selecione" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contaControle.contasBancoAtivas}" var="c"
+                                                   itemLabel="#{c.nome}" itemValue="#{c}"/>
+                                </p:selectOneMenu>
+                            </h:panelGroup>
+
+                        </p:outputPanel>
+
+                        <p:commandButton value="Confirmar Pagamento"
+                                         actionListener="#{contaReceberControle.confirmarRecebimento}"
+                                         process="@form"
+                                         update=":formListagemContasReceber:tabelaContaReceber
+                                         :formListagemContasReceber:resumo
+                                         :formListagemContasReceber:growlMessages
+                                         :frmPagamento:msgsPag"
+                                         oncomplete="if(!args.validationFailed){PF('pagamentoDialog').hide()}"/>
+                    </p:outputPanel>
+                </h:form>
+            </p:dialog>
 
             <!-- Estilo -->
             <style>

@@ -99,6 +99,7 @@ public class CompraFacade extends AbstractFacade<Compra> {
                     + " - ID:" + compra.getId());
             conta.setValor(parcela.getValorParcela());
             conta.setDataVencimento(parcela.getDataVencimento());
+            conta.setMetodoPagamento(parcela.getMetodoPagamento());
             conta.setStatus("ABERTA");
 
             contas.add(conta);
@@ -125,7 +126,8 @@ public class CompraFacade extends AbstractFacade<Compra> {
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void cancelarCompra(Compra compraParam) {
-        // 1) Recarrega a compra (só com itens) para não estourar MultipleBagFetch
+
+        // 
         Compra compra = em.createQuery(
                 "select c from Compra c "
                 + "left join fetch c.itensCompra i "
@@ -133,28 +135,28 @@ public class CompraFacade extends AbstractFacade<Compra> {
                 .setParameter("id", compraParam.getId())
                 .getSingleResult();
 
-        // 2) Reverte estoque
+        //volta o estoque
         for (ItensCompra ic : compra.getItensCompra()) {
             ProdutoDerivacao deriv = ic.getProdutoDerivacao();
             deriv.setQuantidade(deriv.getQuantidade() - ic.getQuantidade());
             em.merge(deriv);
         }
 
-        // 3) Busca as contas a pagar desta compra (com o lançamento + conta do lançamento)
         List<ContaPagar> contas = em.createQuery(
-                "select cp from ContaPagar cp "
-                + "left join fetch cp.lancamento l "
+                "select distinct cp from ContaPagar cp "
+                + "left join fetch cp.lancamentos l "
                 + "left join fetch l.conta "
                 + "where cp.compra = :compra", ContaPagar.class)
                 .setParameter("compra", compra)
                 .getResultList();
 
-        // 4) Para cada conta: cancelar/estornar
+        // Para cada conta: cancelar/estornar
         for (ContaPagar cp : contas) {
             String st = cp.getStatus();
             if ("PAGA".equalsIgnoreCase(st)) {
                 estornarContaPagar(cp, "Cancelamento da compra #" + compra.getId());
-            } else {
+            }
+            if ("ABERTA".equalsIgnoreCase(st)) {
                 cp.setStatus("CANCELADA");
                 contaPagarFacade.salvar(cp);
             }
@@ -165,7 +167,7 @@ public class CompraFacade extends AbstractFacade<Compra> {
     }
 
     private void estornarContaPagar(ContaPagar cp, String motivo) {
-        LancamentoFinanceiro original = cp.getLancamento();
+        LancamentoFinanceiro original = lancFacade.buscarOriginalPagamento(cp);
 
         if (original == null) {
             cp.setStatus("ESTORNADA");
@@ -177,7 +179,7 @@ public class CompraFacade extends AbstractFacade<Compra> {
         lancFacade.salvar(original);
 
         LancamentoFinanceiro reverso = new LancamentoFinanceiro();
-        reverso.setConta(original.getConta());               
+        reverso.setConta(original.getConta());
         reverso.setTipo(TipoLancamento.ENTRADA);
         reverso.setValor(original.getValor());
         reverso.setDataHora(new Date());

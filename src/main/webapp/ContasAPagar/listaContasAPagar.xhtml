@@ -56,6 +56,12 @@
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                              styleClass="tabela-contas">
+                    
+                    <p:column headerText="ID: " sortBy="#{contaPagarItem.id}" filterBy="#{contaPagarItem.id}" filterMatchMode="contains">
+                        <h:outputText value="#{contaPagarItem.id}">
+                            <f:convertNumber integerOnly="true" groupingUsed="true" />
+                        </h:outputText>
+                    </p:column>
 
                     <p:column headerText="Descrição" sortBy="#{contaPagarItem.descricao}" filterBy="#{contaPagarItem.descricao}" filterMatchMode="contains">
                         <h:outputText value="#{contaPagarItem.descricao}"/>

@@ -4,10 +4,13 @@
  */
 package Entidades;
 
+import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -39,6 +42,10 @@ public class ParcelaCompra implements Serializable{
 
     @Column(name = "par_valor_parcela")
     private Double valorParcela;
+    
+    @Column(name = "par_metodoPagamento", nullable = true)
+    @Enumerated(EnumType.STRING)
+    private MetodoPagamento metodoPagamento;
 
     // Getters e Setters
     public Long getId() {
@@ -72,4 +79,14 @@ public class ParcelaCompra implements Serializable{
     public void setValorParcela(Double valorParcela) {
         this.valorParcela = valorParcela;
     }
+
+    public MetodoPagamento getMetodoPagamento() {
+        return metodoPagamento;
+    }
+
+    public void setMetodoPagamento(MetodoPagamento metodoPagamento) {
+        this.metodoPagamento = metodoPagamento;
+    }
+    
+    
 }

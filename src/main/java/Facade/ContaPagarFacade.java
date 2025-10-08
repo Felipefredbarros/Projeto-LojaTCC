@@ -56,4 +56,13 @@ public class ContaPagarFacade extends AbstractFacade<ContaPagar> {
         ).getResultList();
     }
 
+    public ContaPagar findWithLancamentos(Long id) {
+        return em.createQuery(
+                "select distinct cp from ContaPagar cp "
+                + "left join fetch cp.lancamentos "
+                + "where cp.id = :id", ContaPagar.class)
+                .setParameter("id", id)
+                .getSingleResult();
+    }
+
 }

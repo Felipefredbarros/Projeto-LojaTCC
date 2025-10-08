@@ -271,6 +271,7 @@ public class CompraControle implements Serializable {
 
         compra.calcularParcelas();
         compra.setPlanoPagamento(PlanoPagamento.PARCELADO_COMPRA);
+        compra.setMetodoPagamento(MetodoPagamento.A_DENIFIR);
         compraFacade.salvarCompra(compra, edit);
 
         FacesContext.getCurrentInstance().addMessage(null,

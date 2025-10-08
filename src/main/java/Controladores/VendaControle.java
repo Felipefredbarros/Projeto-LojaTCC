@@ -1,16 +1,16 @@
 package Controladores;
 
 import Converters.ConverterGenerico;
+import Entidades.Conta;
+import Entidades.ContaReceber;
 import Entidades.ItensVenda;
 import Entidades.Enums.MetodoPagamento;
-import Entidades.MovimentacaoMensalFuncionario;
 import Entidades.Pessoa;
 import Entidades.Enums.PlanoPagamento;
-import static Entidades.Enums.PlanoPagamento.FIADO;
+import Entidades.LancamentoFinanceiro;
 import Entidades.Produto;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
-import Entidades.Enums.TipoBonus;
 import Facade.MovimentacaoMensalFacade;
 import Facade.PessoaFacade;
 import Facade.ProdutoDerivacaoFacade;
@@ -61,12 +61,28 @@ public class VendaControle implements Serializable {
     @EJB
     private MovimentacaoMensalFacade movimentacaoMensalFacade;
 
+    @EJB
+    private Facade.LancamentoFinanceiroFacade lancamentoFinanceiroFacade;
+    @EJB
+    private Facade.ContaFacade contaFacade;
+
+    @EJB
+    private Facade.ContaReceberFacade contaReceberFacade;
+
     private ConverterGenerico pessoaConverter;
     private ConverterGenerico produtoConverter;
     private ConverterGenerico produtoDevConverter;
     private List<MetodoPagamento> metodosPagamentoFiltrados;
     private List<PlanoPagamento> planosPagamentos;
     private Venda vendaSelecionado;
+    private Venda vendaParaFecharAVista;
+    private Conta contaFinanceiraSelecionada;
+    private String obsRecebimento;
+
+    public boolean isMetodoDinheiroDaVendaParaFechar() {
+        return vendaParaFecharAVista != null
+                && vendaParaFecharAVista.getMetodoPagamento() == Entidades.Enums.MetodoPagamento.DINHEIRO;
+    }
 
     @ManagedProperty("#{produtoControle}")
     private ProdutoControle produtoControle;
@@ -144,7 +160,7 @@ public class VendaControle implements Serializable {
             // Apenas PIX e Dinheiro
             this.metodosPagamentoFiltrados = new ArrayList<>();
             this.metodosPagamentoFiltrados.add(MetodoPagamento.A_DENIFIR);
-            
+
         } else if (venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_1X
                 || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_2X
                 || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_3X) {
@@ -282,6 +298,77 @@ public class VendaControle implements Serializable {
                             "Erro ao cancelar a venda!", null));
             e.printStackTrace();
         }
+    }
+
+    public void prepararFechamentoAVista(Venda ven) {
+        this.vendaParaFecharAVista = vendaFacade.findWithItens(ven.getId());
+        this.contaFinanceiraSelecionada = null;
+        this.obsRecebimento = null;
+    }
+
+    public void confirmarFechamentoAVista() {
+        if (vendaParaFecharAVista == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Venda não selecionada."));
+            return;
+        }
+        if (contaFinanceiraSelecionada == null || contaFinanceiraSelecionada.getId() == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Selecione a conta financeira."));
+            return;
+        }
+
+        vendaFacade.fecharVenda(vendaParaFecharAVista);
+
+        // pega a conta a receber gerada pra essa venda à vista
+        ContaReceber cr = contaReceberFacade.findAvistaByVendaIdWithLancs(vendaParaFecharAVista.getId());
+        if (cr == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Não foi possível localizar a conta a receber gerada."));
+            return;
+        }
+
+        // cria lançamento de entrada e vincula a conta a receber
+        LancamentoFinanceiro lanc = new LancamentoFinanceiro();
+        lanc.setConta(contaFinanceiraSelecionada);
+        lanc.setTipo(Entidades.Enums.TipoLancamento.ENTRADA);
+        lanc.setValor(vendaParaFecharAVista.getValorTotal());
+        lanc.setDataHora(new Date());
+        lanc.setMetodo(vendaParaFecharAVista.getMetodoPagamento());
+        lanc.setStatus(Entidades.Enums.StatusLancamento.NORMAL);
+
+        String desc = "Recebimento de venda à vista #" + vendaParaFecharAVista.getId()
+                + " (Conta a Receber #" + cr.getId() + ")";
+        if (obsRecebimento != null && !obsRecebimento.trim().isEmpty()) {
+            desc += " - Observação: " + obsRecebimento.trim();
+        }
+        lanc.setDescricao(desc);
+        cr.addLancamento(lanc);
+
+        lancamentoFinanceiroFacade.salvar(lanc);
+
+        recomputarSaldo(contaFinanceiraSelecionada);
+
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Venda fechada e recebimento registrado!"));
+
+        vendaParaFecharAVista = null;
+        contaFinanceiraSelecionada = null;
+        obsRecebimento = null;
+    }
+
+    private void recomputarSaldo(Entidades.Conta conta) {
+        Double inicial = conta.getValorInicial() != null ? conta.getValorInicial() : 0.0;
+        Double entradas = lancamentoFinanceiroFacade.somarPorContaETipoEPeriodo(conta, Entidades.Enums.TipoLancamento.ENTRADA, null, null);
+        Double saidas = lancamentoFinanceiroFacade.somarPorContaETipoEPeriodo(conta, Entidades.Enums.TipoLancamento.SAIDA, null, null);
+        if (entradas == null) {
+            entradas = 0d;
+        }
+        if (saidas == null) {
+            saidas = 0d;
+        }
+        conta.setSaldo(inicial + entradas - saidas);
+        contaFacade.salvar(conta);
     }
 
     public void exportarPDF() throws DocumentException, IOException {
@@ -528,6 +615,30 @@ public class VendaControle implements Serializable {
 
     public void setVendaSelecionado(Venda vendaSelecionado) {
         this.vendaSelecionado = vendaSelecionado;
+    }
+
+    public Venda getVendaParaFecharAVista() {
+        return vendaParaFecharAVista;
+    }
+
+    public void setVendaParaFecharAVista(Venda vendaParaFecharAVista) {
+        this.vendaParaFecharAVista = vendaParaFecharAVista;
+    }
+
+    public Conta getContaFinanceiraSelecionada() {
+        return contaFinanceiraSelecionada;
+    }
+
+    public void setContaFinanceiraSelecionada(Conta contaFinanceiraSelecionada) {
+        this.contaFinanceiraSelecionada = contaFinanceiraSelecionada;
+    }
+
+    public String getObsRecebimento() {
+        return obsRecebimento;
+    }
+
+    public void setObsRecebimento(String obsRecebimento) {
+        this.obsRecebimento = obsRecebimento;
     }
 
 }

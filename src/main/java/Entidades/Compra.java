@@ -42,7 +42,6 @@ public class Compra implements Serializable, ClassePai {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "com_id")
     private Long id;
-
     @Column(name = "com_metodoPagamento", nullable = true)
     @Enumerated(EnumType.STRING)
     private MetodoPagamento metodoPagamento;
@@ -64,24 +63,23 @@ public class Compra implements Serializable, ClassePai {
 
     @Column(name = "com_parcelas", nullable = false)
     private Integer parcelas;
-    
+
     @Column(name = "ven_status")
     private String status = "Aberta";
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "fornecedor_id")
     private Pessoa fornecedor;
-    
+
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ItensCompra> itensCompra;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @OrderColumn(name="ordem")
+    @OrderColumn(name = "ordem")
     private List<ParcelaCompra> parcelasCompra;
-    
+
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ContaPagar> contasPagar = new ArrayList<>();
-
 
     public List<ParcelaCompra> getParcelasCompra() {
         return parcelasCompra;
@@ -110,6 +108,7 @@ public class Compra implements Serializable, ClassePai {
                 ParcelaCompra parcela = new ParcelaCompra();
                 parcela.setCompra(this);
                 parcela.setValorParcela(valorParcela);
+                parcela.setMetodoPagamento(MetodoPagamento.A_DENIFIR);
                 parcela.setDataVencimento(calendar.getTime());  // Gera a data de vencimento corretamente
                 parcelasCompra.add(parcela);
                 calendar.add(Calendar.MONTH, 1);  // Incrementa o mês para a próxima parcela
@@ -219,8 +218,6 @@ public class Compra implements Serializable, ClassePai {
     public void setContasPagar(List<ContaPagar> contasPagar) {
         this.contasPagar = contasPagar;
     }
-    
-    
 
     @Override
     public int hashCode() {

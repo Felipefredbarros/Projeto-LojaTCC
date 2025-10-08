@@ -66,11 +66,11 @@
                             <f:convertNumber type="currency"/>
                         </h:outputText>
                     </p:column>
-                    
+
                     <p:column headerText="Plano de Pagamento" sortBy="#{vendaItem.planoPagamento.descricao}" filterBy="#{vendaItem.planoPagamento.descricao}" filterMatchMode="contains">
                         <h:outputText value="#{vendaItem.planoPagamento.descricao}"/>
                     </p:column>
-                    
+
                     <p:column headerText="Metodo de Pagamento" sortBy="#{vendaItem.metodoPagamento.descricao}" filterBy="#{vendaItem.metodoPagamento.descricao}" filterMatchMode="contains">
                         <h:outputText value="#{vendaItem.metodoPagamento.descricao}"/>
                     </p:column>
@@ -119,8 +119,19 @@
                                       rendered="#{vendaItem.status eq 'CANCELADA'}"
                                       style="font-weight: bold; color: red;" />
 
+
+                        <!-- Fechar venda A VISTA: abre diálogo -->
                         <p:commandButton value="Fechar" icon="pi pi-lock"
-                                         rendered="#{vendaItem.status eq 'Aberta'}"
+                                         rendered="#{vendaItem.status eq 'Aberta' and vendaItem.planoPagamento eq 'A_VISTA'}"
+                                         actionListener="#{vendaControle.prepararFechamentoAVista(vendaItem)}"
+                                         process="@this"
+                                         update=":dlgFechamentoAVistaForm"
+                                         oncomplete="PF('dlgFechamentoAVista').show()"
+                                         styleClass="rounded-button ui-button-success"/>
+
+                        <!-- fechar normal -->
+                        <p:commandButton value="Fechar" icon="pi pi-lock"
+                                         rendered="#{vendaItem.status eq 'Aberta' and vendaItem.planoPagamento ne 'A_VISTA'}"
                                          actionListener="#{vendaControle.fecharVenda(vendaItem)}"
                                          process="@this"
                                          update=":formListagemVendas:tabelaVendas :formListagemVendas:growlMessages"
@@ -168,7 +179,7 @@
                                     </h:outputText>
                                 </span>
                             </div>
-                            
+
                             <div class="info-box">
                                 <span class="label"><strong>Plano de Pagamento:</strong></span>
                                 <span class="value">#{vendaControle.vendaSelecionado.planoPagamento.descricao}</span>
@@ -212,6 +223,48 @@
                     <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
                 </p:confirmDialog>
             </h:form>
+            
+            <p:dialog id="dlgFechamentoAVista" widgetVar="dlgFechamentoAVista" header="Recebimento à vista"
+                      modal="true" width="460" appendTo="@(body)" dynamic="true" cache="false">
+                <h:form id="dlgFechamentoAVistaForm">
+                    <p:messages id="msgsFechAVista"/>
+
+                    <h:panelGrid columns="1" style="width:100%" columnClasses="ui-g-12">
+                        <h:outputText value="Selecione a conta para registrar a ENTRADA:" style="font-weight:bold"/>
+
+                        <!-- Se método = DINHEIRO, mostra cofres; senão, bancos -->
+                        <h:panelGroup rendered="#{vendaControle.metodoDinheiroDaVendaParaFechar}">
+                            <p:selectOneMenu value="#{vendaControle.contaFinanceiraSelecionada}"
+                                             converter="#{contaControle.contaConverter}"
+                                             required="true"
+                                             requiredMessage="Selecione um cofre.">
+                                <f:selectItem itemLabel="Selecione" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{contaControle.contasCofreAtivas}" var="c" itemLabel="#{c.nome}" itemValue="#{c}"/>
+                            </p:selectOneMenu>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{not vendaControle.metodoDinheiroDaVendaParaFechar}">
+                            <p:selectOneMenu value="#{vendaControle.contaFinanceiraSelecionada}"
+                                             converter="#{contaControle.contaConverter}"
+                                             required="true"
+                                             requiredMessage="Selecione uma conta bancária.">
+                                <f:selectItem itemLabel="Selecione" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{contaControle.contasBancoAtivas}" var="c" itemLabel="#{c.nome}" itemValue="#{c}"/>
+                            </p:selectOneMenu>
+                        </h:panelGroup>
+
+                        <p:inputTextarea value="#{vendaControle.obsRecebimento}" rows="3" placeholder="Observação (opcional)"/>
+                    </h:panelGrid>
+
+                    <p:commandButton value="Confirmar" icon="pi pi-check"
+                                     actionListener="#{vendaControle.confirmarFechamentoAVista}"
+                                     process="@form"
+                                     update=":formListagemVendas:tabelaVendas :formListagemVendas:growlMessages :dlgFechamentoAVistaForm:msgsFechAVista"
+                                     oncomplete="if(!args.validationFailed){PF('dlgFechamentoAVista').hide()}"/>
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgFechamentoAVista').hide()" styleClass="ui-button-secondary"/>
+                </h:form>
+            </p:dialog>
+
             <style>
                 .info-box-grid {
                     display: grid;

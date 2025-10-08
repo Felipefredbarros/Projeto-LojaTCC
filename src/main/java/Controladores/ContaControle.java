@@ -4,7 +4,6 @@ import Converters.ConverterGenerico;
 import Entidades.Conta;
 import Entidades.Enums.StatusLancamento;
 import Entidades.Enums.TipoConta;
-import static Entidades.Enums.TipoConta.COFRE;
 import Entidades.Enums.TipoLancamento;
 import Entidades.LancamentoFinanceiro;
 import Facade.ContaFacade;
@@ -61,6 +60,43 @@ public class ContaControle implements Serializable {
     private List<LancamentoFinanceiro> movimentacoesDaConta;
 
     private Long paramContaId;
+
+    private FiltroEstorno filtroEstorno = FiltroEstorno.TODAS;
+
+    public enum FiltroEstorno {
+        TODAS, // mostra tudo
+        SEM_ESTORNOS, // só lançamentos normais
+        APENAS_ESTORNOS // apenas estornados + reversos
+    }
+
+    public boolean isEstorno(LancamentoFinanceiro l) {
+        if (l == null) {
+            return false;
+        }
+        if (l.getStatus() == Entidades.Enums.StatusLancamento.ESTORNADO) {
+            return true;
+        }
+        String d = l.getDescricao();
+        return d != null && d.trim().toLowerCase().startsWith("estorno");
+    }
+
+    public List<LancamentoFinanceiro> getMovimentacoesFiltradas() {
+        if (movimentacoesDaConta == null) {
+            return java.util.Collections.emptyList();
+        }
+        switch (filtroEstorno) {
+            case SEM_ESTORNOS:
+                return movimentacoesDaConta.stream()
+                        .filter(l -> !isEstorno(l))
+                        .collect(java.util.stream.Collectors.toList());
+            case APENAS_ESTORNOS:
+                return movimentacoesDaConta.stream()
+                        .filter(this::isEstorno)
+                        .collect(java.util.stream.Collectors.toList());
+            default:
+                return movimentacoesDaConta;
+        }
+    }
 
     public void initDetalhe() {
         if (contaSelecionada == null || (paramContaId != null && !paramContaId.equals(contaSelecionada.getId()))) {
@@ -537,10 +573,6 @@ public class ContaControle implements Serializable {
         this.filtroPeriodo = filtroPeriodo;
     }
 
-    public List<LancamentoFinanceiro> getMovimentacoesFiltradas() {
-        return movimentacoesFiltradas;
-    }
-
     public void setMovimentacoesFiltradas(List<LancamentoFinanceiro> movimentacoesFiltradas) {
         this.movimentacoesFiltradas = movimentacoesFiltradas;
     }
@@ -658,6 +690,14 @@ public class ContaControle implements Serializable {
 
     public void setMovimentacoesDaConta(List<LancamentoFinanceiro> movimentacoesDaConta) {
         this.movimentacoesDaConta = movimentacoesDaConta;
+    }
+
+    public FiltroEstorno getFiltroEstorno() {
+        return filtroEstorno;
+    }
+
+    public void setFiltroEstorno(FiltroEstorno filtroEstorno) {
+        this.filtroEstorno = filtroEstorno;
     }
 
 }

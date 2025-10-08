@@ -5,6 +5,7 @@
 package Facade;
 
 import Entidades.ContaReceber;
+import Entidades.Venda;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -60,16 +61,50 @@ public class ContaReceberFacade extends AbstractFacade<ContaReceber> {
 
     public List<ContaReceber> listaTodosReais() {
         Query q = getEntityManager().createQuery(
-                "FROM ContaReceber v WHERE v.status NOT IN ('CANCELADA', 'ESTORNADA') ORDER BY v.id DESC"
+                "FROM ContaReceber v WHERE v.status NOT IN ('CANCELADA') ORDER BY v.id DESC"
         );
         return q.getResultList();
     }
 
     public List<ContaReceber> listaTodosCanceladas() {
         return em.createQuery(
-                "FROM ContaReceber v WHERE v.status IN ('CANCELADA', 'ESTORNADA') ORDER BY v.id DESC",
+                "FROM ContaReceber v WHERE v.status IN ('CANCELADA') ORDER BY v.id DESC",
                 ContaReceber.class
         ).getResultList();
+    }
+
+    public ContaReceber buscarAvistaDaVenda(Venda venda) {
+        List<ContaReceber> list = em.createQuery(
+                "select c from ContaReceber c "
+                + "where c.venda = :v and c.status = 'RECEBIDA' "
+                + "order by c.id desc", ContaReceber.class)
+                .setParameter("v", venda)
+                .setMaxResults(1)
+                .getResultList();
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    public ContaReceber findWithLancamentos(Long id) {
+        return em.createQuery(
+                "select distinct cp from ContaReceber cp "
+                + "left join fetch cp.lancamentos "
+                + "where cp.id = :id", ContaReceber.class)
+                .setParameter("id", id)
+                .getSingleResult();
+    }
+
+    // ContaReceberFacade
+    public ContaReceber findAvistaByVendaIdWithLancs(Long vendaId) {
+        List<ContaReceber> list = em.createQuery(
+                "select cr from ContaReceber cr "
+                + "left join fetch cr.lancamentos l "
+                + "where cr.venda.id = :vid and cr.status = 'RECEBIDA' "
+                + // à vista você marcou como RECEBIDA
+                "order by cr.id desc", ContaReceber.class)
+                .setParameter("vid", vendaId)
+                .setMaxResults(1)
+                .getResultList();
+        return list.isEmpty() ? null : list.get(0);
     }
 
 }

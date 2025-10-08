@@ -6,7 +6,9 @@ package Entidades;
 
 import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -18,6 +20,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -70,10 +73,14 @@ public class ContaPagar implements Serializable, ClassePai {
     @JoinColumn(name = "conta_id")
     private Conta contaPagamento;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, optional = true)
-    @JoinColumn(name = "lancamento_id", unique = true)
-    private LancamentoFinanceiro lancamento;
+    @OneToMany(mappedBy = "contaPagar", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<LancamentoFinanceiro> lancamentos = new ArrayList<>();
 
+    public void addLancamento(LancamentoFinanceiro l) {
+    l.setContaPagar(this);
+    this.lancamentos.add(l);
+}
+    
     @Override
     public Long getId() {
         return id;
@@ -151,13 +158,15 @@ public class ContaPagar implements Serializable, ClassePai {
         this.contaPagamento = contaPagamento;
     }
 
-    public LancamentoFinanceiro getLancamento() {
-        return lancamento;
+    public List<LancamentoFinanceiro> getLancamentos() {
+        return lancamentos;
     }
 
-    public void setLancamento(LancamentoFinanceiro lancamento) {
-        this.lancamento = lancamento;
+    public void setLancamentos(List<LancamentoFinanceiro> lancamentos) {
+        this.lancamentos = lancamentos;
     }
+
+    
 
     @Override
     public int hashCode() {

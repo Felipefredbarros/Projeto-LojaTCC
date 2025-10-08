@@ -159,24 +159,17 @@
                             <h:outputText value="Movimentações"/>
                         </f:facet>
                         <p:outputPanel styleClass="table-actions" layout="block">
-                            <div class="left">
-                                <p:inputText id="globalFilterTxt" styleClass="gf" placeholder="Filtrar em tudo..."
-                                             onkeyup="PF('tabelaMovWV').filter()"/>
-                            </div>
+                            <p:selectOneRadio value="#{contaControle.filtroEstorno}">
+                                <f:selectItem itemLabel="Todas" itemValue="TODAS" />
+                                <f:selectItem itemLabel="Sem estornos" itemValue="SEM_ESTORNOS" />
+                                <f:selectItem itemLabel="Somente estornos" itemValue="APENAS_ESTORNOS" />
+                                <p:ajax update="tabelaMov" />
+                            </p:selectOneRadio>
 
-                            <div class="right">
-                                <p:selectOneMenu value="#{contaControle.filtroTipo}" styleClass="mr-2" placeholder="Tipo">
-                                    <f:selectItem itemLabel="Todos os Tipos" itemValue="#{null}"/>
-                                    <f:selectItem itemLabel="Entradas" itemValue="ENTRADA"/>
-                                    <f:selectItem itemLabel="Saídas" itemValue="SAIDA"/>
-                                    <p:ajax listener="#{contaControle.carregarMovimentacoes}" update="tabelaMov"/>
-                                </p:selectOneMenu>
-
-                            </div>
                         </p:outputPanel>
 
                         <p:dataTable id="tabelaMov" widgetVar="tabelaMovWV"
-                                     value="#{contaControle.movimentacoesDaConta}"
+                                     value="#{contaControle.movimentacoesFiltradas}"
                                      var="mov"
                                      emptyMessage="Nenhuma movimentação registrada"
                                      paginator="true" rows="10"
@@ -195,6 +188,10 @@
 
                             <p:column headerText="Tipo" styleClass="col-xs center">
                                 <p:tag value="#{mov.tipo}" severity="#{mov.tipo eq 'ENTRADA' ? 'success' : 'danger'}"/>
+                            </p:column>
+
+                            <p:column headerText="Metodo Pagamento" sortBy="#{mov.metodo.descricao}" filterBy="#{mov.metodo.descricao}" styleClass="col-xs center">
+                                <p:tag value="#{mov.metodo.descricao}"/>
                             </p:column>
 
                             <p:column headerText="Valor" sortBy="#{mov.valor}" filterBy="#{mov.valor}" styleClass="col-md right">

@@ -82,7 +82,7 @@ public class ContaPagarControle implements Serializable {
         System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
         this.contaSelecionada = conta;
         System.out.println("CONTA: " + contaSelecionada.getDescricao() + "contacuzaopreto:" + contaSelecionada.getStatus());
-        this.metodoSelecionado = null; // limpa seleção anterior
+        this.metodoSelecionado = null; 
     }
 
     public void prepararCancelamento(ContaPagar c) {
@@ -90,12 +90,7 @@ public class ContaPagarControle implements Serializable {
     }
 
     public void confirmarPagamento() {
-        System.out.println("== confirmarPagamento ==");
-        System.out.println("contaSelecionada: " + (contaSelecionada == null ? "NULL" : contaSelecionada.getId()));
-        System.out.println("metodoSelecionado: " + metodoSelecionado);
-        System.out.println("contaParaPagar: " + (contaParaPagar == null ? "NULL" : contaParaPagar.getId()));
-
-        // 1) Validações básicas
+        // validações básicas
         if (contaSelecionada == null) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Nenhuma conta a pagar selecionada.", null));
@@ -111,7 +106,6 @@ public class ContaPagarControle implements Serializable {
             return;
         }
 
-        // 2) Regras: método x tipo de conta
         boolean isDinheiro = MetodoPagamento.DINHEIRO.equals(metodoSelecionado);
         if (isDinheiro && contaParaPagar.getTipoConta() != TipoConta.COFRE) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -126,7 +120,7 @@ public class ContaPagarControle implements Serializable {
             return;
         }
 
-        // 3) Regra de saldo quando for cofre
+        // Regra de saldo quando for cofre
         if (contaParaPagar.getTipoConta() == TipoConta.COFRE) {
             double saldoAtual = contaParaPagar.getSaldo() != null ? contaParaPagar.getSaldo() : 0d;
             if (contaSelecionada.getValor() > saldoAtual) {
@@ -136,29 +130,34 @@ public class ContaPagarControle implements Serializable {
                 return;
             }
         }
+        ContaPagar cp = contaPagarFacade.findWithLancamentos(contaSelecionada.getId());
 
-        // 4) Criar e persistir o lançamento primeiro (SAÍDA)
         LancamentoFinanceiro lanc = new LancamentoFinanceiro();
         lanc.setConta(contaParaPagar);
         lanc.setTipo(TipoLancamento.SAIDA);
-        lanc.setValor(contaSelecionada.getValor());
+        lanc.setValor(cp.getValor());
         lanc.setDataHora(new Date());
         lanc.setStatus(StatusLancamento.NORMAL);
         lanc.setMetodo(metodoSelecionado);
-        lanc.setContaPagar(contaSelecionada);
+        lanc.setContaPagar(cp);
 
-        String desc = "Pagamento conta #" + contaSelecionada.getId()
-                + (contaSelecionada.getDescricao() != null ? " - " + contaSelecionada.getDescricao() : "");
+        String desc = "Pagamento Conta #" + cp.getId()
+                + (cp.getDescricao() != null ? " - " + cp.getDescricao() : "");
         if (obsPagamento != null && !obsPagamento.trim().isEmpty()) {
             desc += " (" + obsPagamento.trim() + ")";
         }
         lanc.setDescricao(desc);
 
-        contaSelecionada.setMetodoPagamento(metodoSelecionado);
-        contaSelecionada.setStatus("PAGA");
-        contaSelecionada.setDataRecebimento(new Date());
-        contaSelecionada.setLancamento(lanc);
-        contaPagarFacade.salvar(contaSelecionada);
+        // vincula nas duas pontas
+        cp.addLancamento(lanc);
+
+        // atualiza status da conta
+        cp.setMetodoPagamento(metodoSelecionado);
+        cp.setStatus("PAGA");
+        cp.setDataRecebimento(new Date());
+
+        // salva (cascade vai persistir o lançamento)
+        contaPagarFacade.salvar(cp);
 
         recomputarSaldo(contaParaPagar);
 
@@ -189,7 +188,8 @@ public class ContaPagarControle implements Serializable {
         ContaPagar cp = this.contaSelecionada;
 
         if ("PAGA".equals(cp.getStatus())) {
-            LancamentoFinanceiro original = cp.getLancamento();
+            LancamentoFinanceiro original = lancamentoFinanceiroFacade.buscarOriginalPagamento(cp);
+
             if (original == null) {
                 cp.setStatus("ESTORNADA");
                 contaPagarFacade.salvar(cp);

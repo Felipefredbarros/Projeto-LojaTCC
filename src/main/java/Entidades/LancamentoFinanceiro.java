@@ -55,6 +55,7 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
     private String categoria;
 
     @Column(name = "lancamento_metodo")
+    @Enumerated(EnumType.STRING)
     private MetodoPagamento metodo;
 
     @Column(name = "status")
@@ -65,7 +66,12 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
     @JoinColumn(name = "conta_id")
     private Conta conta;
 
-    @OneToOne(mappedBy = "lancamento")
+    @ManyToOne
+    @JoinColumn(name = "contaReceber_id")  // sem unique
+    private ContaReceber contaReceber;
+
+    @ManyToOne
+    @JoinColumn(name = "contaPagar_id")  // sem unique
     private ContaPagar contaPagar;
 
     @Override
@@ -147,6 +153,14 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
 
     public void setContaPagar(ContaPagar contaPagar) {
         this.contaPagar = contaPagar;
+    }
+
+    public ContaReceber getContaReceber() {
+        return contaReceber;
+    }
+
+    public void setContaReceber(ContaReceber contaReceber) {
+        this.contaReceber = contaReceber;
     }
 
     @Override

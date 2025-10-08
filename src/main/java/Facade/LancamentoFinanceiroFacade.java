@@ -5,6 +5,9 @@
 package Facade;
 
 import Entidades.Conta;
+import Entidades.ContaPagar;
+import Entidades.ContaReceber;
+import Entidades.Enums.StatusLancamento;
 import Entidades.Enums.TipoLancamento;
 import Entidades.LancamentoFinanceiro;
 import java.util.Date;
@@ -75,6 +78,32 @@ public class LancamentoFinanceiroFacade extends AbstractFacade<LancamentoFinance
 
         List<LancamentoFinanceiro> resultados = q.getResultList();
         return resultados.isEmpty() ? null : resultados.get(0);
+    }
+
+    public LancamentoFinanceiro buscarOriginalPagamento(ContaPagar cp) {
+        List<LancamentoFinanceiro> list = em.createQuery(
+                "select l from LancamentoFinanceiro l "
+                + "where l.contaPagar = :cp and l.tipo = :tipo and l.status = :st "
+                + "order by l.dataHora asc", LancamentoFinanceiro.class)
+                .setParameter("cp", cp)
+                .setParameter("tipo", TipoLancamento.SAIDA)
+                .setParameter("st", StatusLancamento.NORMAL)
+                .setMaxResults(1)
+                .getResultList();
+        return list.isEmpty() ? null : list.get(0);
+    }
+    
+    public LancamentoFinanceiro buscarOriginalRecebimento(ContaReceber cp) {
+        List<LancamentoFinanceiro> list = em.createQuery(
+                "select l from LancamentoFinanceiro l "
+                + "where l.contaReceber = :cp and l.tipo = :tipo and l.status = :st "
+                + "order by l.dataHora asc", LancamentoFinanceiro.class)
+                .setParameter("cp", cp)
+                .setParameter("tipo", TipoLancamento.ENTRADA)
+                .setParameter("st", StatusLancamento.NORMAL)
+                .setMaxResults(1)
+                .getResultList();
+        return list.isEmpty() ? null : list.get(0);
     }
 
 }

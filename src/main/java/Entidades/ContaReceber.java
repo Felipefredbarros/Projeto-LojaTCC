@@ -6,9 +6,11 @@ package Entidades;
 
 import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -66,11 +68,18 @@ public class ContaReceber implements Serializable, ClassePai {
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataRecebimento;
 
+    @OneToMany(mappedBy = "contaReceber", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<LancamentoFinanceiro> lancamentos = new ArrayList<>();
 
     @Override
     public Long getId() {
         return id;
     }
+    
+    public void addLancamento(LancamentoFinanceiro l) {
+    l.setContaReceber(this);
+    this.lancamentos.add(l);
+}
 
     public void setId(Long id) {
         this.id = id;
@@ -139,7 +148,15 @@ public class ContaReceber implements Serializable, ClassePai {
     public void setMetodoPagamento(MetodoPagamento metodoPagamento) {
         this.metodoPagamento = metodoPagamento;
     }
-    
+
+    public List<LancamentoFinanceiro> getLancamentos() {
+        return lancamentos;
+    }
+
+    public void setLancamentos(List<LancamentoFinanceiro> lancamentos) {
+        this.lancamentos = lancamentos;
+    }
+
     
 
     @Override

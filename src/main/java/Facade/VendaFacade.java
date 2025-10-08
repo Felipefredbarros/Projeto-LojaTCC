@@ -5,10 +5,13 @@
  */
 package Facade;
 
+import Entidades.Conta;
 import Entidades.ContaReceber;
-import Entidades.Enums.MetodoPagamento;
+import Entidades.Enums.StatusLancamento;
 import Entidades.Enums.TipoBonus;
+import Entidades.Enums.TipoLancamento;
 import Entidades.ItensVenda;
+import Entidades.LancamentoFinanceiro;
 import Entidades.MovimentacaoMensalFuncionario;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
@@ -18,6 +21,8 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -34,6 +39,11 @@ public class VendaFacade extends AbstractFacade<Venda> {
 
     @EJB
     private ContaReceberFacade contaReceberFacade;
+
+    @EJB
+    private ContaFacade contaFacade;
+    @EJB
+    private LancamentoFinanceiroFacade lancFacade;
 
     @PersistenceContext(unitName = "projetotestPU")
     private EntityManager em;
@@ -170,6 +180,7 @@ public class VendaFacade extends AbstractFacade<Venda> {
         return cal.getTime();
     }
 
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void cancelarVenda(Venda venda) {
         venda = em.find(Venda.class, venda.getId());
         venda.getItensVenda().size();
@@ -190,17 +201,71 @@ public class VendaFacade extends AbstractFacade<Venda> {
 
         venda.setStatus("CANCELADA");
 
-        for (ContaReceber conta : venda.getContasReceber()) {
-            if ("RECEBIDA".equals(conta.getStatus())) {
-                conta.setStatus("ESTORNADA");
+        for (ContaReceber cr : venda.getContasReceber()) {
+            if ("RECEBIDA".equals(cr.getStatus())) {
+                estornarContaReceber(cr, "Cancelamento da venda #" + venda.getId());
             } else {
-                conta.setStatus("CANCELADA");
+                cr.setStatus("CANCELADA");
+                contaReceberFacade.salvar(cr);
             }
 
-            contaReceberFacade.salvar(conta);
+        }
+        em.merge(venda);
+    }
+
+    private void estornarContaReceber(ContaReceber cr, String motivo) {
+        LancamentoFinanceiro original = lancFacade.buscarOriginalRecebimento(cr);
+
+        if (original == null) {
+            cr.setStatus("ESTORNADA");
+            contaReceberFacade.salvar(cr);
+            return;
         }
 
-        em.merge(venda);
+        original.setStatus(StatusLancamento.ESTORNADO);
+        lancFacade.salvar(original);
+
+        LancamentoFinanceiro reverso = new LancamentoFinanceiro();
+        reverso.setConta(original.getConta());
+        reverso.setTipo(TipoLancamento.SAIDA);
+        reverso.setValor(original.getValor());
+        reverso.setDataHora(new Date());
+        reverso.setMetodo(original.getMetodo());
+        reverso.setContaReceber(cr);
+        reverso.setStatus(StatusLancamento.NORMAL);
+
+        String desc = "Estorno de recebimento da Conta a Receber #" + cr.getId()
+                + " (Venda #" + cr.getVenda().getId() + ")";
+
+        if (cr.getDescricao() != null && !cr.getDescricao().trim().isEmpty()) {
+            desc += " - " + cr.getDescricao().trim();
+        }
+        if (motivo != null && !motivo.trim().isEmpty()) {
+            desc += " - Motivo: " + motivo.trim();
+        }
+
+        reverso.setDescricao(desc);
+
+        lancFacade.salvar(reverso);
+
+        cr.setStatus("ESTORNADA");
+        contaReceberFacade.salvar(cr);
+
+        recomputarSaldo(original.getConta());
+    }
+
+    private void recomputarSaldo(Conta conta) {
+        Double inicial = conta.getValorInicial() != null ? conta.getValorInicial() : 0.0;
+        Double entradas = lancFacade.somarPorContaETipoEPeriodo(conta, TipoLancamento.ENTRADA, null, null);
+        Double saidas = lancFacade.somarPorContaETipoEPeriodo(conta, TipoLancamento.SAIDA, null, null);
+        if (entradas == null) {
+            entradas = 0d;
+        }
+        if (saidas == null) {
+            saidas = 0d;
+        }
+        conta.setSaldo(inicial + entradas - saidas);
+        contaFacade.salvar(conta);
     }
 
     @Override
