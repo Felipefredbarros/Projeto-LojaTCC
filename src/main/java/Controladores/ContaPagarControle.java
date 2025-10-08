@@ -83,6 +83,7 @@ public class ContaPagarControle implements Serializable {
         this.contaSelecionada = conta;
         System.out.println("CONTA: " + contaSelecionada.getDescricao() + "contacuzaopreto:" + contaSelecionada.getStatus());
         this.metodoSelecionado = null; 
+        this.obsPagamento = null;
     }
 
     public void prepararCancelamento(ContaPagar c) {

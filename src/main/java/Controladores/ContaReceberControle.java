@@ -165,7 +165,7 @@ public class ContaReceberControle implements Serializable {
             desc += " - " + cr.getDescricao().trim();
         }
         if (obsRecebimento != null && !obsRecebimento.trim().isEmpty()) {
-            desc += " - Observação: " + obsRecebimento.trim();
+            desc += " - (" + obsRecebimento.trim() +")";
         }
 
         lanc.setDescricao(desc);

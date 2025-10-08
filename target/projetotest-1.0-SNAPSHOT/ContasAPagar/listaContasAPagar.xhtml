@@ -56,7 +56,7 @@
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                              styleClass="tabela-contas">
-                    
+
                     <p:column headerText="ID: " sortBy="#{contaPagarItem.id}" filterBy="#{contaPagarItem.id}" filterMatchMode="contains">
                         <h:outputText value="#{contaPagarItem.id}">
                             <f:convertNumber integerOnly="true" groupingUsed="true" />
@@ -195,6 +195,7 @@
                                                    itemLabel="#{c.nome}" itemValue="#{c}"/>
                                 </p:selectOneMenu>
                             </h:panelGroup>
+                            <p:inputTextarea value="#{contaPagarControle.obsPagamento}" rows="3" placeholder="Observação (opcional)"/>
 
                         </p:outputPanel>
 

@@ -340,7 +340,7 @@ public class VendaControle implements Serializable {
         String desc = "Recebimento de venda à vista #" + vendaParaFecharAVista.getId()
                 + " (Conta a Receber #" + cr.getId() + ")";
         if (obsRecebimento != null && !obsRecebimento.trim().isEmpty()) {
-            desc += " - Observação: " + obsRecebimento.trim();
+            desc += " - (" + obsRecebimento.trim()+")";
         }
         lanc.setDescricao(desc);
         cr.addLancamento(lanc);
