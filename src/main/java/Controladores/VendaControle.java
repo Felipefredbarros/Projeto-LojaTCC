@@ -16,6 +16,7 @@ import Facade.PessoaFacade;
 import Facade.ProdutoDerivacaoFacade;
 import Facade.ProdutoFacade;
 import Facade.VendaFacade;
+import Utilitario.FinanceDesc;
 
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
@@ -337,11 +338,9 @@ public class VendaControle implements Serializable {
         lanc.setMetodo(vendaParaFecharAVista.getMetodoPagamento());
         lanc.setStatus(Entidades.Enums.StatusLancamento.NORMAL);
 
-        String desc = "Recebimento de venda à vista #" + vendaParaFecharAVista.getId()
-                + " (Conta a Receber #" + cr.getId() + ")";
-        if (obsRecebimento != null && !obsRecebimento.trim().isEmpty()) {
-            desc += " - (" + obsRecebimento.trim()+")";
-        }
+        String desc = FinanceDesc.recebimentoVendaAVista(vendaParaFecharAVista, cr, obsRecebimento);
+
+
         lanc.setDescricao(desc);
         cr.addLancamento(lanc);
 

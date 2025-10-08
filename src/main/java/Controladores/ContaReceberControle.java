@@ -14,6 +14,7 @@ import Entidades.LancamentoFinanceiro;
 import Facade.ContaFacade;
 import Facade.ContaReceberFacade;
 import Facade.LancamentoFinanceiroFacade;
+import Utilitario.FinanceDesc;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,6 +89,31 @@ public class ContaReceberControle implements Serializable {
         ContaReceber cr = this.contaSelecionada;
 
         if ("RECEBIDA".equals(cr.getStatus())) {
+            LancamentoFinanceiro original = lancamentoFinanceiroFacade.buscarOriginalRecebimento(cr);
+            if (original == null) {
+                cr.setStatus("ESTORNADA");
+                contaReceberFacade.salvar(cr);
+                return;
+            }
+            original.setStatus(StatusLancamento.ESTORNADO);
+            lancamentoFinanceiroFacade.salvar(original);
+
+            LancamentoFinanceiro reverso = new LancamentoFinanceiro();
+            reverso.setConta(original.getConta());
+            reverso.setTipo(TipoLancamento.SAIDA);
+            reverso.setValor(original.getValor());
+            reverso.setDataHora(new Date());
+            reverso.setMetodo(original.getMetodo());
+            reverso.setContaReceber(cr);
+            reverso.setStatus(StatusLancamento.NORMAL);
+
+            reverso.setDescricao(FinanceDesc.estornoRecebimentoCR(cr, null));
+            
+            lancamentoFinanceiroFacade.salvar(reverso);
+            cr.setStatus("ESTORNADA");
+            contaReceberFacade.salvar(cr);
+            recomputarSaldo(original.getConta());
+
             cr.setStatus("ESTORNADA");
         } else {
             cr.setStatus("CANCELADA");
@@ -158,15 +184,7 @@ public class ContaReceberControle implements Serializable {
         lanc.setMetodo(metodoSelecionado);
         lanc.setContaReceber(cr);
 
-        String desc = "Recebimento da Conta a Receber #" + cr.getId()
-                + " referente à Venda #" + cr.getVenda().getId();
-
-        if (cr.getDescricao() != null && !cr.getDescricao().trim().isEmpty()) {
-            desc += " - " + cr.getDescricao().trim();
-        }
-        if (obsRecebimento != null && !obsRecebimento.trim().isEmpty()) {
-            desc += " - (" + obsRecebimento.trim() +")";
-        }
+        String desc = FinanceDesc.recebimentoContaReceber(cr, obsRecebimento);
 
         lanc.setDescricao(desc);
 

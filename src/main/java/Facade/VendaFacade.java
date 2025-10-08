@@ -15,6 +15,7 @@ import Entidades.LancamentoFinanceiro;
 import Entidades.MovimentacaoMensalFuncionario;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
+import Utilitario.FinanceDesc;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -204,7 +205,7 @@ public class VendaFacade extends AbstractFacade<Venda> {
         for (ContaReceber cr : venda.getContasReceber()) {
             if ("RECEBIDA".equals(cr.getStatus())) {
                 estornarContaReceber(cr, "Cancelamento da venda #" + venda.getId());
-            } else {
+            } if ("ABERTA".equals(cr.getStatus())) {
                 cr.setStatus("CANCELADA");
                 contaReceberFacade.salvar(cr);
             }
@@ -234,15 +235,7 @@ public class VendaFacade extends AbstractFacade<Venda> {
         reverso.setContaReceber(cr);
         reverso.setStatus(StatusLancamento.NORMAL);
 
-        String desc = "Estorno de recebimento da Conta a Receber #" + cr.getId()
-                + " (Venda #" + cr.getVenda().getId() + ")";
-
-        if (cr.getDescricao() != null && !cr.getDescricao().trim().isEmpty()) {
-            desc += " - " + cr.getDescricao().trim();
-        }
-        if (motivo != null && !motivo.trim().isEmpty()) {
-            desc += " - Motivo: " + motivo.trim();
-        }
+        String desc = FinanceDesc.estornoRecebimentoCR(cr, motivo);
 
         reverso.setDescricao(desc);
 

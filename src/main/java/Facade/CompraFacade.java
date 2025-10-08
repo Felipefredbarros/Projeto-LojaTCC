@@ -15,6 +15,7 @@ import Entidades.LancamentoFinanceiro;
 import Entidades.ParcelaCompra;
 import Entidades.Produto;
 import Entidades.ProdutoDerivacao;
+import Utilitario.FinanceDesc;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -187,14 +188,8 @@ public class CompraFacade extends AbstractFacade<Compra> {
         reverso.setContaPagar(cp);
         reverso.setStatus(StatusLancamento.NORMAL);
 
-        String desc = "ESTORNO pagamento ContaPagar #" + cp.getId();
-        if (cp.getDescricao() != null && !cp.getDescricao().trim().isEmpty()) {
-            desc += " - " + cp.getDescricao();
-        }
-        if (motivo != null && !motivo.trim().isEmpty()) {
-            desc += " (" + motivo.trim() + ")";
-        }
-        reverso.setDescricao(desc);
+
+        reverso.setDescricao(FinanceDesc.estornoPagamentoCP(cp, motivo));
 
         lancFacade.salvar(reverso);
 

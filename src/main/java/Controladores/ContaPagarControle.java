@@ -13,6 +13,7 @@ import Entidades.Enums.TipoLancamento;
 import Entidades.LancamentoFinanceiro;
 import Facade.ContaPagarFacade;
 import Facade.LancamentoFinanceiroFacade;
+import Utilitario.FinanceDesc;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -82,7 +83,7 @@ public class ContaPagarControle implements Serializable {
         System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
         this.contaSelecionada = conta;
         System.out.println("CONTA: " + contaSelecionada.getDescricao() + "contacuzaopreto:" + contaSelecionada.getStatus());
-        this.metodoSelecionado = null; 
+        this.metodoSelecionado = null;
         this.obsPagamento = null;
     }
 
@@ -142,12 +143,7 @@ public class ContaPagarControle implements Serializable {
         lanc.setMetodo(metodoSelecionado);
         lanc.setContaPagar(cp);
 
-        String desc = "Pagamento Conta #" + cp.getId()
-                + (cp.getDescricao() != null ? " - " + cp.getDescricao() : "");
-        if (obsPagamento != null && !obsPagamento.trim().isEmpty()) {
-            desc += " (" + obsPagamento.trim() + ")";
-        }
-        lanc.setDescricao(desc);
+        lanc.setDescricao(FinanceDesc.pagamentoContaPagar(cp, obsPagamento));
 
         // vincula nas duas pontas
         cp.addLancamento(lanc);
@@ -208,12 +204,8 @@ public class ContaPagarControle implements Serializable {
             reverso.setContaPagar(cp);
             reverso.setStatus(StatusLancamento.NORMAL);
 
-            String desc = "ESTORNO pagamento ContaPagar #" + cp.getId();
-            if (cp.getDescricao() != null && !cp.getDescricao().trim().isEmpty()) {
-                desc += " - " + cp.getDescricao();
-            }
 
-            reverso.setDescricao(desc);
+            reverso.setDescricao(FinanceDesc.estornoPagamentoCP(cp, null));
 
             lancamentoFinanceiroFacade.salvar(reverso);
             cp.setStatus("ESTORNADA");

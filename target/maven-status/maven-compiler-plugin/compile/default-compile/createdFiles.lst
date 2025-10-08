@@ -48,6 +48,7 @@ Facade\ContaReceberFacade.class
 Entidades\ContaReceber.class
 Entidades\ContratoTrabalho.class
 Entidades\Telefone.class
+Utilitario\FinanceDesc.class
 Controladores\ProdutoControle.class
 Entidades\ProdutoDerivacao.class
 Entidades\Marca.class
