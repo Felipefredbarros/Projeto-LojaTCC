@@ -7,6 +7,9 @@ package Facade;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.criteria.Root; // Importe esta classe
+import javax.persistence.criteria.CriteriaQuery;
+
 
 /**
  *
@@ -51,5 +54,18 @@ public abstract class AbstractFacade<T> {
         Query q = getEntityManager().createQuery(hql);
         q.setParameter("filtro", "%" + filtro.toLowerCase() + "%");
         return q.getResultList();
+    }
+    
+     public int count() {
+        // 1. Cria uma query de critérios (CriteriaQuery)
+        CriteriaQuery cq = getEntityManager().getCriteriaBuilder().createQuery();
+        
+        Root<T> rt = cq.from(entityClass);
+        
+        cq.select(getEntityManager().getCriteriaBuilder().count(rt));
+        
+        javax.persistence.Query q = getEntityManager().createQuery(cq);
+        
+        return ((Long) q.getSingleResult()).intValue();
     }
 }

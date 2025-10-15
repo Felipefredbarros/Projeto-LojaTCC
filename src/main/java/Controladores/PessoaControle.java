@@ -15,8 +15,8 @@ import Entidades.Telefone;
 import Entidades.Enums.tipoTelefone;
 import Entidades.Estado;
 import Facade.CidadeFacade;
+import Facade.EstadoFacade;
 import Facade.PessoaFacade;
-import Services.IbgeService;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
@@ -30,10 +30,8 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
 import javax.faces.view.ViewScoped;
 
-import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
@@ -43,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
 /**
  *
@@ -68,8 +65,8 @@ public class PessoaControle implements Serializable {
     private Long cidadeSelecionadaId;
     private List<Estado> listaEstados;
     private List<Cidade> listaCidades;
-    @Inject
-    private IbgeService ibgeService;
+    @EJB
+    private EstadoFacade estadoFacade;
 
     @PostConstruct
     public void init() {
@@ -86,23 +83,13 @@ public class PessoaControle implements Serializable {
     }
 
     private void carregarEstados() {
-        try {
-            listaEstados = ibgeService.buscarEstados();
-        } catch (Exception e) {
-            // Adicionar uma mensagem de erro para o usuário (FacesMessage)
-            e.printStackTrace();
-            listaEstados = new ArrayList<>(); // Garante que a lista não seja nula
-        }
+        listaEstados = estadoFacade.listaTodos();
     }
 
     public void onEstadoSelect() {
         if (estadoSelecionadoId != null) {
-            try {
-                listaCidades = ibgeService.buscarCidadesPorEstado(estadoSelecionadoId);
-            } catch (Exception e) {
-                e.printStackTrace();
-                listaCidades = new ArrayList<>();
-            }
+            listaCidades = cidadeFacade.buscarPorEstadoId(estadoSelecionadoId); // Você precisará criar este método no seu CidadeFacade
+
         } else {
             listaCidades = new ArrayList<>();
         }
@@ -174,35 +161,33 @@ public class PessoaControle implements Serializable {
         }
 
         try {
-            // achar o objeto Estado completo na lista em memória
+            // achar o estado
             Estado estadoSelecionado = listaEstados.stream()
                     .filter(e -> e.getId().equals(estadoSelecionadoId))
                     .findFirst()
                     .orElse(null);
 
-            // achar o objeto Cidade completo na lista em memória
+            // achar o cidade
             Cidade cidadeSelecionada = listaCidades.stream()
                     .filter(c -> c.getId().equals(cidadeSelecionadaId))
                     .findFirst()
                     .orElse(null);
 
-            // se acnou , montar o objeto
+            // se achou o objeto
             if (cidadeSelecionada != null && estadoSelecionado != null) {
                 // associa o estado à cidade 
                 cidadeSelecionada.setEstado(estadoSelecionado);
 
-                // associa a cidade ao endereço que será adicionado
+                // associa a cidade ao endereço 
                 novoEndereco.setCidade(cidadeSelecionada);
 
-                // associa o endereço à pessoa
                 novoEndereco.setPessoa(pessoa);
                 pessoa.getListaEnderecos().add(novoEndereco);
 
-                // limpa
                 novoEndereco = new Endereco();
                 estadoSelecionadoId = null;
                 cidadeSelecionadaId = null;
-                listaCidades = new ArrayList<>(); // limpa a lista de cidades
+                listaCidades = new ArrayList<>();
 
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Endereço adicionado."));

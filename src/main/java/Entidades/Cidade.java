@@ -30,7 +30,7 @@ public class Cidade implements Serializable, ClassePai{
     private Long id; 
     @Column(name = "cid_nome")
     private String nome; 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estado_id")
     private Estado estado;
 

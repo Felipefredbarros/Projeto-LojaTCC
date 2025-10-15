@@ -58,6 +58,8 @@ Utilitario\FinanceDesc.class
 Controladores\ProdutoControle.class
 Entidades\ProdutoDerivacao.class
 Entidades\Marca.class
+Facade\EstadoFacade.class
+Services\DatabaseSeederService.class
 Controladores\CategoriaControle.class
 Controladores\CompraControle.class
 MovimentacaoMensalControle.class
