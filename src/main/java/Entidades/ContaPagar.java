@@ -68,6 +68,10 @@ public class ContaPagar implements Serializable, ClassePai {
     @Column(name = "contaPagar_dataRecebimento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataRecebimento;
+    
+    @Column(name = "contaReceber_dataCriação")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dataCriação;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "conta_id")
@@ -165,6 +169,16 @@ public class ContaPagar implements Serializable, ClassePai {
     public void setLancamentos(List<LancamentoFinanceiro> lancamentos) {
         this.lancamentos = lancamentos;
     }
+
+    public Date getDataCriação() {
+        return dataCriação;
+    }
+
+    public void setDataCriação(Date dataCriação) {
+        this.dataCriação = dataCriação;
+    }
+    
+    
 
     
 

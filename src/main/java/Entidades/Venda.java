@@ -8,6 +8,7 @@ import Entidades.Enums.PlanoPagamento;
 import Entidades.Enums.MetodoPagamento;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -24,6 +25,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -81,10 +83,45 @@ public class Venda implements Serializable, ClassePai {
     
     @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ContaReceber> contasReceber = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderColumn(name = "ordem")
+    private List<ParcelaCompra> parcelasVenda;
+    
+    @Column(name = "ven_parcelas")
+    private Integer parcelas;
 
     public Venda() {
         itensVenda = new ArrayList<>();
         dataVenda = new Date();
+        this.parcelasVenda = new ArrayList<>();
+    }
+    
+    public void calcularParcelas() {
+        if (parcelas == null || parcelas <= 0) {
+            throw new IllegalStateException("O número de parcelas não está definido ou é inválido.");
+        }
+
+        if (dataVencimento == null) {
+            throw new IllegalStateException("A data de vencimento não está definida.");
+        }
+
+        parcelasVenda.clear();
+        if (parcelas > 0 && valorTotal != null) {
+            double valorParcela = valorTotal / parcelas;
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(dataVencimento);  
+
+            for (int i = 0; i < parcelas; i++) {
+                ParcelaCompra parcela = new ParcelaCompra();
+                parcela.setVenda(this);
+                parcela.setValorParcela(valorParcela);
+                parcela.setMetodoPagamento(MetodoPagamento.A_DENIFIR);
+                parcela.setDataVencimento(calendar.getTime());  
+                parcelasVenda.add(parcela);
+                calendar.add(Calendar.MONTH, 1);  
+            }
+        }
     }
 
     public Double getTotal() {
@@ -191,6 +228,26 @@ public class Venda implements Serializable, ClassePai {
     public void setContasReceber(List<ContaReceber> contasReceber) {
         this.contasReceber = contasReceber;
     }
+
+    public List<ParcelaCompra> getParcelasVenda() {
+        return parcelasVenda;
+    }
+
+    public void setParcelasVenda(List<ParcelaCompra> parcelasVenda) {
+        this.parcelasVenda = parcelasVenda;
+    }
+
+    public Integer getParcelas() {
+        return parcelas;
+    }
+
+    public void setParcelas(Integer parcelas) {
+        this.parcelas = parcelas;
+    }
+    
+    
+    
+    
     
     
     

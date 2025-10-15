@@ -12,7 +12,6 @@ import Entidades.Enums.PlanoPagamento;
 import Entidades.Produto;
 import Entidades.Compra;
 import Entidades.ProdutoDerivacao;
-import Entidades.Venda;
 import Facade.PessoaFacade;
 import Facade.ProdutoFacade;
 import Facade.CompraFacade;
@@ -31,9 +30,11 @@ import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
@@ -73,24 +74,8 @@ public class CompraControle implements Serializable {
     private Boolean edit = false;
     private List<Compra> listaComprasFiltradas = new ArrayList<>();
     private Compra compraSelecionado;
-
-    public void filtrarPorPeriodo() {
-        List<Compra> todasCompras = compraFacade.listaTodosComItens();
-        listaComprasFiltradas = new ArrayList<>();
-
-        for (Compra compra : todasCompras) {
-            if ((dataInicio == null || !compra.getDataCompra().before(dataInicio))
-                    && (dataFim == null || !compra.getDataCompra().after(dataFim))) {
-                listaComprasFiltradas.add(compra);
-            }
-        }
-    }
-
-    public void removerFiltro() {
-        dataInicio = null;
-        dataFim = null;
-        listaComprasFiltradas = compraFacade.listaTodosComItens();
-    }
+    private Pessoa fornecedorFiltro;
+    private Produto produtoFiltro;
 
     public void prepararVisualizacao(Compra com) {
         this.compraSelecionado = compraFacade.findWithItens(com.getId());
@@ -160,10 +145,10 @@ public class CompraControle implements Serializable {
     }
 
     public ConverterGenerico getProdutoDevConverter() {
-        if (produtoConverter == null) {
-            produtoConverter = new ConverterGenerico(produtoDevFacade);
+        if (produtoDevConverter == null) {
+            produtoDevConverter = new ConverterGenerico(produtoDevFacade);
         }
-        return produtoConverter;
+        return produtoDevConverter;
     }
 
     public void setProdutoConverter(ConverterGenerico produtoConverter) {
@@ -323,15 +308,25 @@ public class CompraControle implements Serializable {
         return metodosParcelados;
     }
 
-    public List<Compra> getListaComprasFiltradas() {
-        return listaComprasFiltradas != null && !listaComprasFiltradas.isEmpty()
-                ? listaComprasFiltradas
-                : compraFacade.listaTodosComItens();
+    public void exportarPDFFiltrado() throws DocumentException, IOException {
+    List<Compra> comprasParaExportar = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);  
+    exportarPDF(comprasParaExportar); 
+}
+
+
+    public void aplicarFiltro() {
+        listaComprasFiltradas = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
     }
 
-    public void exportarPDF() throws DocumentException, IOException {
-        List<Compra> comprasParaExportar = getListaComprasFiltradas();
+    public void limparFiltros() {
+        fornecedorFiltro = null;
+        produtoFiltro = null;
+        dataInicio = null;
+        dataFim = null;
+        listaComprasFiltradas = compraFacade.listaTodosComItens(); // ou vazio, como preferir
+    }
 
+    public void exportarPDF(List<Compra> comprasParaExportar) throws DocumentException, IOException {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
         response.setContentType("application/pdf");
@@ -341,12 +336,17 @@ public class CompraControle implements Serializable {
         PdfWriter.getInstance(document, response.getOutputStream());
         document.open();
 
-        // Título do relatório
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 0, 128)); // Azul escuro
-        Paragraph title = new Paragraph("Relatório de Compras - Loja São Judas Tadeu", titleFont);
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
+        Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
-        title.setSpacingAfter(20); // Espaçamento após o título
+        title.setSpacingAfter(10);
         document.add(title);
+
+        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
+        Paragraph subtitle = new Paragraph("Relatório de Compras", subtitleFont);
+        subtitle.setAlignment(Element.ALIGN_CENTER);
+        subtitle.setSpacingAfter(20);
+        document.add(subtitle);
 
         // Fonte para os cabeçalhos
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.BOLD, Color.BLACK);
@@ -372,8 +372,22 @@ public class CompraControle implements Serializable {
             compraTable.addCell(new PdfPCell(new Phrase(com.getFornecedor().getNome(), contentFont)));
             compraTable.addCell(new PdfPCell(new Phrase("Método de Pagamento:", headerFont)));
             compraTable.addCell(new PdfPCell(new Phrase(com.getMetodoPagamento().toString(), contentFont)));
+            compraTable.addCell(new PdfPCell(new Phrase("Parcelas:", headerFont)));
+            compraTable.addCell(new PdfPCell(new Phrase(com.getParcelas().toString(), contentFont)));
             compraTable.addCell(new PdfPCell(new Phrase("Valor Total:", headerFont)));
             compraTable.addCell(new PdfPCell(new Phrase(com.getValorTotal().toString(), contentFont)));
+
+            NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+            String textoParcela;
+            if (com.getParcelasCompra() != null && !com.getParcelasCompra().isEmpty()) {
+                double vParc = com.getParcelasCompra().get(0).getValorParcela(); // assume todas iguais
+                int qtd = com.getParcelasCompra().size();
+                textoParcela = qtd + "x de " + fmt.format(vParc);
+            } else {
+                textoParcela = "-";
+            }
+            compraTable.addCell(new PdfPCell(new Phrase("Valor Parcelas:", headerFont)));
+            compraTable.addCell(new PdfPCell(new Phrase(textoParcela, contentFont)));
 
             document.add(compraTable);
 
@@ -490,6 +504,22 @@ public class CompraControle implements Serializable {
 
     public void setCompraSelecionado(Compra compraSelecionado) {
         this.compraSelecionado = compraSelecionado;
+    }
+
+    public Pessoa getFornecedorFiltro() {
+        return fornecedorFiltro;
+    }
+
+    public void setFornecedorFiltro(Pessoa fornecedorFiltro) {
+        this.fornecedorFiltro = fornecedorFiltro;
+    }
+
+    public Produto getProdutoFiltro() {
+        return produtoFiltro;
+    }
+
+    public void setProdutoFiltro(Produto produtoFiltro) {
+        this.produtoFiltro = produtoFiltro;
     }
 
 }

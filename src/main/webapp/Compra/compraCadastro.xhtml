@@ -31,7 +31,7 @@
                     <p:inputNumber id="parcelas" value="#{compraControle.compra.parcelas}" 
                                    minValue="1" maxValue="12"/>
 
-                    <p:outputLabel value="DIa de Vencimento" />
+                    <p:outputLabel value="Data de Vencimento" />
                     <p:calendar id="dataVencimento" value="#{compraControle.compra.dataVencimento}"
                                 pattern="dd/MM/yyyy" locale="pt_BR" />
 
@@ -60,7 +60,9 @@
                                        minValue="0" decimalPlaces="0" />
 
                         <p:outputLabel value="Preço:" />
-                        <p:inputText id="valorUnitario" value="#{compraControle.itensCompra.valorUnitario}" widgetVar="valorUnitario" />
+                        <p:inputNumber id="valorUnitario" value="#{compraControle.itensCompra.valorUnitario}" widgetVar="valorUnitario"
+                                     symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                   required="true" minValue="0" style="width: 100%;"/>
                     </h:panelGrid>
 
                     <!-- Botão para adicionar o item -->
@@ -71,7 +73,7 @@
                 <!-- Tabela de Itens no Carrinho -->
                 <p:dataTable id="itensTable" value="#{compraControle.compra.itensCompra}" var="item" emptyMessage="Nenhum item no carrinho" rendered="#{!compraControle.edit}">
                     <p:column headerText="Produto">
-                        <h:outputText value="#{item.produtoDerivacao.produto.categoria.categoria}" />
+                        <h:outputText value="#{item.produtoDerivacao.texto}" />
                     </p:column>
                     <p:column headerText="Quantidade">
                         <h:outputText value="#{item.quantidade}" />

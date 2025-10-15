@@ -11,7 +11,7 @@
             <h:form id="formListagemContas">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1 style="color: #003366; margin-bottom: 20px;">
+                <h1>
                     📑 Listagem de Contas
                 </h1>
 
@@ -36,33 +36,33 @@
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
 
-                    <p:column headerText="ID" sortBy="#{contaItem.id}" filterBy="#{contaItem.id}">
+                    <p:column headerText="ID"  filterBy="#{contaItem.id}" filterMatchMode="contains" style="text-align:center" >
                         <h:outputText value="#{contaItem.id}" />
                     </p:column>
 
-                    <p:column headerText="Data de Criação" sortBy="#{contaItem.dataCriacao}">
-                        <h:outputText value="#{contaItem.dataCriacao}">
-                            <f:convertDateTime pattern="dd/MM/yyyy" />
-                        </h:outputText>
-                    </p:column>
-
-                    <p:column headerText="Tipo Conta" sortBy="#{contaItem.tipoConta}">
+                    <p:column headerText="Tipo Conta" filterBy="#{contaItem.tipoConta}" filterMatchMode="contains" style="text-align:center">
                         <h:outputText value="#{contaItem.tipoConta}" styleClass="tag-status"/>
                     </p:column>
 
-                    <p:column headerText="Nome" sortBy="#{contaItem.nome}">
+                    <p:column headerText="Nome" filterBy="#{contaItem.nome}" filterMatchMode="contains" style="text-align:center">
                         <h:outputText value="#{contaItem.nome}" />
                     </p:column>
 
-                    <p:column headerText="Banco" sortBy="#{contaItem.banco}">
-                        <h:outputText value="#{contaItem.banco}" />
+                    <p:column headerText="Banco" filterBy="#{contaItem.banco}" filterMatchMode="contains" style="text-align:center">
+                        <h:outputText value="#{contaItem.banco != null and contaItem.banco ne '' ? contaItem.banco : 'Não Informado'}" />
                     </p:column>
 
-                    <p:column headerText="STATUS" sortBy="#{contaItem.status}" style="text-align:center">
+                    <p:column headerText="STATUS" filterBy="#{contaItem.status}" filterMatchMode="contains"  style="text-align:center">
                         <h:outputText value="#{contaItem.status}" 
                                       styleClass="status-label #{contaItem.status}"/>
                     </p:column>
 
+                    <p:column headerText="Data de Criação" style="text-align:center">
+                        <h:outputText value="#{contaItem.dataCriacao}">
+                            <f:convertDateTime pattern="dd/MM/yyyy" />
+                        </h:outputText>
+                    </p:column>
+                    
                     <p:column headerText="Ações" style="width:180px;text-align:center">
                         <p:commandButton icon="pi pi-search" 
                                          title="Visualizar Conta" 
@@ -76,7 +76,9 @@
                                          actionListener="#{contaControle.excluirOuInativar(contaItem)}"
                                          update="tabelaContas :formListagemContas:growlMessages"
                                          styleClass="ui-button-danger"
-                                         process="@this"/>
+                                         process="@this">
+                            <p:confirm header="Confirmação" message="Deseja realmente excluir/inativar esta conta?" icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
                     </p:column>
                 </p:dataTable>
 

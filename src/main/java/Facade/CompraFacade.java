@@ -13,12 +13,17 @@ import Entidades.Enums.TipoLancamento;
 import Entidades.ItensCompra;
 import Entidades.LancamentoFinanceiro;
 import Entidades.ParcelaCompra;
+import Entidades.Pessoa;
 import Entidades.Produto;
 import Entidades.ProdutoDerivacao;
 import Utilitario.FinanceDesc;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -26,6 +31,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -100,7 +107,8 @@ public class CompraFacade extends AbstractFacade<Compra> {
                     + " - ID:" + compra.getId());
             conta.setValor(parcela.getValorParcela());
             conta.setDataVencimento(parcela.getDataVencimento());
-            conta.setMetodoPagamento(parcela.getMetodoPagamento());
+            conta.setDataCriação(new Date());
+            conta.setMetodoPagamento(compra.getMetodoPagamento());
             conta.setStatus("ABERTA");
 
             contas.add(conta);
@@ -128,7 +136,6 @@ public class CompraFacade extends AbstractFacade<Compra> {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void cancelarCompra(Compra compraParam) {
 
-        // 
         Compra compra = em.createQuery(
                 "select c from Compra c "
                 + "left join fetch c.itensCompra i "
@@ -136,7 +143,6 @@ public class CompraFacade extends AbstractFacade<Compra> {
                 .setParameter("id", compraParam.getId())
                 .getSingleResult();
 
-        //volta o estoque
         for (ItensCompra ic : compra.getItensCompra()) {
             ProdutoDerivacao deriv = ic.getProdutoDerivacao();
             deriv.setQuantidade(deriv.getQuantidade() - ic.getQuantidade());
@@ -151,7 +157,6 @@ public class CompraFacade extends AbstractFacade<Compra> {
                 .setParameter("compra", compra)
                 .getResultList();
 
-        // Para cada conta: cancelar/estornar
         for (ContaPagar cp : contas) {
             String st = cp.getStatus();
             if ("PAGA".equalsIgnoreCase(st)) {
@@ -188,7 +193,6 @@ public class CompraFacade extends AbstractFacade<Compra> {
         reverso.setContaPagar(cp);
         reverso.setStatus(StatusLancamento.NORMAL);
 
-
         reverso.setDescricao(FinanceDesc.estornoPagamentoCP(cp, motivo));
 
         lancFacade.salvar(reverso);
@@ -220,7 +224,7 @@ public class CompraFacade extends AbstractFacade<Compra> {
     }
 
     public List<Compra> listaTodosComItens() {
-        return em.createQuery("SELECT DISTINCT c FROM Compra c LEFT JOIN FETCH c.itensCompra", Compra.class).getResultList();
+        return em.createQuery("SELECT DISTINCT c FROM Compra c LEFT JOIN FETCH c.itensCompra where c.status != 'CANCELADA' and c.status != 'Aberta' order by c.id desc", Compra.class).getResultList();
     }
 
     public List<Compra> listaTodasReais() {
@@ -230,6 +234,100 @@ public class CompraFacade extends AbstractFacade<Compra> {
 
     public List<Compra> listaComprasCanceladas() {
         Query q = getEntityManager().createQuery("From Compra as v where v.status = 'CANCELADA' order by v.id desc ");
+        return q.getResultList();
+    }
+
+    public Map<Object, Number> findComprasUltimos30Dias() {
+        Map<Object, Number> resultado = new LinkedHashMap<>();
+
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicioLD = hoje.minusDays(29);
+
+        Date inicio = Date.from(inicioLD.atStartOfDay(zone).toInstant());
+        Date fim = Date.from(hoje.plusDays(1).atStartOfDay(zone).toInstant());
+
+        // preenche zeros
+        for (int i = 0; i < 30; i++) {
+            LocalDate d = inicioLD.plusDays(i);
+            resultado.put(Date.from(d.atStartOfDay(zone).toInstant()), 0.0);
+        }
+
+        String jpql
+                = "SELECT YEAR(c.dataCompra), MONTH(c.dataCompra), DAY(c.dataCompra), "
+                + "       COALESCE(SUM(c.valorTotal), 0) "
+                + "FROM Compra c "
+                + "WHERE c.status = 'FECHADA' "
+                + // ajuste se for outro valor ou enum
+                "AND c.dataCompra >= :inicio AND c.dataCompra < :fim "
+                + "GROUP BY YEAR(c.dataCompra), MONTH(c.dataCompra), DAY(c.dataCompra) "
+                + "ORDER BY YEAR(c.dataCompra), MONTH(c.dataCompra), DAY(c.dataCompra)";
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createQuery(jpql)
+                .setParameter("inicio", inicio, TemporalType.TIMESTAMP)
+                .setParameter("fim", fim, TemporalType.TIMESTAMP)
+                .getResultList();
+
+        for (Object[] r : rows) {
+            int ano = ((Number) r[0]).intValue();
+            int mes = ((Number) r[1]).intValue();
+            int dia = ((Number) r[2]).intValue();
+            double total = ((Number) r[3]).doubleValue();
+
+            LocalDate d = LocalDate.of(ano, mes, dia);
+            Date chave = Date.from(d.atStartOfDay(zone).toInstant());
+            resultado.put(chave, total);
+        }
+        return resultado;
+    }
+
+    public List<Compra> buscarPorFiltros(Pessoa fornecedor, Produto produto, Date ini, Date fim) {
+        StringBuilder jpql = new StringBuilder(
+                "SELECT DISTINCT c FROM Compra c "
+                + "LEFT JOIN FETCH c.itensCompra ic "
+                + "LEFT JOIN FETCH ic.produtoDerivacao pd "
+                + "LEFT JOIN FETCH pd.produto pFetch "
+                + "WHERE c.status <> 'CANCELADA' AND c.status <> 'Aberta' "
+        );
+
+        if (fornecedor != null) {
+            jpql.append(" AND c.fornecedor = :fornecedor ");
+        }
+        if (ini != null) {
+            jpql.append(" AND c.dataCompra >= :ini ");
+        }
+        if (fim != null) {
+            jpql.append(" AND c.dataCompra <= :fim ");
+        }
+        if (produto != null) {
+            jpql.append(
+                    " AND EXISTS ( "
+                    + "   SELECT 1 FROM ItensCompra ic2 "
+                    + "   JOIN ic2.produtoDerivacao pd2 "
+                    + "   JOIN pd2.produto p2 "
+                    + "   WHERE ic2.compra = c AND p2 = :produto "
+                    + " ) "
+            );
+        }
+
+        jpql.append(" ORDER BY c.id DESC ");
+
+        TypedQuery<Compra> q = em.createQuery(jpql.toString(), Compra.class);
+
+        if (fornecedor != null) {
+            q.setParameter("fornecedor", fornecedor);
+        }
+        if (ini != null) {
+            q.setParameter("ini", ini, TemporalType.TIMESTAMP);
+        }
+        if (fim != null) {
+            q.setParameter("fim", fim, TemporalType.TIMESTAMP);
+        }
+        if (produto != null) {
+            q.setParameter("produto", produto);
+        }
+
         return q.getResultList();
     }
 

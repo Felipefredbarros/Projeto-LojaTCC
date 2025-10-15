@@ -24,13 +24,18 @@ import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import dto.ProdutoRankingDTO;
 import java.awt.Color;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringJoiner;
-import javax.transaction.Transactional;
 import org.primefaces.component.datatable.DataTable;
 
 /**
@@ -58,6 +63,7 @@ public class ProdutoControle implements Serializable {
     @EJB
     private ProdutoDerivacaoFacade produtoDevFacade;
     private Produto produtoSelecionado;
+
 
     public ConverterGenerico getCategoriaConverter() {
         if (categoriaConverter == null) {
@@ -294,7 +300,6 @@ public class ProdutoControle implements Serializable {
         PdfWriter.getInstance(document, response.getOutputStream());
         document.open();
 
-        // --- Document Title and Subtitle ---
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
         Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
@@ -358,7 +363,6 @@ public class ProdutoControle implements Serializable {
                 derivationTable.addCell(new PdfPCell(new Phrase("Cor", nestedHeaderFont)));
                 derivationTable.addCell(new PdfPCell(new Phrase("Qtd. Estoque", nestedHeaderFont)));
 
-                // Add derivation rows
                 for (ProdutoDerivacao deriv : prod.getVariacoes()) {
                     derivationTable.addCell(new PdfPCell(new Phrase(deriv.getTamanho(), nestedContentFont)));
                     derivationTable.addCell(new PdfPCell(new Phrase(deriv.getCor(), nestedContentFont)));
@@ -374,20 +378,16 @@ public class ProdutoControle implements Serializable {
             mainTable.addCell(derivationsCell);
         }
 
-        // Add the completed table to the document
         document.add(mainTable);
         document.close();
         facesContext.responseComplete();
     }
 
-    // Método para capturar os produtos visíveis na tabela (com paginação e filtros)
     private List<Produto> getProdutosVisiveisNaTabela() {
-        DataTable dataTable = (DataTable) FacesContext.getCurrentInstance().getViewRoot().findComponent("formRelatorioProdutos:tabelaProdutos");
+        DataTable dataTable = (DataTable) FacesContext.getCurrentInstance().getViewRoot().findComponent("formListagemProdutos:tabelaProdutos");
 
-        // Pegue o valor filtrado diretamente do dataTable
         List<Produto> listaFiltrada = (List<Produto>) dataTable.getFilteredValue();
 
-        // Se não houver filtro, retorna a lista completa do dataTable
         if (listaFiltrada == null) {
             listaFiltrada = (List<Produto>) dataTable.getValue();
         }

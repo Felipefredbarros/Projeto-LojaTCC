@@ -487,7 +487,7 @@
                         <h:commandLink action="/Pessoa/listaPessoa.xhtml?faces-redirect=true">
                             <i class="fas fa-users fa-fw"></i> <span>Pessoas</span>
                         </h:commandLink>
-                        <h:commandLink action="/index.xhtml?faces-redirect=true">
+                        <h:commandLink action="/Usuario/listaUsuario.xhtml?faces-redirect=true">
                             <i class="fas fa-users-cog"></i> <span>Usuarios</span>
                         </h:commandLink>
                         <h:commandLink action="/Produto/listaProduto.xhtml?faces-redirect=true">
@@ -500,7 +500,7 @@
                             <i class="fas fa-layer-group"></i> <span>Marcas</span>
                         </h:commandLink>
                     </div>
-                    
+
                     <h4>RH</h4>
                     <div class="campos">
                         <h:commandLink action="/MovimentacaoFuncionario/movimentacaoFuncionario.xhtml?faces-redirect=true">
@@ -519,6 +519,13 @@
                         <h:commandLink action="/Compra/listaCompra.xhtml?faces-redirect=true">
                             <i class="fas fa-receipt fa-fw"></i> <span>Compras</span>
                         </h:commandLink>
+                    </div>
+
+                    <h4>Financeiro</h4>
+                    <div class="campos">
+                        <h:commandLink action="/Contas/contas.xhtml?faces-redirect=true">
+                            <i class="fas fa-university fa-fw"></i> <span>Contas</span>
+                        </h:commandLink>
                         <h:commandLink action="/ContasAReceber/listaContasAReceber?faces-redirect=true">
                             <i class="fas fa-hand-holding-usd fa-fw"></i> <span>Contas a Receber</span>
                         </h:commandLink>
@@ -526,86 +533,170 @@
                             <i class="fas fa-money-bill-wave fa-fw"></i> <span>Contas a Pagar</span>
                         </h:commandLink>
                     </div>
-                    
-                    <h4>Financeiro</h4>
-                    <div class="campos">
-                        <h:commandLink action="/Contas/contas.xhtml?faces-redirect=true">
-                            <i class="fas fa-university fa-fw"></i> <span>Contas</span>
-                        </h:commandLink>
-                    </div>
-
-                    <h4>Relatórios</h4>
-                    <div class="campos">
-                        <h:commandLink action="/Relatorios/relatorios.xhtml?faces-redirect=true">
-                            <i class="fas fa-file-alt fa-fw"></i> <span>Rel. Cadastrais</span>
-                        </h:commandLink>
-                        <h:commandLink action="/Relatorios/relatoriosGerenciais.xhtml?faces-redirect=true">
-                            <i class="fas fa-chart-line fa-fw"></i> <span>Rel. Gerenciais</span>
-                        </h:commandLink>
-                    </div>
                 </h:form>
             </div>
 
             <div class="content">
                 <ui:insert id="corpo" name="body">
-                    <h1>Dashboard de Visão Geral</h1>
-                    <h:form id="formularioDashboard"> <div class="dashboard-grid">
-                            <div class="panel">
-                                <h3>Total de Produtos Cadastrados</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.totalProdutos}" />
-                                </span>
-                            </div>
-                            <div class="panel">
-                                <h3>Produtos com Estoque Baixo</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.produtosEstoqueBaixo.size()}" />
-                                </span>
-                            </div>
-                            <div class="panel">
-                                <h3>Quantidade Total de Estoque</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.totalEstoque}" />
-                                </span>
-                            </div>
-                            <div class="panel">
-                                <h3>Total de Vendas Realizadas</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.totalVendas}" />
-                                </span>
-                            </div>
-                            <div class="panel">
-                                <h3>Valor Total Vendido</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.valorTotalVendido}">
-                                        <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                    <h:form id="formularioDashboard">
+                        <h1><i class="pi pi-th-large" style="margin-right: 10px;"></i>Dashboard de Visão Geral</h1>
+
+                        <p:panelGrid columns="4" layout="grid" styleClass="ui-noborder" columnClasses="ui-grid-col-12 ui-md-grid-col-6 ui-lg-grid-col-3">
+
+                            <p:outputPanel styleClass="panel kpi-card">
+                                <h:link outcome="/Venda/listaVenda.xhtml">
+                                    <div class="card-content">
+                                        <i class="pi pi-shopping-cart icon-kpi" style="color: var(--success-color);"></i>
+                                        <div class="text-content">
+                                            <h:outputText styleClass="kpi-title" value="Vendas Hoje" />
+                                            <h:outputText styleClass="panel-value" value="#{dashBoardControle.valorVendasHoje}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </div>
+                                    </div>
+                                </h:link>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="panel kpi-card">
+                                <h:link outcome="/ContasAReceber/listaContasAReceber.xhtml">
+                                    <div class="card-content">
+                                        <i class="pi pi-arrow-circle-down icon-kpi" style="color: var(--info-color);"></i>
+                                        <div class="text-content">
+                                            <h:outputText styleClass="kpi-title" value="Contas a Receber (Mês)" />
+                                            <h:outputText styleClass="panel-value" value="#{dashBoardControle.contasAReceberMes}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </div>
+                                    </div>
+                                </h:link>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="panel kpi-card">
+                                <h:link outcome="/ContasAPagar/listaContasAPagar.xhtml">
+                                    <div class="card-content">
+                                        <i class="pi pi-arrow-circle-up icon-kpi" style="color: var(--danger-color);"></i>
+                                        <div class="text-content">
+                                            <h:outputText styleClass="kpi-title" value="Contas a Pagar (Mês)" />
+                                            <h:outputText styleClass="panel-value" value="#{dashBoardControle.contasAPagarMes}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </div>
+                                    </div>
+                                </h:link>
+                            </p:outputPanel>
+
+                        </p:panelGrid>
+
+                        <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder"
+                                     style="margin-top: var(--spacing-lg);"
+                                     columnClasses="ui-g-12 ui-md-6, ui-g-12 ui-md-6">
+
+                            <p:outputPanel styleClass="panel" style="width:100%;">
+                                <h3 style="margin-top:0;">Vendas nos Últimos 30 Dias</h3>
+                                <p:chart type="line" model="#{dashBoardControle.vendasMensalModel}"
+                                         style="height:240px; width:100%;" />
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="panel" style="width:100%;">
+                                <h3 style="margin-top:0;">Compras nos Últimos 30 Dias</h3>
+                                <p:chart type="line" model="#{dashBoardControle.comprasMensalModel}"
+                                         style="height:240px; width:100%;" />
+                            </p:outputPanel>
+
+                        </p:panelGrid>
+
+                        <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" style="margin-top: var(--spacing-lg);" columnClasses="ui-grid-col-12 ui-md-grid-col-6, ui-grid-col-12 ui-md-grid-col-6">
+
+                            <p:dataTable var="prod" value="#{dashBoardControle.produtosEstoqueBaixo}" rows="5" paginator="true"
+                                         paginatorPosition="bottom" styleClass="products-table"
+                                         emptyMessage="Nenhum produto com estoque baixo.">
+                                <f:facet name="header">
+                                    <i class="pi pi-exclamation-triangle" style="margin-right: 8px; color: var(--warning-color);"></i>
+                                    Produtos com Estoque Baixo(Menor que 3)
+                                </f:facet>
+                                <p:column headerText="Produto">
+                                    <h:outputText value="#{prod.texto}" />
+                                </p:column>
+                                <p:column headerText="Estoque Atual" style="width:120px; text-align: center;">
+                                    <h:outputText value="#{prod.quantidade}">
+                                        <f:convertNumber integerOnly="true" groupingUsed="true" />
                                     </h:outputText>
-                                </span>
-                            </div>
-                            <div class="panel">
-                                <h3>Total de Compras Realizadas</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.totalCompras}" />
-                                </span>
-                            </div>
-                            <div class="panel">
-                                <h3>Valor Total Comprado</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.valorTotalComprado}">
-                                        <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                                </p:column>
+                            </p:dataTable>
+
+                            <p:dataTable var="conta" value="#{dashBoardControle.contasPagarProximas}" rows="5" paginator="true"
+                                         paginatorPosition="bottom" styleClass="accounts-table"
+                                         emptyMessage="Nenhuma conta com vencimento próximo.">
+                                <f:facet name="header">
+                                    <i class="pi pi-calendar-times" style="margin-right: 8px; color: var(--danger-color);"></i>
+                                    Contas a Pagar (Próximos 7 dias)
+                                </f:facet>
+                                <p:column headerText="Fornecedor">
+                                    <h:outputText value="#{conta.fornecedor.nome != null ? conta.fornecedor.nome : '*'}" />
+                                </p:column>
+                                <p:column headerText="Vencimento" style="width:120px; text-align: center;">
+                                    <h:outputText value="#{conta.dataVencimento}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy" />
                                     </h:outputText>
-                                </span>
-                            </div>
-                            <div class="panel">
-                                <h3>Lucro Líquido (Estimado)</h3>
-                                <span class="panel-value">
-                                    <h:outputText value="#{dashBoardControle.lucroLiquido}">
-                                        <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                                </p:column>
+                                <p:column headerText="Valor" style="width:130px; text-align: right;">
+                                    <h:outputText value="#{conta.valor}">
+                                        <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
                                     </h:outputText>
-                                </span>
-                            </div>
-                        </div>
+                                </p:column>
+                            </p:dataTable>
+
+                        </p:panelGrid>
                     </h:form>
+                    <style>
+                        .kpi-card {
+                            cursor: pointer;
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                        }
+                        .kpi-card:hover {
+                            transform: translateY(-5px);
+                            box-shadow: var(--shadow-md);
+                        }
+                        .card-content {
+                            display: flex;
+                            align-items: center;
+                            width: 100%;
+                        }
+                        .icon-kpi {
+                            font-size: 3rem; /* 48px */
+                            margin-right: var(--spacing-lg);
+                            padding: var(--spacing-sm);
+                        }
+                        .text-content {
+                            display: flex;
+                            flex-direction: column;
+                            text-align: left;
+                        }
+                        .kpi-title {
+                            font-size: 0.9rem; /* 14.4px */
+                            color: var(--secondary-color);
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            margin-bottom: var(--spacing-xs);
+                        }
+
+                        .kpi-card {
+                            padding: 0 !important; /* Removemos o padding do painel para o link controlar o espaçamento */
+                        }
+
+                        .kpi-card > a {
+                            display: block; /* Faz o link se comportar como uma div */
+                            padding: var(--spacing-lg); /* Adicionamos o padding aqui */
+                            text-decoration: none; /* Remove o sublinhado do link */
+                            color: inherit; /* Faz o texto herdar a cor do elemento pai */
+                            height: 100%;
+                            width: 100%;
+                        }
+                        /* Ajuste no valor do painel para caber melhor no card */
+                        .panel .panel-value {
+                            font-size: 1.8rem; /* 28.8px, um pouco menor que antes */
+                        }
+                    </style>
                 </ui:insert>
             </div>
         </div>

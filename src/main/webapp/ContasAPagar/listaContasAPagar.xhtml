@@ -17,13 +17,22 @@
                                  styleClass="ui-button-success"
                                  actionListener="#{contaPagarControle.novo}"
                                  process="@this"
-                                 update=":formListagemContasReceber:cadastroContaDialogoPanel"
+                                 update=":frmCadastroConta:cadastroContaDialogoPanel"
                                  oncomplete="PF('cadastroContaDialog').show()"
                                  style="margin-right: 10px"/>
                 <p:commandButton value="Ver Canceladas"
                                  icon="pi pi-times-circle"
                                  styleClass="btn-canceladas"
-                                 action="contasCanceladas.xhtml?faces-redirect=true"/>
+                                 action="contasCanceladas.xhtml?faces-redirect=true"
+                                 style="margin-right: 10px"/>
+
+                <p:commandButton id="dynaButton" value="Gerar Relatorios(PDF)" icon="pi pi-download" styleClass="ml-2" style="margin-right: 1px">
+                    <p:menu overlay="true" trigger="dynaButton" my="left top" at="left bottom">
+                        <p:menuitem value="Exportar Relatorio de Contas a pagar(pdf)" onclick="PF('dlgFiltroContasPagar').show()"/>
+                        <p:menuitem value="Exportar Relatorio de Contas pagas(pdf)" onclick="PF('dlgFiltroContasPagas').show()"/>
+                    </p:menu>
+                </p:commandButton>
+
                 <p:tabView id="resumo" style="margin-bottom:1px">
                     <p:tab title="Resumo">
                         <h3>💰 Resumo de Contas</h3>
@@ -38,6 +47,13 @@
                             <div class="resumo-card recebido">
                                 <i class="pi pi-check-circle icone"></i>
                                 <span class="titulo">Pagas</span>
+                                <h:outputText value="#{contaPagarControle.totalPagas}" styleClass="valor">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
+                                </h:outputText>
+                            </div>
+                            <div class="resumo-card gerado">
+                                <i class="pi pi-check-circle icone"></i>
+                                <span class="titulo">Total Gerado</span>
                                 <h:outputText value="#{contaPagarControle.totalPagas}" styleClass="valor">
                                     <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
                                 </h:outputText>
@@ -57,56 +73,64 @@
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                              styleClass="tabela-contas">
 
-                    <p:column headerText="ID: " sortBy="#{contaPagarItem.id}" filterBy="#{contaPagarItem.id}" filterMatchMode="contains">
+                    <p:column headerText="ID: " sortable="true" filterBy="#{contaPagarItem.id}" filterMatchMode="contains" style="text-align: center">
                         <h:outputText value="#{contaPagarItem.id}">
                             <f:convertNumber integerOnly="true" groupingUsed="true" />
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Descrição" sortBy="#{contaPagarItem.descricao}" filterBy="#{contaPagarItem.descricao}" filterMatchMode="contains">
+                    <p:column headerText="Status" style="width:180px;text-align:center" filterBy="#{contaPagarItem.status}" filterMatchMode="contains" >
+                        <h:outputText value="#{contaPagarItem.status}"
+                                      styleClass="status-label #{contaPagarItem.status}"/>
+                    </p:column>
+
+                    <p:column headerText="Descrição" filterBy="#{contaPagarItem.descricao}" filterMatchMode="contains" style="text-align: center">
                         <h:outputText value="#{contaPagarItem.descricao}"/>
                     </p:column>
 
-                    <p:column headerText="Data da Compra" sortBy="#{contaPagarItem.compra.dataCompra}">
-                        <h:outputText value="#{contaPagarItem.compra.dataCompra}">
-                            <f:convertDateTime pattern="dd/MM/yyyy"/>
-                        </h:outputText>
-                    </p:column>
-
-                    <p:column headerText="Fornecedor" sortBy="#{contaPagarItem.fornecedor.nome}" filterBy="#{contaPagarItem.fornecedor.nome}" filterMatchMode="contains">
-                        <h:outputText value="#{contaPagarItem.fornecedor.nome}"/>
-                    </p:column>
-
-                    <p:column headerText="Valor" sortBy="#{contaPagarItem.valor}">
+                    <p:column headerText="Valor" filterBy="#{contaPagarItem.valor}" filterMatchMode="contains" style="text-align: center">
                         <h:outputText value="#{contaPagarItem.valor}">
                             <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Metodo de Pagamento" sortBy="#{contaPagarItem.metodoPagamento.descricao}" filterBy="#{contaPagarItem.metodoPagamento.descricao}" filterMatchMode="contains">
-                        <h:outputText value="#{contaPagarItem.metodoPagamento.descricao}"/>
+                    <p:column headerText="Fornecedor" filterBy="#{contaPagarItem.fornecedor.nome}" filterMatchMode="contains" style="text-align: center">
+                        <h:outputText value="#{contaPagarItem.fornecedor.nome != null ? contaPagarItem.fornecedor.nome : '*'}"/>
                     </p:column>
 
-                    <p:column headerText="Vencimento" sortBy="#{contaPagarItem.dataVencimento}">
+                    <p:column headerText="Metodo de Pagamento" filterBy="#{contaPagarItem.metodoPagamento.descricao}" filterMatchMode="contains" style="text-align: center">
+                        <h:outputText value="#{contaPagarItem.metodoPagamento.descricao != null ? contaPagarItem.metodoPagamento.descricao : '*'}"/>
+                    </p:column>
+
+                    <p:column headerText="Data de Criação" filterBy="#{contaPagarItem.compra.dataCompra}" style="text-align: center">
+                        <h:outputText value="#{contaPagarItem.dataCriação != null ? contaPagarItem.dataCriação : '*'}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Data de Vencimento" filterBy="#{contaPagarItem.dataVencimento}" style="text-align: center">
                         <h:outputText value="#{contaPagarItem.dataVencimento}">
                             <f:convertDateTime pattern="dd/MM/yyyy"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Status" style="width:180px;text-align:center">
-                        <h:outputText value="#{contaPagarItem.status}"
-                                      styleClass="status-label #{contaPagarItem.status}"/>
+                    <p:column headerText="Data de Recebimento" style="text-align: center">
+                        <h:outputText value="#{contaPagarItem.dataRecebimento != null ? contaPagarItem.dataRecebimento : '*'}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Ações" style="width:200px;text-align:center">
-                        <p:commandButton value="Pagar"
-                                         icon="pi pi-check"
-                                         process="@this"
-                                         styleClass="btn-acao btn-receber-icone"
-                                         actionListener="#{contaPagarControle.prepararPagamento(contaPagarItem)}"
-                                         update=":frmPagamento:pagamentoDialogoPanel :frmPagamento:msgsPag"
-                                         oncomplete="PF('pagamentoDialog').show()"
-                                         rendered="#{contaPagarItem.status eq 'ABERTA'}"/>
+                    <p:column headerText="Ações" style="width:180px;text-align:center">
+                        <p:commandButton 
+                            title="Pagar"
+                            icon="pi pi-check"
+                            process="@this"
+                            styleClass="btn-acao btn-receber-icone"
+                            actionListener="#{contaPagarControle.prepararPagamento(contaPagarItem)}"
+                            update=":frmPagamento:pagamentoDialogoPanel :frmPagamento:msgsPag"
+                            oncomplete="PF('pagamentoDialog').show()"
+                            rendered="#{contaPagarItem.status eq 'ABERTA'}"
+                            style="margin-right: 5px"/>
 
                         <p:commandButton icon="pi pi-times"
                                          title="Cancelar conta"
@@ -115,41 +139,77 @@
                                          actionListener="#{contaPagarControle.prepararCancelamento(contaPagarItem)}"
                                          update=":confirmCancelForm"
                                          oncomplete="PF('confirmCancelDialog').show()"
-                                         rendered="#{contaPagarItem.status ne 'CANCELADA' and contaPagarItem.status ne 'ESTORNADA'}"/>
+                                         rendered="#{contaPagarItem.status ne 'CANCELADA' and contaPagarItem.status ne 'ESTORNADA'}"
+                                         style="background-color: red; border-color: red"/>
                     </p:column>
                 </p:dataTable>
-                <p:dialog id="cadastroContaDialog" 
-                          widgetVar="cadastroContaDialog" 
-                          modal="true" 
-                          header="Nova Conta a Pagar" 
-                          resizable="false" 
-                          closable="true" 
-                          width="500">
 
-                    <p:outputPanel id="cadastroContaDialogoPanel">
-                        <h:panelGrid columns="2" cellpadding="5" style="width:100%">
 
-                            <h:outputLabel value="Descrição:" for="descricao"/>
-                            <p:inputText id="descricao" value="#{contaPagarControle.contaPagar.descricao}" required="true"/>
+                <!-- modal de relatorio filtro pagas -->
 
-                            <h:outputLabel value="Valor:" for="valor"/>
-                            <p:inputText id="valor" value="#{contaPagarControle.contaPagar.valor}" required="true">
-                                <f:convertNumber maxFractionDigits="2"/>
-                            </p:inputText>
+                <p:dialog id="dlgFiltroContasPagas" header="Filtrar Relatório de Contas Pagas"
+                          widgetVar="dlgFiltroContasPagas" modal="true" responsive="true"
+                          width="600" closable="true" closeOnEscape="true">
 
-                            <h:outputLabel value="Vencimento:" for="vencimento"/>
-                            <p:calendar id="vencimento" value="#{contaPagarControle.contaPagar.dataVencimento}" pattern="dd/MM/yyyy"/>
+                    <h:panelGrid id="gridFiltroPagas" columns="2" columnClasses="col1,col2" style="width:100%" cellpadding="5">
+                        <h:outputLabel for="dtIni" value="Data início:" />
+                        <p:calendar id="dtIni" value="#{contaPagarControle.dataFimPagas}"
+                                    pattern="dd/MM/yyyy"/>
 
-                        </h:panelGrid>
+                        <h:outputLabel for="dtFim" value="Data fim:" />
+                        <p:calendar id="dtFim" value="#{contaPagarControle.dataFimPagas}"
+                                    pattern="dd/MM/yyyy"/>
+                    </h:panelGrid>
 
-                        <p:commandButton value="Salvar"
-                                         actionListener="#{contaPagarControle.salvar}"
-                                         update=":formListagemContasReceber:tabelaContaPagar :formListagemContasReceber:resumo :formListagemContasReceber:growlMessages"
-                                         oncomplete="PF('cadastroContaDialog').hide()"
-                                         styleClass="ui-button-success"
-                                         style="margin-top:15px"/>
-                    </p:outputPanel>
+                    <f:facet name="footer">
+                        <p:commandButton value="Exportar PDF"
+                                         action="#{contaPagarControle.exportarPDFFiltradoPagas()}"
+                                         process="@(form) dlgFiltroContasPagas"
+                                         ajax="false" icon="pi pi-download" />
+
+                        <p:commandButton value="Limpar"
+                                         actionListener="#{contaPagarControle.limparFiltros}"
+                                         process="@this"
+                                         update="gridFiltroPagas :formListagemContasReceber:tabelaContaPagar"
+                                         icon="pi pi-undo" styleClass="ui-button-secondary" />
+                        <p:commandButton value="Fechar"
+                                         type="button" onclick="PF('dlgFiltroContasPagas').hide()"
+                                         icon="pi pi-times" styleClass="ui-button-danger" />
+                    </f:facet>
                 </p:dialog>
+
+                <!-- modal de relatorio filtro a pagar -->
+                <p:dialog id="dlgFiltroContasPagar" header="Filtrar Relatório de Contas a Pagar"
+                          widgetVar="dlgFiltroContasPagar" modal="true" responsive="true"
+                          width="600" closable="true" closeOnEscape="true">
+
+                    <h:panelGrid columns="2" id="gridFiltroPagar" columnClasses="col1,col2" style="width:100%" cellpadding="5">
+                        <h:outputLabel for="dtIni2" value="Data início:" />
+                        <p:calendar id="dtIni2" value="#{contaPagarControle.dataInicio}"
+                                    pattern="dd/MM/yyyy"/>
+
+                        <h:outputLabel for="dtFim2" value="Data fim:" />
+                        <p:calendar id="dtFim2" value="#{contaPagarControle.dataFim}"
+                                    pattern="dd/MM/yyyy"/>
+                    </h:panelGrid>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Exportar PDF"
+                                         action="#{contaPagarControle.exportarPDFFiltradoPagar()}"
+                                         process="@(form) dlgFiltroContasPagar"
+                                         ajax="false" icon="pi pi-download" />
+
+                        <p:commandButton value="Limpar"
+                                         actionListener="#{contaPagarControle.limparFiltros}"
+                                         process="@this"
+                                         update="gridFiltroPagar :formListagemContasReceber:tabelaContaPagar"
+                                         icon="pi pi-undo" styleClass="ui-button-secondary" />
+                        <p:commandButton value="Fechar"
+                                         type="button" onclick="PF('dlgFiltroContasPagar').hide()"
+                                         icon="pi pi-times" styleClass="ui-button-danger" />
+                    </f:facet>
+                </p:dialog>
+
             </h:form>
             <p:dialog header="Pagamento" widgetVar="pagamentoDialog"
                       modal="true" width="460" appendTo="@(body)" dynamic="true" cache="false">
@@ -226,6 +286,53 @@
                                      onclick="PF('confirmCancelDialog').hide()"/>
                 </h:form>
             </p:confirmDialog>
+
+            <p:dialog id="cadastroContaDialog"
+                      widgetVar="cadastroContaDialog"
+                      modal="true"
+                      header="Nova Conta a Pagar"
+                      resizable="false"
+                      closable="true"
+                      width="500"
+                      appendTo="@(body)" 
+                      dynamic="true" cache="false">
+
+                <!-- form PRÓPRIO do diálogo -->
+                <h:form id="frmCadastroConta">
+                    <p:outputPanel id="cadastroContaDialogoPanel">
+                        <p:messages id="dialogMessages" showDetail="true" closable="true"/>
+
+                        <h:panelGrid columns="2" cellpadding="5" style="width:100%">
+
+                            <h:outputLabel value="Descrição:" for="descricao"/>
+                            <p:inputText id="descricao"
+                                         value="#{contaPagarControle.contaPagar.descricao}"
+                                         required="true"/>
+
+                            <h:outputLabel value="Valor:" for="valor"/>
+                            <p:inputNumber id="valor" value="#{contaPagarControle.contaPagar.valor}"
+                                           symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                           required="true" minValue="0" style="width: 100%;" />
+
+                            <h:outputLabel value="Vencimento:" for="vencimento"/>
+                            <p:calendar id="vencimento"
+                                        value="#{contaPagarControle.contaPagar.dataVencimento}"
+                                        pattern="dd/MM/yyyy"
+                                        required ="true"/>
+                        </h:panelGrid>
+
+                        <p:commandButton value="Salvar"
+                                         actionListener="#{contaPagarControle.salvar}"
+                                         process="@form"
+                                         update=":formListagemContasReceber:tabelaContaPagar 
+                                         :formListagemContasReceber:resumo 
+                                         :formListagemContasReceber:growlMessages"
+                                         styleClass="ui-button-success"
+                                         style="margin-top:15px"
+                                         oncomplete="if (!args.validationFailed) { PF('cadastroContaDialog').hide(); }"/>
+                    </p:outputPanel>
+                </h:form>
+            </p:dialog>
 
 
             <!-- Estilo -->
@@ -328,11 +435,15 @@
 
                 /* Cores personalizadas */
                 .resumo-card.receber {
-                    background: linear-gradient(135deg, #007bff, #3399ff);
+                    background: linear-gradient(135deg, #A83838, #DB6565);
                 }
 
                 .resumo-card.recebido {
                     background: linear-gradient(135deg, #28a745, #5cd65c);
+                }
+
+                .resumo-card.gerado {
+                    background: linear-gradient(135deg, #007bff, #3399ff);
                 }
 
                 .btn-canceladas {

@@ -46,6 +46,9 @@ public class VendaControle implements Serializable {
     private Date dataFim;
     private List<Venda> listaVendasFiltradas = new ArrayList<>();
     private Boolean edit = false;
+    private Pessoa clienteFiltro;
+    private Produto produtoFiltro;
+    private Pessoa funcionarioFiltro;
 
     @EJB
     private VendaFacade vendaFacade;
@@ -96,25 +99,6 @@ public class VendaControle implements Serializable {
 
     }
 
-    // Métodos de filtro
-    public void filtrarPorPeriodo() {
-        List<Venda> todasVendas = vendaFacade.listaTodosComItens();
-        listaVendasFiltradas = new ArrayList<>();
-
-        for (Venda venda : todasVendas) {
-            if ((dataInicio == null || !venda.getDataVenda().before(dataInicio))
-                    && (dataFim == null || !venda.getDataVenda().after(dataFim))) {
-                listaVendasFiltradas.add(venda);
-            }
-        }
-    }
-
-    public void removerFiltro() {
-        dataInicio = null;
-        dataFim = null;
-        listaVendasFiltradas = vendaFacade.listaTodosComItens();
-    }
-
     public void atualizarPreco() {
         if (itensVenda.getProdutoDerivacao() != null) {
             Produto produto = itensVenda.getProdutoDerivacao().getProduto();
@@ -143,34 +127,30 @@ public class VendaControle implements Serializable {
         itensVenda = new ItensVenda();
     }
 
-    public List<Venda> getListaVendasFiltradas() {
-        return listaVendasFiltradas != null && !listaVendasFiltradas.isEmpty()
-                ? listaVendasFiltradas
-                : vendaFacade.listaTodosComItens();
-    }
-
     public void atualizarMetodosPagamento() {
-        if (venda.getPlanoPagamento() == PlanoPagamento.A_VISTA) {
-            // PIX, Débito e Dinheiro
-            this.metodosPagamentoFiltrados = new ArrayList<>();
-            this.metodosPagamentoFiltrados.add(MetodoPagamento.PIX);
-            this.metodosPagamentoFiltrados.add(MetodoPagamento.CARTAO_DEBITO);
-            this.metodosPagamentoFiltrados.add(MetodoPagamento.DINHEIRO);
-
-        } else if (venda.getPlanoPagamento() == PlanoPagamento.FIADO) {
-            // Apenas PIX e Dinheiro
-            this.metodosPagamentoFiltrados = new ArrayList<>();
-            this.metodosPagamentoFiltrados.add(MetodoPagamento.A_DENIFIR);
-
-        } else if (venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_1X
-                || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_2X
-                || venda.getPlanoPagamento() == PlanoPagamento.PARCELADO_EM_3X) {
-            // Apenas Crédito
-            this.metodosPagamentoFiltrados = new ArrayList<>();
-            this.metodosPagamentoFiltrados.add(MetodoPagamento.CARTAO_CREDITO);
-        } else {
+        if (null == venda.getPlanoPagamento()) {
             // Se não se enquadrar, não deixa nenhum método
             this.metodosPagamentoFiltrados = new ArrayList<>();
+        } else {
+            switch (venda.getPlanoPagamento()) {
+                case A_VISTA:
+                    // PIX, Débito e Dinheiro
+                    this.metodosPagamentoFiltrados = new ArrayList<>();
+                    this.metodosPagamentoFiltrados.add(MetodoPagamento.PIX);
+                    this.metodosPagamentoFiltrados.add(MetodoPagamento.CARTAO_DEBITO);
+                    this.metodosPagamentoFiltrados.add(MetodoPagamento.DINHEIRO);
+                    break;
+                case FIADO:
+                    // Apenas PIX e Dinheiro
+                    this.metodosPagamentoFiltrados = new ArrayList<>();
+                    this.metodosPagamentoFiltrados.add(MetodoPagamento.A_DENIFIR);
+                    this.metodosPagamentoFiltrados.add(MetodoPagamento.CARTAO_CREDITO);
+                    break;
+                default:
+                    // Se não se enquadrar, não deixa nenhum método
+                    this.metodosPagamentoFiltrados = new ArrayList<>();
+                    break;
+            }
         }
     }
 
@@ -244,17 +224,34 @@ public class VendaControle implements Serializable {
             hasError = true;
         }
 
+        if (venda.getMetodoPagamento() == null) {
+            mensagemErro.append("Metodo de Pagamento, ");
+            hasError = true;
+        }
+
+        if (venda.getPlanoPagamento() == PlanoPagamento.FIADO) {
+            if (venda.getDataVencimento() == null) {
+                mensagemErro.append("Data de Vencimento, ");
+                hasError = true;
+            }
+            if (venda.getParcelas() == null || venda.getParcelas() <= 0) {
+                mensagemErro.append("Parcelas, ");
+                hasError = true;
+            }
+        }
+
         if (hasError) {
             mensagemErro.setLength(mensagemErro.length() - 2);
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", mensagemErro.toString()));
             return;
         }
-        // SALVAR VENDA PRIMEIRO
+        if (venda.getPlanoPagamento() == PlanoPagamento.FIADO) {
+            venda.calcularParcelas();
+        }
 
         vendaFacade.salvarVenda(venda, edit);
 
-        // GARANTIR QUE TEM ID
         if (venda.getId() == null) {
             throw new IllegalStateException("Venda não foi persistida corretamente.");
         }
@@ -340,7 +337,6 @@ public class VendaControle implements Serializable {
 
         String desc = FinanceDesc.recebimentoVendaAVista(vendaParaFecharAVista, cr, obsRecebimento);
 
-
         lanc.setDescricao(desc);
         cr.addLancamento(lanc);
 
@@ -370,8 +366,25 @@ public class VendaControle implements Serializable {
         contaFacade.salvar(conta);
     }
 
-    public void exportarPDF() throws DocumentException, IOException {
-        List<Venda> vendasParaExportar = getListaVendasFiltradas();
+    public void exportarPDFFiltrado() throws DocumentException, IOException {
+        List<Venda> vendasParaExportar = vendaFacade.buscarPorFiltros(clienteFiltro, funcionarioFiltro, produtoFiltro, dataInicio, dataFim);
+        exportarPDF(vendasParaExportar);
+    }
+
+    public void aplicarFiltro() {
+        listaVendasFiltradas = vendaFacade.buscarPorFiltros(clienteFiltro, funcionarioFiltro, produtoFiltro, dataInicio, dataFim);
+    }
+
+    public void limparFiltros() {
+        clienteFiltro = null;
+        funcionarioFiltro = null;
+        produtoFiltro = null;
+        dataInicio = null;
+        dataFim = null;
+        listaVendasFiltradas = vendaFacade.listaTodosComItens(); // ou vazio, como preferir
+    }
+
+    public void exportarPDF(List<Venda> vendasParaExportar) throws DocumentException, IOException {
 
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
@@ -384,11 +397,17 @@ public class VendaControle implements Serializable {
         try {
             document.open();
 
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 0, 128));
-            Paragraph title = new Paragraph("Relatório de Vendas - Loja São Judas Tadeu", titleFont);
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
+            Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
-            title.setSpacingAfter(20);
+            title.setSpacingAfter(10);
             document.add(title);
+
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph("Relatório de Vendas", subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(20);
+            document.add(subtitle);
 
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.BOLD, Color.BLACK);
             Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
@@ -638,6 +657,30 @@ public class VendaControle implements Serializable {
 
     public void setObsRecebimento(String obsRecebimento) {
         this.obsRecebimento = obsRecebimento;
+    }
+
+    public Pessoa getClienteFiltro() {
+        return clienteFiltro;
+    }
+
+    public void setClienteFiltro(Pessoa clienteFiltro) {
+        this.clienteFiltro = clienteFiltro;
+    }
+
+    public Produto getProdutoFiltro() {
+        return produtoFiltro;
+    }
+
+    public void setProdutoFiltro(Produto produtoFiltro) {
+        this.produtoFiltro = produtoFiltro;
+    }
+
+    public Pessoa getFuncionarioFiltro() {
+        return funcionarioFiltro;
+    }
+
+    public void setFuncionarioFiltro(Pessoa funcionarioFiltro) {
+        this.funcionarioFiltro = funcionarioFiltro;
     }
 
 }

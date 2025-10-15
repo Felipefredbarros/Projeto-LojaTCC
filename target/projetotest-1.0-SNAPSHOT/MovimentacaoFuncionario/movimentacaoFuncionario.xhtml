@@ -17,15 +17,15 @@
                                  emptyMessage="Nenhuma movimentação cadastrada." rows="6" paginator="false"
                                  styleClass="tabela-categorias" rowsPerPageTemplate="6,12,18">
 
-                        <p:column headerText="Funcionário" sortBy="#{m.funcionario.nome}" filterBy="#{m.funcionario.nome}" filterMatchMode="contains">
+                        <p:column headerText="Funcionário"  filterBy="#{m.funcionario.nome}" filterMatchMode="contains"  style="text-align: center">
                             <h:outputText value="#{m.funcionario.nome}" />
                         </p:column>
-                        <p:column headerText="Data: (DD/MM/AAAA):">
+                        <p:column headerText="Data: (DD/MM/AAAA):"  style="text-align: center">
                             <h:outputText value="#{m.data}">
                                 <f:convertDateTime pattern="dd/MM/yyyy"/>
                             </h:outputText>
                         </p:column>
-                        <p:column headerText="Tipo de Bonus" sortBy="#{m.tipoBonus.descricao}" filterBy="#{m.tipoBonus.descricao}" filterMatchMode="exact">
+                        <p:column headerText="Tipo de Bonus" filterBy="#{m.tipoBonus.descricao}" filterMatchMode="exact"  style="text-align: center">
                             <f:facet name="filter">
                                 <p:selectOneMenu onchange="PF('tabelaMovWV').filter()" styleClass="custom-filter">
                                     <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true" />
@@ -35,7 +35,7 @@
                             </f:facet>
                             <h:outputText value="#{m.tipoBonus.descricao}" />
                         </p:column>
-                        <p:column headerText=" Bonus: ">
+                        <p:column headerText=" Bonus: "  style="text-align: center">
                             <h:outputText value="#{m.bonus}">
                                 <f:convertNumber type="currency"/>
                             </h:outputText>

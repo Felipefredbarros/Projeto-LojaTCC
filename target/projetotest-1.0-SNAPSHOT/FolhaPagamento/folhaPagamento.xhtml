@@ -62,19 +62,19 @@
                                              paginatorPosition="bottom" styleClass="tabela-folhas"
                                              rowsPerPageTemplate="5,10,15">
 
-                                    <p:column headerText="Data de Geração" sortBy="#{fol.dataGeracao}" filterBy="#{fol.dataGeracao}" filterMatchMode="contains">
+                                    <p:column headerText="Data de Geração" filterBy="#{fol.dataGeracao}" filterMatchMode="contains"  style="text-align: center">
                                         <h:outputText value="#{fol.dataGeracao}">
                                             <f:convertDateTime pattern="dd/MM/yyyy"/>
                                         </h:outputText>
                                     </p:column>
 
-                                    <p:column headerText="Competencia" sortBy="#{fol.competencia}" filterBy="#{fol.competencia}" filterMatchMode="contains">
+                                    <p:column headerText="Competencia" filterBy="#{fol.competencia}" filterMatchMode="contains"  style="text-align: center">
                                         <h:outputText value="#{fol.competencia}">
                                             <f:convertDateTime pattern="MM/yyyy"/>
                                         </h:outputText>
                                     </p:column>
 
-                                    <p:column headerText="Funcionario" sortBy="#{fol.funcionario.nome}" filterBy="#{fol.funcionario.nome}" filterMatchMode="contains">
+                                    <p:column headerText="Funcionario" filterBy="#{fol.funcionario.nome}" filterMatchMode="contains"  style="text-align: center">
                                         <h:outputText value="#{fol.funcionario.nome}"/>
                                     </p:column>
 

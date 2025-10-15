@@ -13,13 +13,20 @@ import Entidades.Enums.TipoLancamento;
 import Entidades.ItensVenda;
 import Entidades.LancamentoFinanceiro;
 import Entidades.MovimentacaoMensalFuncionario;
+import Entidades.ParcelaCompra;
+import Entidades.Pessoa;
+import Entidades.Produto;
 import Entidades.ProdutoDerivacao;
 import Entidades.Venda;
 import Utilitario.FinanceDesc;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -27,6 +34,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -85,7 +94,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
     }
 
     public void fecharVenda(Venda venda) {
-        // --- validação da combinação plano x método ---
 
         venda.setStatus("FECHADA");
 
@@ -98,64 +106,33 @@ public class VendaFacade extends AbstractFacade<Venda> {
                 contaAvista.setCliente(venda.getCliente());
                 contaAvista.setDescricao("Venda à vista - ID:" + venda.getId());
                 contaAvista.setValor(venda.getValorTotal());
-                contaAvista.setDataVencimento(venda.getDataVenda());
-                contaAvista.setDataRecebimento(venda.getDataVenda());
+                contaAvista.setDataVencimento(new Date());
+                contaAvista.setDataRecebimento(new Date());
+                contaAvista.setDataCriação(new Date());
                 contaAvista.setStatus("RECEBIDA");
                 contaAvista.setMetodoPagamento(venda.getMetodoPagamento());
                 contas.add(contaAvista);
                 break;
 
             case FIADO:
-                ContaReceber contaPrazo = new ContaReceber();
-                contaPrazo.setVenda(venda);
-                contaPrazo.setCliente(venda.getCliente());
-                contaPrazo.setDescricao("Venda a prazo - ID:" + venda.getId());
-                contaPrazo.setValor(venda.getValorTotal());
-                contaPrazo.setDataVencimento(addMonths(venda.getDataVenda(), 1));
-                contaPrazo.setStatus("ABERTA");
-                contaPrazo.setMetodoPagamento(venda.getMetodoPagamento());
-                contas.add(contaPrazo);
-                break;
+                for (int i = 0; i < venda.getParcelasVenda().size(); i++) {
+                    ParcelaCompra parcela = venda.getParcelasVenda().get(i);
 
-            case PARCELADO_EM_1X:
-                ContaReceber conta1x = new ContaReceber();
-                conta1x.setVenda(venda);
-                conta1x.setCliente(venda.getCliente());
-                conta1x.setDescricao("Venda parcelada em 1x - ID:" + venda.getId());
-                conta1x.setValor(venda.getValorTotal());
-                conta1x.setDataVencimento(addMonths(venda.getDataVenda(), 1));
-                conta1x.setStatus("ABERTA");
-                conta1x.setMetodoPagamento(venda.getMetodoPagamento());
-                contas.add(conta1x);
-                break;
-
-            case PARCELADO_EM_2X:
-                for (int i = 0; i < 2; i++) {
                     ContaReceber conta = new ContaReceber();
                     conta.setVenda(venda);
                     conta.setCliente(venda.getCliente());
-                    conta.setDescricao("Parcela " + (i + 1) + "/2 - ID:" + venda.getId());
-                    conta.setValor(venda.getValorTotal() / 2);
-                    conta.setDataVencimento(addMonths(venda.getDataVenda(), i + 1));
-                    conta.setStatus("ABERTA");
+                    conta.setDescricao("Parcela " + (i + 1) + "/" + venda.getParcelasVenda().size()
+                            + " - ID:" + venda.getId());
+                    conta.setValor(parcela.getValorParcela());
+                    conta.setDataVencimento(parcela.getDataVencimento());
+                    conta.setDataCriação(new Date());
                     conta.setMetodoPagamento(venda.getMetodoPagamento());
+                    conta.setStatus("ABERTA");
+
                     contas.add(conta);
                 }
                 break;
 
-            case PARCELADO_EM_3X:
-                for (int i = 0; i < 3; i++) {
-                    ContaReceber conta = new ContaReceber();
-                    conta.setVenda(venda);
-                    conta.setCliente(venda.getCliente());
-                    conta.setDescricao("Parcela " + (i + 1) + "/3 - ID:" + venda.getId());
-                    conta.setValor(venda.getValorTotal() / 3);
-                    conta.setDataVencimento(addMonths(venda.getDataVenda(), i + 1));
-                    conta.setStatus("ABERTA");
-                    conta.setMetodoPagamento(venda.getMetodoPagamento());
-                    contas.add(conta);
-                }
-                break;
         }
 
         venda.setContasReceber(contas);
@@ -205,7 +182,8 @@ public class VendaFacade extends AbstractFacade<Venda> {
         for (ContaReceber cr : venda.getContasReceber()) {
             if ("RECEBIDA".equals(cr.getStatus())) {
                 estornarContaReceber(cr, "Cancelamento da venda #" + venda.getId());
-            } if ("ABERTA".equals(cr.getStatus())) {
+            }
+            if ("ABERTA".equals(cr.getStatus())) {
                 cr.setStatus("CANCELADA");
                 contaReceberFacade.salvar(cr);
             }
@@ -283,7 +261,7 @@ public class VendaFacade extends AbstractFacade<Venda> {
     }
 
     public List<Venda> listaTodosComItens() {
-        return em.createQuery("SELECT DISTINCT v FROM Venda v LEFT JOIN FETCH v.itensVenda", Venda.class).getResultList();
+        return em.createQuery("SELECT DISTINCT v FROM Venda v LEFT JOIN FETCH v.itensVenda where v.status != 'CANCELADA' and v.status != 'Aberta' order by v.id desc", Venda.class).getResultList();
     }
 
     public List<Venda> listaTodasReais() {
@@ -293,6 +271,175 @@ public class VendaFacade extends AbstractFacade<Venda> {
 
     public List<Venda> listaVendasCanceladas() {
         Query q = getEntityManager().createQuery("From Venda as v where v.status = 'CANCELADA' order by v.id desc ");
+        return q.getResultList();
+    }
+
+    // VendaFacade.java (Java 8 ok)
+    public double findValorTotalVendasPorData(Date dataAlvo) {
+        if (dataAlvo == null) {
+            return 0.0;
+        }
+
+        LocalDate ld = dataAlvo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        Date inicio = Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date fim = Date.from(ld.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        // TROQUE v.valorTotal pelo nome REAL do campo na sua entidade Venda
+        String jpql
+                = "SELECT COALESCE(SUM(v.valorTotal), 0) "
+                + "FROM Venda v "
+                + "WHERE v.status IN ('FECHADA')"
+                + "  AND v.dataVenda >= :inicio AND v.dataVenda < :fim";
+
+        Double total = em.createQuery(jpql, Double.class)
+                .setParameter("inicio", inicio, TemporalType.TIMESTAMP)
+                .setParameter("fim", fim, TemporalType.TIMESTAMP)
+                .getSingleResult();
+
+        return total != null ? total : 0.0;
+    }
+
+    public Map<Object, Number> findVendasUltimos30Dias() {
+        Map<Object, Number> resultado = new LinkedHashMap<>();
+
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicioLD = hoje.minusDays(29);
+
+        Date inicio = Date.from(inicioLD.atStartOfDay(zone).toInstant());
+        Date fim = Date.from(hoje.plusDays(1).atStartOfDay(zone).toInstant());
+
+        // PREENCHE 30 dias com zero (mantém o gráfico contínuo)
+        for (int i = 0; i < 30; i++) {
+            LocalDate d = inicioLD.plusDays(i);
+            Date chave = Date.from(d.atStartOfDay(zone).toInstant());
+            resultado.put(chave, 0.0);
+        }
+
+        String jpql
+                = "SELECT YEAR(v.dataVenda), MONTH(v.dataVenda), DAY(v.dataVenda), "
+                + "       COALESCE(SUM(v.valorTotal), 0) "
+                + // <-- troque 'valorTotal' se o nome for outro
+                "FROM Venda v "
+                + "WHERE v.status <> 'CANCELADA' "
+                + // se enum: use parâmetro
+                "  AND v.dataVenda >= :inicio AND v.dataVenda < :fim "
+                + "GROUP BY YEAR(v.dataVenda), MONTH(v.dataVenda), DAY(v.dataVenda) "
+                + "ORDER BY YEAR(v.dataVenda), MONTH(v.dataVenda), DAY(v.dataVenda)";
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createQuery(jpql)
+                .setParameter("inicio", inicio, TemporalType.TIMESTAMP)
+                .setParameter("fim", fim, TemporalType.TIMESTAMP)
+                .getResultList();
+
+        for (Object[] r : rows) {
+            int ano = ((Number) r[0]).intValue();
+            int mes = ((Number) r[1]).intValue();
+            int dia = ((Number) r[2]).intValue();
+            double total = ((Number) r[3]).doubleValue();
+
+            LocalDate d = LocalDate.of(ano, mes, dia);
+            Date chave = Date.from(d.atStartOfDay(zone).toInstant());
+            resultado.put(chave, total);
+        }
+        return resultado;
+    }
+
+    public Map<String, Number> findTop5ProdutosVendidosMes() {
+        Map<String, Number> resultado = new LinkedHashMap<>();
+
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate inicioLD = LocalDate.now().withDayOfMonth(1);
+        LocalDate fimLD = inicioLD.plusMonths(1);
+
+        Date inicio = Date.from(inicioLD.atStartOfDay(zone).toInstant());
+        Date fim = Date.from(fimLD.atStartOfDay(zone).toInstant());
+
+        // 1) Buscamos pelo ID da derivação (campo mapeado certo) + soma das quantidades
+        String jpql
+                = "SELECT pd.id, SUM(iv.quantidade) "
+                + "FROM ItensVenda iv "
+                + "JOIN iv.venda v "
+                + "JOIN iv.produtoDerivacao pd "
+                + "WHERE v.status <> 'CANCELADA' "
+                + "  AND v.dataVenda >= :inicio AND v.dataVenda < :fim "
+                + "GROUP BY pd.id "
+                + "ORDER BY SUM(iv.quantidade) DESC";
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createQuery(jpql)
+                .setParameter("inicio", inicio, TemporalType.TIMESTAMP)
+                .setParameter("fim", fim, TemporalType.TIMESTAMP)
+                .setMaxResults(5)
+                .getResultList();
+
+        // 2) Para cada ID, carregamos a derivação e usamos getTexto() como rótulo do gráfico
+        for (Object[] r : rows) {
+            Long derivacaoId = (Long) r[0];
+            Number qtd = (Number) r[1];
+
+            ProdutoDerivacao pd = em.find(ProdutoDerivacao.class, derivacaoId);
+            String rotulo = (pd != null && pd.getTexto() != null) ? pd.getTexto() : ("Derivação #" + derivacaoId);
+
+            resultado.put(rotulo, qtd);
+        }
+
+        return resultado;
+    }
+
+    public List<Venda> buscarPorFiltros(Pessoa cliente, Pessoa funcionario, Produto produto, Date ini, Date fim) {
+        StringBuilder jpql = new StringBuilder(
+                "SELECT DISTINCT c FROM Venda c "
+                + "LEFT JOIN FETCH c.itensVenda ic "
+                + "LEFT JOIN ic.produtoDerivacao pd "
+                + "LEFT JOIN pd.produto p "
+                + "WHERE c.status <> 'CANCELADA' AND c.status <> 'Aberta' ");
+
+        if (cliente != null) {
+            jpql.append(" AND c.cliente = :cliente ");
+        }
+
+        if (funcionario != null) {
+            jpql.append(" AND c.funcionario = :funcionario ");
+        }
+
+        if (produto != null) {
+            jpql.append(
+                    " AND EXISTS ( "
+                    + "   SELECT 1 FROM ItensVenda ic2 "
+                    + "   JOIN ic2.produtoDerivacao pd2 "
+                    + "   JOIN pd2.produto p2 "
+                    + "   WHERE ic2.venda = c AND p2 = :produto "
+                    + " ) "
+            );
+        }
+        if (ini != null) {
+            jpql.append(" AND c.dataVenda >= :ini ");
+        }
+        if (fim != null) {
+            jpql.append(" AND c.dataVenda <= :fim ");
+        }
+        jpql.append(" ORDER BY c.id DESC ");
+
+        TypedQuery<Venda> q = em.createQuery(jpql.toString(), Venda.class);
+
+        if (cliente != null) {
+            q.setParameter("cliente", cliente);
+        }
+        if (funcionario != null) {
+            q.setParameter("funcionario", funcionario);
+        }
+        if (produto != null) {
+            q.setParameter("produto", produto);
+        }
+        if (ini != null) {
+            q.setParameter("ini", ini, TemporalType.TIMESTAMP);
+        }
+        if (fim != null) {
+            q.setParameter("fim", fim, TemporalType.TIMESTAMP);
+        }
+
         return q.getResultList();
     }
 

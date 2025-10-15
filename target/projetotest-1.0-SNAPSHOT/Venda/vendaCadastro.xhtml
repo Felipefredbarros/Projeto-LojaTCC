@@ -36,7 +36,9 @@
                     <p:selectOneMenu id="plano" value="#{vendaControle.venda.planoPagamento}">
                         <f:selectItems value="#{vendaControle.planosPagamentos}" var="plano"
                                        itemLabel="#{plano.descricao}" itemValue="#{plano}" />
-                        <p:ajax event="change" listener="#{vendaControle.atualizarMetodosPagamento}" update="metodos" />
+
+                        <p:ajax listener="#{vendaControle.atualizarMetodosPagamento}"
+                                update="metodos parcelasWrapper" />                  
                     </p:selectOneMenu>
 
                     <p:outputLabel value="Metodo de Pagamento:" />
@@ -44,6 +46,23 @@
                         <f:selectItems value="#{vendaControle.metodosPagamentoFiltrados}" var="metodo"
                                        itemLabel="#{metodo.descricao}" itemValue="#{metodo}" />
                     </p:selectOneMenu>
+
+                    <!-- WRAPPER sempre presente -->
+                    <h:panelGroup id="parcelasWrapper" layout="block">
+                        <!-- bloco condicional -->
+                        <h:panelGroup layout="block"
+                                      rendered="#{not empty vendaControle.venda.planoPagamento
+                                                  and vendaControle.venda.planoPagamento eq 'FIADO'}">
+
+                            <p:outputLabel for="parcelas" value="Parcelas:" />
+                            <p:inputNumber id="parcelas" value="#{vendaControle.venda.parcelas}"
+                                           minValue="1" maxValue="12" />
+
+                            <p:outputLabel for="dataVencimento" value="Data de Vencimento" />
+                            <p:calendar id="dataVencimento" value="#{vendaControle.venda.dataVencimento}"
+                                        pattern="dd/MM/yyyy" locale="pt_BR" />
+                        </h:panelGroup>
+                    </h:panelGroup>
 
 
                 </h:panelGrid>
@@ -71,7 +90,9 @@
                                        minValue="0" decimalPlaces="0" />
 
                         <p:outputLabel value="Preço:" />
-                        <p:inputText id="valorUnitario" value="#{vendaControle.itensVenda.valorUnitario}" widgetVar="valorUnitario" disabled="#{vendaControle.edit}"/>
+                        <p:inputNumber id="valorUnitario" value="#{vendaControle.itensVenda.valorUnitario}" widgetVar="valorUnitario" disabled="#{vendaControle.edit}"
+                                     symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                   required="true" minValue="0" style="width: 100%;"/>
                     </h:panelGrid>
 
                     <!-- Botão para adicionar o item -->

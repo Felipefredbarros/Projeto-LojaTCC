@@ -4,6 +4,7 @@ C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facad
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\PessoaControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Marca.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ParcelaCompra.java
+C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Usuario.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Estado.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Cidade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\tipoTelefone.java
@@ -42,6 +43,7 @@ C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entid
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\ProdutoDerivacaoFacade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\TipoBatida.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\dataExporterView.java
+C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\UsuarioControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ContaReceber.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\MarcaFacade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ItensCompra.java
@@ -54,6 +56,7 @@ C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entid
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\MarcaControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\LancamentoFinanceiroFacade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\StatusLancamento.java
+C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\UsuarioFacade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Controladores\ContaReceberControle.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Facade\FolhaFacade.java
 C:\Users\felip\OneDrive\Documentos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\PlanoPagamento.java

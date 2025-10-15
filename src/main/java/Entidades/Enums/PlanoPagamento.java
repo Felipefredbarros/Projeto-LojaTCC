@@ -13,9 +13,6 @@ import java.util.List;
  */
 public enum PlanoPagamento {
     A_VISTA("À Vista"),
-    PARCELADO_EM_1X("Parcelado em 1x"),
-    PARCELADO_EM_2X("Parcelado em 2x"),
-    PARCELADO_EM_3X("Parcelado em 3x"),
     FIADO("Fiado"),
     PARCELADO_COMPRA("Parcelado");
 
@@ -32,9 +29,6 @@ public enum PlanoPagamento {
     public static List<PlanoPagamento> getPlanosPagamento() {
         List<PlanoPagamento> planos = new ArrayList<>();
         planos.add(A_VISTA);
-        planos.add(PARCELADO_EM_1X);
-        planos.add(PARCELADO_EM_2X);
-        planos.add(PARCELADO_EM_3X);
         planos.add(FIADO);
         return planos;
     }

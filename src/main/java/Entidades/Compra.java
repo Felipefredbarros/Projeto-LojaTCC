@@ -102,16 +102,16 @@ public class Compra implements Serializable, ClassePai {
         if (parcelas > 0 && valorTotal != null) {
             double valorParcela = valorTotal / parcelas;
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(dataVencimento);  // Certifique-se de que dataVencimento é válida
+            calendar.setTime(dataVencimento);  
 
             for (int i = 0; i < parcelas; i++) {
                 ParcelaCompra parcela = new ParcelaCompra();
                 parcela.setCompra(this);
                 parcela.setValorParcela(valorParcela);
                 parcela.setMetodoPagamento(MetodoPagamento.A_DENIFIR);
-                parcela.setDataVencimento(calendar.getTime());  // Gera a data de vencimento corretamente
+                parcela.setDataVencimento(calendar.getTime());  
                 parcelasCompra.add(parcela);
-                calendar.add(Calendar.MONTH, 1);  // Incrementa o mês para a próxima parcela
+                calendar.add(Calendar.MONTH, 1);  
             }
         }
     }
@@ -218,6 +218,8 @@ public class Compra implements Serializable, ClassePai {
     public void setContasPagar(List<ContaPagar> contasPagar) {
         this.contasPagar = contasPagar;
     }
+    
+    
 
     @Override
     public int hashCode() {

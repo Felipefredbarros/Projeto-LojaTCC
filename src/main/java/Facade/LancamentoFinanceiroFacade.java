@@ -45,20 +45,28 @@ public class LancamentoFinanceiroFacade extends AbstractFacade<LancamentoFinance
     public List<LancamentoFinanceiro> buscarPorConta(Conta conta) {
         String jpql = "SELECT l FROM LancamentoFinanceiro l "
                 + "WHERE l.conta = :conta "
-                + "ORDER BY l.dataHora DESC";
+                + "ORDER BY l.id DESC";
         return em.createQuery(jpql, LancamentoFinanceiro.class)
                 .setParameter("conta", conta)
                 .getResultList();
     }
 
     public Double somarPorContaETipoEPeriodo(Conta conta, TipoLancamento tipo, Date ini, Date fim) {
-        String jpql = "SELECT COALESCE(SUM(l.valor), 0) FROM LancamentoFinanceiro l WHERE l.conta = :conta AND l.tipo = :tipo"
+        String jpql = "SELECT COALESCE(SUM(l.valor), 0) "
+                + "FROM LancamentoFinanceiro l "
+                + "WHERE l.conta = :conta "
+                + "  AND l.tipo = :tipo "
+                + // Regra principal: ignora estornados
+                "  AND (l.status IS NULL OR l.status <> :statusEstornado) "
+                + // Blindagem extra por descrição (casos antigos sem status marcado)
+                "  AND (l.descricao IS NULL OR UPPER(l.descricao) NOT LIKE 'ESTORNO%') "
                 + (ini != null ? " AND l.dataHora >= :ini" : "")
                 + (fim != null ? " AND l.dataHora <= :fim" : "");
 
         TypedQuery<Double> q = em.createQuery(jpql, Double.class);
         q.setParameter("conta", conta);
         q.setParameter("tipo", tipo);
+        q.setParameter("statusEstornado", Entidades.Enums.StatusLancamento.ESTORNADO);
         if (ini != null) {
             q.setParameter("ini", ini);
         }
@@ -92,7 +100,7 @@ public class LancamentoFinanceiroFacade extends AbstractFacade<LancamentoFinance
                 .getResultList();
         return list.isEmpty() ? null : list.get(0);
     }
-    
+
     public LancamentoFinanceiro buscarOriginalRecebimento(ContaReceber cp) {
         List<LancamentoFinanceiro> list = em.createQuery(
                 "select l from LancamentoFinanceiro l "

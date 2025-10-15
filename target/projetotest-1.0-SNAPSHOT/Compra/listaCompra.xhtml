@@ -11,7 +11,7 @@
             <h:form id="formListagemCompras">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1>Listagem de Compras</h1>
+                <h1>📑 Listagem de Compras</h1>
 
                 <p:toolbar styleClass="mb-3">
                     <p:toolbarGroup>
@@ -21,12 +21,19 @@
                                          styleClass="ui-button-success"
                                          process="@this"
                                          style="margin-right: 10px"/>
-                        
+
                         <p:commandButton value="Compras Canceladas"
                                          action="comprasCanceladas.xhtml"
                                          styleClass="ui-button-success"
                                          process="@this"
                                          style="margin-right: 10px"/>
+
+                        <p:commandButton value="Exportar Relatório Compras(PDF)"                                          
+                                         styleClass="ui-button-success"
+                                         icon="pi pi-download" 
+                                         type="button"
+                                         onclick="PF('dlgFiltroCompras').show()"/>
+
 
                     </p:toolbarGroup>
                 </p:toolbar>
@@ -40,24 +47,24 @@
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
 
-                    <p:column headerText="ID: " sortBy="#{compraItem.id}" filterBy="#{compraItem.id}" filterMatchMode="contains">
+                    <p:column headerText="ID: " filterBy="#{compraItem.id}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{compraItem.id}">
                             <f:convertNumber integerOnly="true" groupingUsed="true" />
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Data da Compra" sortBy="#{compraItem.dataCompra}" filterBy="#{compraItem.dataCompra}" filterMatchMode="contains">
+                    <p:column headerText="Data da Compra" filterBy="#{compraItem.dataCompra}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{compraItem.dataCompra}" >
                             <f:convertDateTime pattern="dd/MM/yy"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Cliente" sortBy="#{compraItem.fornecedor.nome}" filterBy="#{compraItem.fornecedor.nome}" filterMatchMode="contains">
+                    <p:column headerText="Cliente"  filterBy="#{compraItem.fornecedor.nome}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{compraItem.fornecedor.nome}"/>
                     </p:column>
 
 
-                    <p:column headerText="Valor Total" sortBy="#{compraItem.valorTotal}" filterBy="#{compraItem.valorTotal}" filterMatchMode="contains">
+                    <p:column headerText="Valor Total"  filterBy="#{compraItem.valorTotal}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{compraItem.valorTotal}">
                             <f:convertNumber type="currency"/>
                         </h:outputText>
@@ -212,6 +219,55 @@
                     <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
                     <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
                 </p:confirmDialog>
+
+                <!-- modal de relatorio filtro -->
+
+                <p:dialog id="dlgFiltroCompras" header="Filtrar Relatório de Compras"
+                          widgetVar="dlgFiltroCompras" modal="true" responsive="true"
+                          width="600" closable="true" closeOnEscape="true">
+
+                    <h:panelGrid columns="2" columnClasses="col1,col2" style="width:100%" cellpadding="5">
+                        <h:outputLabel for="fornAC" value="Fornecedor:" />
+                        <p:autoComplete id="fornAC"
+                                        value="#{compraControle.fornecedorFiltro}"
+                                        completeMethod="#{compraControle.getListaFornecedoresFiltrando}"
+                                        var="f" itemLabel="#{f.nome}" itemValue="#{f}"
+                                        dropdown="true" forceSelection="true"
+                                        converter="#{compraControle.pessoaConverter}" />
+
+                        <h:outputLabel for="prodAC" value="Produto(Categoria):" />
+                        <p:autoComplete id="prodAC"
+                                        value="#{compraControle.produtoFiltro}"
+                                        completeMethod="#{compraControle.getListaProdutosFiltrando}"
+                                        var="p" itemLabel="#{p.categoria.categoria}" itemValue="#{p}"
+                                        dropdown="true" forceSelection="true"
+                                        converter="#{compraControle.produtoConverter}" />
+
+                        <h:outputLabel for="dtIni" value="Data início:" />
+                        <p:calendar id="dtIni" value="#{compraControle.dataInicio}"
+                                    pattern="dd/MM/yyyy"/>
+
+                        <h:outputLabel for="dtFim" value="Data fim:" />
+                        <p:calendar id="dtFim" value="#{compraControle.dataFim}"
+                                    pattern="dd/MM/yyyy"/>
+                    </h:panelGrid>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Exportar PDF"
+                                         action="#{compraControle.exportarPDFFiltrado}"
+                                         process="@(form) dlgFiltroCompras"
+                                         ajax="false" icon="pi pi-download" />
+                        <p:commandButton value="Limpar"
+                                         actionListener="#{compraControle.limparFiltros}"
+                                         process="@this"
+                                         update="@form :formListagemCompras:tabelaCompras"
+                                         icon="pi pi-undo" styleClass="ui-button-secondary" />
+                        <p:commandButton value="Fechar"
+                                         type="button" onclick="PF('dlgFiltroCompras').hide()"
+                                         icon="pi pi-times" styleClass="ui-button-danger" />
+                    </f:facet>
+                </p:dialog>
+
             </h:form>
             <style>
                 .info-box-grid {

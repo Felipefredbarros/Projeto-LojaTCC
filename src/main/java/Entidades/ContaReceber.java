@@ -38,14 +38,14 @@ public class ContaReceber implements Serializable, ClassePai {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "contaReceber_id")
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(nullable = false, name = "cliente_id")
-    private Pessoa cliente;
-
+    
     @ManyToOne
     @JoinColumn(name = "venda_id")
     private Venda venda;
+    
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    private Pessoa cliente;
 
     @Column(name = "contaReceber_descricao")
     private String descricao;
@@ -67,6 +67,10 @@ public class ContaReceber implements Serializable, ClassePai {
     @Column(name = "contaReceber_dataRecebimento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataRecebimento;
+    
+    @Column(name = "contaReceber_dataCriação")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dataCriação;
 
     @OneToMany(mappedBy = "contaReceber", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<LancamentoFinanceiro> lancamentos = new ArrayList<>();
@@ -83,14 +87,6 @@ public class ContaReceber implements Serializable, ClassePai {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Pessoa getCliente() {
-        return cliente;
-    }
-
-    public void setCliente(Pessoa cliente) {
-        this.cliente = cliente;
     }
 
     public Venda getVenda() {
@@ -156,6 +152,24 @@ public class ContaReceber implements Serializable, ClassePai {
     public void setLancamentos(List<LancamentoFinanceiro> lancamentos) {
         this.lancamentos = lancamentos;
     }
+
+    public Date getDataCriação() {
+        return dataCriação;
+    }
+
+    public void setDataCriação(Date dataCriação) {
+        this.dataCriação = dataCriação;
+    }
+
+    public Pessoa getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Pessoa cliente) {
+        this.cliente = cliente;
+    }
+    
+    
 
     
 

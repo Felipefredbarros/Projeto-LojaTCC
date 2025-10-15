@@ -126,29 +126,41 @@
                             <h:outputText value="Informações da Conta"/>
                         </f:facet>
 
-                        <p:panelGrid columns="6" styleClass="grid-clean" columnClasses="label,value,label,value">
-                            <h:outputText value="Saldo Inicial da Conta: "/>
-                            <h:outputText value="#{contaControle.contaSelecionada.valorInicial}">
-                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
-                            </h:outputText>
+                        <p:panelGrid columns="3" layout="grid" styleClass="ui-panelgrid-blank ui-fluid info-grid" 
+                                     columnClasses="ui-g-12 ui-md-6 ui-lg-4, ui-g-12 ui-md-6 ui-lg-4, ui-g-12 ui-md-12 ui-lg-4">
 
-                            <h:outputText value="Nome:"/>
-                            <h:outputText value="#{contaControle.contaSelecionada.nome}"/>
+                            <p:outputPanel styleClass="info-item">
+                                <h:outputText value="Saldo Inicial da Conta: " styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.valorInicial}" styleClass="info-value">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </p:outputPanel>
 
-                            <h:outputText value="Tipo:"/>
-                            <h:panelGroup>
+                            <p:outputPanel styleClass="info-item">
+                                <h:outputText value="Nome:" styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.nome}" styleClass="info-value"/>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="info-item">
+                                <h:outputText value="Tipo:" styleClass="info-label"/>
                                 <p:tag value="#{contaControle.contaSelecionada.tipoConta}"
                                        severity="#{contaControle.contaSelecionada.tipoConta eq 'BANCO' ? 'info' : 'warning'}"/>
-                            </h:panelGroup>
+                            </p:outputPanel>
 
-                            <h:outputText value="Banco:" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
-                            <h:outputText value="#{contaControle.contaSelecionada.banco}" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+                            <p:outputPanel styleClass="info-item" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}">
+                                <h:outputText value="Banco:"  styleClass="info-label"/>
+                                <h:outputText  value="#{contaControle.contaSelecionada.banco != null and contaControle.contaSelecionada.banco ne '' ? contaControle.contaSelecionada.banco : 'Não Informado'}" styleClass="info-value"/>
+                            </p:outputPanel>
+                            
+                            <p:outputPanel styleClass="info-item" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}">
+                                <h:outputText value="Agência:" styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.agencia != null and contaControle.contaSelecionada.agencia ne '' ? contaControle.contaSelecionada.agencia : '—'}" styleClass="info-value"/>
+                            </p:outputPanel>
 
-                            <h:outputText value="Agência:" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
-                            <h:outputText value="#{contaControle.contaSelecionada.agencia}" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
-
-                            <h:outputText value="Conta:" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
-                            <h:outputText value="#{contaControle.contaSelecionada.conta}" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}"/>
+                            <p:outputPanel styleClass="info-item" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}">
+                                <h:outputText value="Conta:" styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.conta != null and contaControle.contaSelecionada.conta ne '' ? contaControle.contaSelecionada.conta : '—'}" styleClass="info-value"/>
+                            </p:outputPanel>
 
                         </p:panelGrid>
                     </p:card>
@@ -160,9 +172,8 @@
                         </f:facet>
                         <p:outputPanel styleClass="table-actions" layout="block">
                             <p:selectOneRadio value="#{contaControle.filtroEstorno}">
-                                <f:selectItem itemLabel="Todas" itemValue="TODAS" />
-                                <f:selectItem itemLabel="Sem estornos" itemValue="SEM_ESTORNOS" />
-                                <f:selectItem itemLabel="Somente estornos" itemValue="APENAS_ESTORNOS" />
+                                <f:selectItem itemLabel="Normais" itemValue="SEM_ESTORNOS" />
+                                <f:selectItem itemLabel="Estornos" itemValue="APENAS_ESTORNOS" />
                                 <p:ajax update="tabelaMov" />
                             </p:selectOneRadio>
 
@@ -176,31 +187,31 @@
                                      rowStyleClass="#{mov.tipo eq 'ENTRADA' ? 'row-in' : 'row-out'}"
                                      styleClass="tabela-conta">
 
-                            <p:column headerText="Data" styleClass="col-sm">
+                            <p:column headerText="Data" styleClass="col-sm"  style="text-align: center">
                                 <h:outputText value="#{mov.dataHora}">
                                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
                                 </h:outputText>
                             </p:column>
 
-                            <p:column headerText="Descrição" sortBy="#{mov.descricao}" filterBy="#{mov.descricao}" styleClass="col-lg">
+                            <p:column headerText="Descrição" filterBy="#{mov.descricao}" styleClass="col-lg"  style="text-align: center">
                                 <h:outputText value="#{mov.descricao}"/>
                             </p:column>
 
-                            <p:column headerText="Tipo" styleClass="col-xs center">
+                            <p:column headerText="Tipo" filterBy="#{mov.tipo}" styleClass="col-xs center"  style="text-align: center">
                                 <p:tag value="#{mov.tipo}" severity="#{mov.tipo eq 'ENTRADA' ? 'success' : 'danger'}"/>
                             </p:column>
 
-                            <p:column headerText="Metodo Pagamento" sortBy="#{mov.metodo.descricao}" filterBy="#{mov.metodo.descricao}" styleClass="col-xs center">
+                            <p:column headerText="Metodo Pagamento"  filterBy="#{mov.metodo.descricao}" styleClass="col-xs center"  style="text-align: center">
                                 <p:tag value="#{mov.metodo.descricao}"/>
                             </p:column>
 
-                            <p:column headerText="Valor" sortBy="#{mov.valor}" filterBy="#{mov.valor}" styleClass="col-md right">
+                            <p:column headerText="Valor"  filterBy="#{mov.valor}" styleClass="col-md right"  style="text-align: center">
                                 <h:outputText value="#{mov.valor}">
                                     <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
                                 </h:outputText>
                             </p:column>
 
-                            <p:column headerText="Status" sortBy="#{mov.status.label}" filterBy="#{mov.status.label}" styleClass="col-xs center">
+                            <p:column headerText="Status" filterBy="#{mov.status.label}" styleClass="col-xs center"  style="text-align: center">
                                 <p:tag value="#{mov.status.label}" severity="#{mov.status.label eq 'OK' ? 'success' : 'danger'}"/>
                             </p:column>
 
@@ -453,29 +464,67 @@
                 }
 
                 .kpi-card.saldo {
-                    background: linear-gradient(135deg, #0f7bff, #003b95);
+                    background: linear-gradient(135deg, #42a5f5, #1e88e5); /* azul médio elegante */
                     color: #fff;
                 }
+
                 .kpi-card.entrada {
-                    background: linear-gradient(135deg, #27ae60, #0d7a41);
+                    background: linear-gradient(135deg, #66bb6a, #43a047); /* verde suave e limpo */
                     color: #fff;
                 }
+
                 .kpi-card.saida {
-                    background: linear-gradient(135deg, #e74c3c, #9c2b21);
+                    background: linear-gradient(135deg, #ef5350, #e53935); /* vermelho moderno e menos agressivo */
                     color: #fff;
                 }
+
                 .kpi-card.ult {
-                    background: linear-gradient(135deg, #8e44ad, #4b2b63);
+                    background: linear-gradient(135deg, #ab47bc, #8e24aa); /* roxo vibrante e sofisticado */
                     color: #fff;
                 }
+
 
                 /* Info card */
                 .info-card {
                     border-radius: 14px;
                 }
-                .grid-clean .label {
+                /* Remova a classe .grid-clean e suas propriedades se for usar a nova estrutura */
+
+                /* Estilos para o Card de Informações - Seção do p:card */
+                .info-card .ui-card-content {
+                    padding: 1rem !important; /* Ajuste interno do card */
+                }
+
+                /* Estilos para o novo p:panelGrid com layout="grid" */
+                .info-grid {
+                    padding: 0; /* Remove padding extra do panelgrid */
+                    margin: 0;
+                }
+
+                /* Estilo para cada item (Label + Value) */
+                .info-grid .info-item {
+                    padding: 0.5rem 0.75rem; /* Adiciona um pequeno espaçamento interno */
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    background-color: var(--surface-hover); /* Fundo sutil para destacar cada item */
+                    display: flex; /* Usa flexbox para alinhar Label e Value */
+                    flex-direction: column; /* Coloca Label em cima do Value */
+                    gap: 2px;
+                }
+
+                /* Estilo para o Label */
+                .info-grid .info-item .info-label {
                     color: var(--text-color-secondary);
-                    width: 140px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                }
+
+                /* Estilo para o Valor */
+                .info-grid .info-item .info-value {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: var(--text-color);
                 }
 
                 /* Table actions */

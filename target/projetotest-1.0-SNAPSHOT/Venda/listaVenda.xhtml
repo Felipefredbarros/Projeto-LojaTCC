@@ -11,7 +11,7 @@
             <h:form id="formListagemVendas">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1>Listagem de Vendas</h1>
+                <h1>📑 Listagem de Vendas</h1>
 
                 <p:toolbar styleClass="mb-3">
                     <p:toolbarGroup>
@@ -28,6 +28,13 @@
                                          process="@this"
                                          style="margin-right: 10px"/>
 
+                        <p:commandButton value="Exportar Relatório Vendas(PDF)" 
+                                         type="button"
+                                         icon="pi pi-download" 
+                                         styleClass="ui-button-success"
+                                         onclick="PF('dlgFiltroCompras').show()"/>
+
+
                     </p:toolbarGroup>
                 </p:toolbar>
 
@@ -41,37 +48,37 @@
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}">
 
 
-                    <p:column headerText="ID: " sortBy="#{vendaItem.id}" filterBy="#{vendaItem.id}" filterMatchMode="contains">
+                    <p:column headerText="ID: "  filterBy="#{vendaItem.id}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{vendaItem.id}">
                             <f:convertNumber integerOnly="true" groupingUsed="true" />
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Data da Venda" sortBy="#{vendaItem.dataVenda}" filterBy="#{vendaItem.dataVenda}" filterMatchMode="contains">
+                    <p:column headerText="Data da Venda"  filterBy="#{vendaItem.dataVenda}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{vendaItem.dataVenda}" >
                             <f:convertDateTime pattern="dd/MM/yy"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Cliente" sortBy="#{vendaItem.cliente.nome}" filterBy="#{vendaItem.cliente.nome}" filterMatchMode="contains">
+                    <p:column headerText="Cliente" filterBy="#{vendaItem.cliente.nome}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{vendaItem.cliente.nome}"/>
                     </p:column>
 
-                    <p:column headerText="Funcionario" sortBy="#{vendaItem.funcionario.nome}" filterBy="#{vendaItem.funcionario.nome}" filterMatchMode="contains">
+                    <p:column headerText="Funcionario" filterBy="#{vendaItem.funcionario.nome}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{vendaItem.funcionario.nome}"/>
                     </p:column>
 
-                    <p:column headerText="Valor Total" sortBy="#{vendaItem.valorTotal}" filterBy="#{vendaItem.valorTotal}" filterMatchMode="contains">
+                    <p:column headerText="Valor Total"  filterBy="#{vendaItem.valorTotal}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{vendaItem.valorTotal}">
                             <f:convertNumber type="currency"/>
                         </h:outputText>
                     </p:column>
 
-                    <p:column headerText="Plano de Pagamento" sortBy="#{vendaItem.planoPagamento.descricao}" filterBy="#{vendaItem.planoPagamento.descricao}" filterMatchMode="contains">
+                    <p:column headerText="Plano de Pagamento" filterBy="#{vendaItem.planoPagamento.descricao}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{vendaItem.planoPagamento.descricao}"/>
                     </p:column>
 
-                    <p:column headerText="Metodo de Pagamento" sortBy="#{vendaItem.metodoPagamento.descricao}" filterBy="#{vendaItem.metodoPagamento.descricao}" filterMatchMode="contains">
+                    <p:column headerText="Metodo de Pagamento" filterBy="#{vendaItem.metodoPagamento.descricao}" filterMatchMode="contains"  style="text-align: center">
                         <h:outputText value="#{vendaItem.metodoPagamento.descricao}"/>
                     </p:column>
 
@@ -185,6 +192,10 @@
                                 <span class="value">#{vendaControle.vendaSelecionado.planoPagamento.descricao}</span>
                             </div>
                             <div class="info-box">
+                                <span class="label"><strong>Parcelas:</strong></span>
+                                <span class="value">#{vendaControle.vendaSelecionado.parcelas != null ? vendaControle.vendaSelecionado.parcelas : '1'}</span>
+                            </div>
+                            <div class="info-box">
                                 <span class="label"><strong>Método de Pagamento:</strong></span>
                                 <span class="value">#{vendaControle.vendaSelecionado.metodoPagamento.descricao}</span>
                             </div>
@@ -222,8 +233,64 @@
                     <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
                     <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
                 </p:confirmDialog>
+
+                <!-- modal de relatorio filtro -->
+
+                <p:dialog id="dlgFiltroCompras" header="Filtrar Relatório de Vendas"
+                          widgetVar="dlgFiltroCompras" modal="true" responsive="true"
+                          width="600" closable="true" closeOnEscape="true">
+
+                    <h:panelGrid columns="2" columnClasses="col1,col2" style="width:100%" cellpadding="5">
+                        <h:outputLabel for="cliAC" value="Clientes: " />
+                        <p:autoComplete id="cliAC"
+                                        value="#{vendaControle.clienteFiltro}"
+                                        completeMethod="#{vendaControle.getListaClientesFiltrando(filtro)}"
+                                        var="f" itemLabel="#{f.nome}" itemValue="#{f}"
+                                        dropdown="true" forceSelection="true"
+                                        converter="#{vendaControle.pessoaConverter}" />
+
+                        <h:outputLabel for="funcAC" value="Funcionario: " />
+                        <p:autoComplete id="funcAC"
+                                        value="#{vendaControle.funcionarioFiltro}"
+                                        completeMethod="#{vendaControle.getListaFuncionariosFiltrando(filtro)}"
+                                        var="f" itemLabel="#{f.nome}" itemValue="#{f}"
+                                        dropdown="true" forceSelection="true"
+                                        converter="#{vendaControle.pessoaConverter}" />
+
+                        <h:outputLabel for="prodAC" value="Produto(Categoria):" />
+                        <p:autoComplete id="prodAC"
+                                        value="#{vendaControle.produtoFiltro}"
+                                        completeMethod="#{vendaControle.getListaProdutosFiltrando}"
+                                        var="p" itemLabel="#{p.categoria.categoria}" itemValue="#{p}"
+                                        dropdown="true" forceSelection="true"
+                                        converter="#{vendaControle.produtoConverter}" />
+
+                        <h:outputLabel for="dtIni" value="Data início:" />
+                        <p:calendar id="dtIni" value="#{vendaControle.dataInicio}"
+                                    pattern="dd/MM/yyyy"/>
+
+                        <h:outputLabel for="dtFim" value="Data fim:" />
+                        <p:calendar id="dtFim" value="#{vendaControle.dataFim}"
+                                    pattern="dd/MM/yyyy"/>
+                    </h:panelGrid>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Exportar PDF"
+                                         action="#{vendaControle.exportarPDFFiltrado}"
+                                         process="@(form) dlgFiltroCompras"
+                                         ajax="false" icon="pi pi-download" />
+                        <p:commandButton value="Limpar"
+                                         actionListener="#{vendaControle.limparFiltros}"
+                                         process="@this"
+                                         update="@form :formListagemVendas:tabelaVendas"
+                                         icon="pi pi-undo" styleClass="ui-button-secondary" />
+                        <p:commandButton value="Fechar"
+                                         type="button" onclick="PF('dlgFiltroCompras').hide()"
+                                         icon="pi pi-times" styleClass="ui-button-danger" />
+                    </f:facet>
+                </p:dialog>
             </h:form>
-            
+
             <p:dialog id="dlgFechamentoAVista" widgetVar="dlgFechamentoAVista" header="Recebimento à vista"
                       modal="true" width="460" appendTo="@(body)" dynamic="true" cache="false">
                 <h:form id="dlgFechamentoAVistaForm">

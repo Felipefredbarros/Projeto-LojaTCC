@@ -6,12 +6,16 @@ package Facade;
 
 import Entidades.Pessoa;
 import Entidades.Enums.TipoPessoa;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TemporalType;
 
 /**
  *
@@ -218,5 +222,4 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
     public List<Pessoa> listaFuncionarioFiltrando(String filtro, String... atributos) {
         return listaFiltrandoPorTipo(TipoPessoa.FUNCIONARIO, filtro, atributos);
     }
-
 }

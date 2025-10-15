@@ -29,6 +29,7 @@ Controladores\PessoaControle.class
 Entidades\Compra.class
 Facade\ProdutoFacade.class
 Facade\VendaFacade.class
+dto\ProdutoRankingDTO.class
 Entidades\Enums\TipoPessoa.class
 Entidades\RegistroPonto.class
 Facade\ContaPagarFacade.class
@@ -37,6 +38,7 @@ Facade\FolhaFacade.class
 Controladores\ContaPagarControle.class
 Controladores\ContaControle$FiltroEstorno.class
 Entidades\Venda.class
+Entidades\Usuario.class
 Entidades\Estado.class
 Facade\CategoriaFacade.class
 Entidades\Categoria.class
@@ -55,8 +57,11 @@ Entidades\Marca.class
 Controladores\CategoriaControle.class
 Controladores\CompraControle.class
 MovimentacaoMensalControle.class
+Facade\UsuarioFacade.class
 Entidades\ItensVenda.class
+Controladores\UsuarioControle.class
 Entidades\ContaPagar.class
+Controladores\VendaControle$1.class
 Entidades\Enums\TipoConta.class
 Facade\ProdutoDerivacaoFacade.class
 Facade\MovimentacaoMensalFacade.class

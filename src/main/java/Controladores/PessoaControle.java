@@ -437,10 +437,16 @@ public class PessoaControle implements Serializable {
         document.open();
 
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
-        Paragraph title = new Paragraph(reportTitle + " - Loja São Judas Tadeu", titleFont);
+        Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
-        title.setSpacingAfter(20);
+        title.setSpacingAfter(10);
         document.add(title);
+
+        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
+        Paragraph subtitle = new Paragraph("Relatório de Pessoas(Funcionario, Fornecedor e Cliente)", subtitleFont);
+        subtitle.setAlignment(Element.ALIGN_CENTER);
+        subtitle.setSpacingAfter(20);
+        document.add(subtitle);
 
         PdfPTable mainTable = new PdfPTable(8);
         mainTable.setWidthPercentage(100);
