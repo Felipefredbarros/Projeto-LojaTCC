@@ -51,6 +51,8 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
                     .getSingleResult();
             return p;
         } catch (javax.persistence.NoResultException nre) {
+            System.out.println("cuuuuuuuu");
+
             return null;
         }
     }
@@ -216,5 +218,23 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
 
     public List<Pessoa> listaFuncionarioFiltrando(String filtro, String... atributos) {
         return listaFiltrandoPorTipo(TipoPessoa.FUNCIONARIO, filtro, atributos);
+    }
+
+    public boolean pessoaTemVendas(Long pessoaId) {
+        Long count = em.createQuery(
+                "SELECT COUNT(v) FROM Venda v "
+                + "WHERE v.cliente.id = :pessoaId OR v.funcionario.id = :pessoaId", Long.class)
+                .setParameter("pessoaId", pessoaId)
+                .getSingleResult();
+
+        return count != null && count > 0;
+    }
+
+    public boolean pessoaTemCompras(Long pessoaId) {
+        Long count = em.createQuery(
+                "SELECT COUNT(c) FROM Compra c WHERE c.fornecedor.id = :pessoaId", Long.class)
+                .setParameter("pessoaId", pessoaId)
+                .getSingleResult();
+        return count != null && count > 0;
     }
 }

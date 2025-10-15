@@ -38,10 +38,10 @@ public class Endereco implements Serializable, ClassePai {
     private String rua;
     @Column(name = "end_cep")
     private String cep;
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cidade_id")
     private Cidade cidade;
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pessoa_id")
     private Pessoa pessoa;
 

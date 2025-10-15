@@ -4,11 +4,13 @@
  */
 package Facade;
 
-import Entidades.Categoria;
 import Entidades.Cidade;
+import java.util.Collections;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -27,6 +29,17 @@ public class CidadeFacade extends AbstractFacade<Cidade>{
 
     public CidadeFacade() {
         super(Cidade.class);
+    }
+    
+    public List<Cidade> buscarPorEstadoId(Long estadoId) {
+        if (estadoId == null) {
+            return Collections.emptyList();
+        }
+
+        String jpql = "SELECT c FROM Cidade c WHERE c.estado.id = :idDoEstado ORDER BY c.nome ASC";
+        TypedQuery<Cidade> query = getEntityManager().createQuery(jpql, Cidade.class);
+        query.setParameter("idDoEstado", estadoId);
+        return query.getResultList();
     }
 
 }

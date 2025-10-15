@@ -6,7 +6,6 @@ package Controladores;
 
 import Entidades.Conta;
 import Entidades.ContaPagar;
-import Entidades.ContaReceber;
 import Entidades.Enums.MetodoPagamento;
 import Entidades.Enums.StatusLancamento;
 import Entidades.Enums.TipoConta;
@@ -34,16 +33,16 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
-import javax.faces.bean.ViewScoped;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 
 /**
  *
  * @author felip
  */
-@ManagedBean
+@Named("contaPagarControle")
 @ViewScoped
 public class ContaPagarControle implements Serializable {
 

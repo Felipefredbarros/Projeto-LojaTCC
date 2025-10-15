@@ -15,8 +15,8 @@ import Entidades.Telefone;
 import Entidades.Enums.tipoTelefone;
 import Entidades.Estado;
 import Facade.CidadeFacade;
+import Facade.EstadoFacade;
 import Facade.PessoaFacade;
-import Services.IbgeService;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
@@ -30,12 +30,8 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.view.ViewScoped;
 
-import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
@@ -43,7 +39,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 
 /**
  *
@@ -68,15 +65,33 @@ public class PessoaControle implements Serializable {
     private Long cidadeSelecionadaId;
     private List<Estado> listaEstados;
     private List<Cidade> listaCidades;
-    @Inject
-    private IbgeService ibgeService;
+    @EJB
+    private EstadoFacade estadoFacade;
 
     @PostConstruct
     public void init() {
+
+        if (FacesContext.getCurrentInstance().isPostback()) {
+            return;
+        }
+
         pessoa = new Pessoa();
+        edit = false;
         novoEndereco = new Endereco();
         listaCidades = new ArrayList<>();
         carregarEstados();
+
+        Object id = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getFlash()
+                .get("pessoaId");
+        if (id != null) {
+            Long pid = (id instanceof Long) ? (Long) id : Long.valueOf(id.toString());
+            this.pessoa = pessoaFacade.findWithAll(pid);
+        }
+        if (pessoa.getContrato() == null) {
+            pessoa.setContrato(new ContratoTrabalho());
+        }
     }
 
     public void limparFormulario() {
@@ -86,23 +101,13 @@ public class PessoaControle implements Serializable {
     }
 
     private void carregarEstados() {
-        try {
-            listaEstados = ibgeService.buscarEstados();
-        } catch (Exception e) {
-            // Adicionar uma mensagem de erro para o usuário (FacesMessage)
-            e.printStackTrace();
-            listaEstados = new ArrayList<>(); // Garante que a lista não seja nula
-        }
+        listaEstados = estadoFacade.listaTodos();
     }
 
     public void onEstadoSelect() {
         if (estadoSelecionadoId != null) {
-            try {
-                listaCidades = ibgeService.buscarCidadesPorEstado(estadoSelecionadoId);
-            } catch (Exception e) {
-                e.printStackTrace();
-                listaCidades = new ArrayList<>();
-            }
+            listaCidades = cidadeFacade.buscarPorEstadoId(estadoSelecionadoId); // Você precisará criar este método no seu CidadeFacade
+
         } else {
             listaCidades = new ArrayList<>();
         }
@@ -128,16 +133,15 @@ public class PessoaControle implements Serializable {
     }
 
     public void onTipoPessoaChange() {
-
+        if (pessoa.getContrato() == null) {
+            pessoa.setContrato(new ContratoTrabalho());
+        }
         pessoa.getContrato().setSalario(null);
         pessoa.getContrato().setCargo(null);
         pessoa.getContrato().setDiaPagamentos(null);
+
         pessoa.setRegiao(null);
-
         pessoa.setTipoPessoa("FISICA");
-
-        pessoa.setCpfcnpj(null);
-
     }
 
     public void onNaturezaPessoaChange() {
@@ -174,35 +178,33 @@ public class PessoaControle implements Serializable {
         }
 
         try {
-            // achar o objeto Estado completo na lista em memória
+            // achar o estado
             Estado estadoSelecionado = listaEstados.stream()
                     .filter(e -> e.getId().equals(estadoSelecionadoId))
                     .findFirst()
                     .orElse(null);
 
-            // achar o objeto Cidade completo na lista em memória
+            // achar o cidade
             Cidade cidadeSelecionada = listaCidades.stream()
                     .filter(c -> c.getId().equals(cidadeSelecionadaId))
                     .findFirst()
                     .orElse(null);
 
-            // se acnou , montar o objeto
+            // se achou o objeto
             if (cidadeSelecionada != null && estadoSelecionado != null) {
                 // associa o estado à cidade 
                 cidadeSelecionada.setEstado(estadoSelecionado);
 
-                // associa a cidade ao endereço que será adicionado
+                // associa a cidade ao endereço 
                 novoEndereco.setCidade(cidadeSelecionada);
 
-                // associa o endereço à pessoa
                 novoEndereco.setPessoa(pessoa);
                 pessoa.getListaEnderecos().add(novoEndereco);
 
-                // limpa
                 novoEndereco = new Endereco();
                 estadoSelecionadoId = null;
                 cidadeSelecionadaId = null;
-                listaCidades = new ArrayList<>(); // limpa a lista de cidades
+                listaCidades = new ArrayList<>();
 
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Endereço adicionado."));
@@ -243,7 +245,6 @@ public class PessoaControle implements Serializable {
         this.pessoa.getListaTelefones().remove(telefoneParaRemover);
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Telefone removido."));
-        novoTelefone = new Telefone();
     }
 
     //novo
@@ -264,6 +265,8 @@ public class PessoaControle implements Serializable {
                 pessoa.getContrato().setSalario(null);
                 pessoa.getContrato().setCargo(null);
                 pessoa.getContrato().setDiaPagamentos(null);
+                pessoa.getContrato().setDataInicio(null);
+                pessoa.getContrato().setJornadaDiariaHoras(null);
             } else {
                 if (pessoa.getContrato() != null) {
                     pessoa.getContrato().setFuncionario(pessoa);
@@ -280,6 +283,9 @@ public class PessoaControle implements Serializable {
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Pessoa salva com sucesso!"));
+            FacesContext.getCurrentInstance().getExternalContext().getFlash().setKeepMessages(true);
+            FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("pessoaId");
+
             limparFormulario();
             return "listaPessoas.xhtml?faces-redirect=true";
         } catch (Exception e) {
@@ -345,9 +351,16 @@ public class PessoaControle implements Serializable {
         pessoa = new Pessoa();
     }
 
-    public void novo() {
+    public String novo() {
         edit = false;
         pessoa = new Pessoa();
+        novoEndereco = new Endereco();
+        novoTelefone = new Telefone();
+        contrato = new ContratoTrabalho();
+        pessoa.setContrato(new ContratoTrabalho());
+
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("pessoaId");
+        return "pessoaCadastro.xhtml?faces-redirect=true";
     }
 
     public void excluir(Pessoa pessoa) {
@@ -388,12 +401,24 @@ public class PessoaControle implements Serializable {
     }
 
     public void editar(Pessoa pes) {
-        edit = true;
-        this.pessoa = pessoaFacade.findWithAll(pes.getId());
+        if (pessoaFacade.pessoaTemVendas(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui vendas relacionadas e não pode ser editado"));
+            return;
+        }
+
+        if (pessoaFacade.pessoaTemCompras(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui compras relacionadas e não pode ser editado"));
+            return;
+        }
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("pessoaId", pes.getId());
 
         try {
             FacesContext.getCurrentInstance().getExternalContext().redirect("pessoaCadastro.xhtml");
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

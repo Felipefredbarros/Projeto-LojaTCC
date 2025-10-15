@@ -36,24 +36,43 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 
 /**
  *
  * @author felip
  */
-@ManagedBean
-@SessionScoped
+@Named("compraControle")
+@ViewScoped
 public class CompraControle implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+    private static final Locale PT_BR = new Locale("pt", "BR");
+    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(PT_BR);
+
     private Compra compra = new Compra();
-    private ItensCompra itensCompra;
+    private ItensCompra itensCompra = new ItensCompra();
+    private Date dataInicio;
+    private Date dataFim;
+    private Compra compraSelecionado;
+    private Pessoa fornecedorFiltro;
+    private Produto produtoFiltro;
+
+    private boolean mostrarParcelas;
+    private Boolean edit = false;
+
+    private List<PlanoPagamento> planosPagamentos;
+    private List<Compra> listaComprasFiltradas = new ArrayList<>();
+
     @EJB
     private CompraFacade compraFacade;
     @EJB
@@ -62,72 +81,36 @@ public class CompraControle implements Serializable {
     private ProdutoFacade produtoFacade;
     @EJB
     private ProdutoDerivacaoFacade produtoDevFacade;
+
     private ConverterGenerico pessoaConverter;
     private ConverterGenerico produtoConverter;
     private ConverterGenerico produtoDevConverter;
-    private List<PlanoPagamento> planosPagamentos;
+
     @ManagedProperty("#{produtoControle}")
     private ProdutoControle produtoControle;
-    private boolean mostrarParcelas;
-    private Date dataInicio;
-    private Date dataFim;
-    private Boolean edit = false;
-    private List<Compra> listaComprasFiltradas = new ArrayList<>();
-    private Compra compraSelecionado;
-    private Pessoa fornecedorFiltro;
-    private Produto produtoFiltro;
 
-    public void prepararVisualizacao(Compra com) {
-        this.compraSelecionado = compraFacade.findWithItens(com.getId());
+    @PostConstruct
+    public void init() {
+        if (FacesContext.getCurrentInstance().isPostback()) {
+            return;
+        }
+        edit = false;
+        compra = new Compra();
+        itensCompra = new ItensCompra();
+        Object id = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getFlash()
+                .get("compraId");
+        if (id != null) {
+            Long pid = (id instanceof Long) ? (Long) id : Long.valueOf(id.toString());
+            this.compra = compraFacade.findWithItens(pid);
+        }
+
     }
 
     public CompraControle() {
         this.planosPagamentos = PlanoPagamento.getPlanosPagamento();
         this.compra = new Compra();
-    }
-
-    public List<PlanoPagamento> getPlanosPagamentos() {
-        return planosPagamentos;
-    }
-
-    public void setPlanosPagamentos(List<PlanoPagamento> planosPagamentos) {
-        this.planosPagamentos = planosPagamentos;
-    }
-
-    public ItensCompra getItensCompra() {
-        return itensCompra;
-    }
-
-    public void setItensCompra(ItensCompra itensCompra) {
-        this.itensCompra = itensCompra;
-    }
-
-    public ProdutoControle getProdutoControle() {
-        return produtoControle;
-    }
-
-    public void setProdutoControle(ProdutoControle produtoControle) {
-        this.produtoControle = produtoControle;
-    }
-
-    public CompraFacade getCompraFacade() {
-        return compraFacade;
-    }
-
-    public void setCompraFacade(CompraFacade compraFacade) {
-        this.compraFacade = compraFacade;
-    }
-
-    public void atualizaPreco() {
-        itensCompra.setValorUnitario(itensCompra.getProdutoDerivacao().getProduto().getValorUnitarioCompra());
-    }
-
-    public List<Pessoa> getListaFornecedoresFiltrando(String filtro) {
-        return pessoaFacade.listaFornecedorFiltrando(filtro, "nome", "cpfcnpj");
-    }
-
-    public List<Produto> getListaProdutosFiltrando(String filtro) {
-        return produtoFacade.listaFiltrar(filtro, "categoria", "tipo");
     }
 
     public ConverterGenerico getPessoaConverter() {
@@ -151,79 +134,13 @@ public class CompraControle implements Serializable {
         return produtoDevConverter;
     }
 
-    public void setProdutoConverter(ConverterGenerico produtoConverter) {
-        this.produtoConverter = produtoConverter;
-    }
-
-    public void setFornecedorConverter(ConverterGenerico estadoConverter) {
-        this.pessoaConverter = estadoConverter;
-    }
-
-    public PessoaFacade getFornecedorFacade() {
-        if (pessoaConverter == null) {
-            pessoaConverter = new ConverterGenerico(pessoaFacade);
-        }
-        return pessoaFacade;
-    }
-
-    public void setFornecedorFacade(PessoaFacade estadoFacade) {
-        this.pessoaFacade = estadoFacade;
-    }
-
-    public ProdutoFacade getProdutoFacade() {
-        if (produtoConverter == null) {
-            produtoConverter = new ConverterGenerico(produtoFacade);
-        }
-        return produtoFacade;
-    }
-
-    public void atualizarPreco() {
-        if (itensCompra.getProdutoDerivacao() != null) {
-            Produto produto = itensCompra.getProdutoDerivacao().getProduto();
-            if (produto != null) {
-                itensCompra.setValorUnitario(produto.getValorUnitarioVenda());
-            }
-        }
-    }
-
-    public void adicionarItem() {
-        if (produtoControle.getListaProdutos() == null
-                || produtoControle.getListaProdutos().isEmpty()
-                || itensCompra.getQuantidade() == null || itensCompra.getValorUnitario() == null) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Erro", "Preencha os Campos para Adicionar um Item"));
-            return;
-        }
-
-        ItensCompra itemTemp = null;
-        for (ItensCompra it : compra.getItensCompra()) {
-            if (it.getProdutoDerivacao().getId().equals(itensCompra.getProdutoDerivacao().getId())) {
-                itemTemp = it;
-            }
-        }
-
-        if (itemTemp == null) {
-            itensCompra.setCompra(compra);
-            compra.getItensCompra().add(itensCompra);
-        } else {
-            if (!Objects.equals(itensCompra.getValorUnitario(), itemTemp.getValorUnitario())) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                "Erro", "O valor do produto precisa ser o mesmo do já cadastrado"));
-                return;
-            }
-            itemTemp.setQuantidade(itemTemp.getQuantidade() + itensCompra.getQuantidade());
-        }
+    public String novo() {
+        edit = false;
+        compra = new Compra();
         itensCompra = new ItensCompra();
 
-    }
-
-    public void removerItem(ItensCompra item) {
-        compra.getItensCompra().remove(item);
-        compra.setValorTotal(compra.getValorTotal() - item.getSubTotal());
-        itensCompra = new ItensCompra();
-        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Item removido com sucesso!"));
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("compraId");
+        return "compraCadastro.xhtml?faces-redirect=true";
     }
 
     public void salvar() {
@@ -270,6 +187,85 @@ public class CompraControle implements Serializable {
         compra = new Compra();
     }
 
+    public void editar(Compra ven) {
+        edit = true;
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("compraId", ven.getId());
+
+        try {
+            FacesContext.getCurrentInstance().getExternalContext().redirect("compraCadastro.xhtml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void excluir(Compra ven) {
+        compraFacade.remover(ven);
+    }
+
+    public void adicionarItem() {
+        if (itensCompra.getProdutoDerivacao() == null
+                || itensCompra.getQuantidade() == null
+                || itensCompra.getQuantidade() <= 0
+                || itensCompra.getValorUnitario() == null) {
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Selecione o produto, informe quantidade e valor."));
+            return;
+        }
+
+        ItensCompra itemExistente = null;
+        for (ItensCompra it : compra.getItensCompra()) {
+            if (it.getProdutoDerivacao().getId().equals(itensCompra.getProdutoDerivacao().getId())) {
+                itemExistente = it;
+                break;
+            }
+        }
+
+        if (itemExistente == null) {
+            itensCompra.setCompra(compra);
+            compra.addItem(itensCompra);
+        } else {
+            if (!Objects.equals(itensCompra.getValorUnitario(), itemExistente.getValorUnitario())) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Erro", "O valor do produto precisa ser o mesmo do já cadastrado"));
+                return;
+            }
+            itemExistente.setQuantidade(itemExistente.getQuantidade() + itensCompra.getQuantidade());
+
+        }
+        compra.setValorTotal(
+                (compra.getValorTotal() == null ? 0d : compra.getValorTotal())
+                + itensCompra.getSubTotal()
+        );
+        itensCompra = new ItensCompra();
+
+    }
+
+    public void removerItem(ItensCompra item) {
+        if (item == null) {
+            return;
+        }
+
+        compra.removeItem(item); // usa o helper da entidade
+        compra.setValorTotal(
+                (compra.getValorTotal() == null ? 0d : compra.getValorTotal()) - item.getSubTotal()
+        );
+        itensCompra = new ItensCompra();
+        limpaCampos();
+        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Item removido com sucesso!"));
+    }
+
+    public void atualizarPreco() {
+        if (itensCompra.getProdutoDerivacao() != null) {
+            Produto produto = itensCompra.getProdutoDerivacao().getProduto();
+            if (produto != null) {
+                itensCompra.setValorUnitario(produto.getValorUnitarioVenda());
+            }
+        }
+    }
+
     public void fecharCompra(Compra com) {
         com = compraFacade.findWithItens(com.getId());
 
@@ -302,30 +298,48 @@ public class CompraControle implements Serializable {
         }
     }
 
-    public List<MetodoPagamento> getMetodosParcelados() {
-        List<MetodoPagamento> metodosParcelados = new ArrayList<>();
-        metodosParcelados.add(MetodoPagamento.CARTAO_CREDITO);
-        return metodosParcelados;
+    public void limpaCampos() {
+        itensCompra.setQuantidade(null);
+        itensCompra.setValorUnitario(null);
     }
 
-    public void exportarPDFFiltrado() throws DocumentException, IOException {
-    List<Compra> comprasParaExportar = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);  
-    exportarPDF(comprasParaExportar); 
-}
-
-
-    public void aplicarFiltro() {
-        listaComprasFiltradas = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
+    public void prepararVisualizacao(Compra com) {
+        this.compraSelecionado = compraFacade.findWithItens(com.getId());
     }
 
-    public void limparFiltros() {
-        fornecedorFiltro = null;
-        produtoFiltro = null;
-        dataInicio = null;
-        dataFim = null;
-        listaComprasFiltradas = compraFacade.listaTodosComItens(); // ou vazio, como preferir
+    public List<Compra> getListaCompras() {
+        return compraFacade.listaTodos();
     }
 
+    public List<Compra> getListaComprasReais() {
+        return compraFacade.listaTodasReais();
+    }
+
+    public List<Compra> getListaComprasCanceladas() {
+        return compraFacade.listaComprasCanceladas();
+    }
+
+    public List<Produto> getListaProdutos() {
+        return produtoFacade.listarProdutosAtivos();
+    }
+
+    public List<ProdutoDerivacao> getListaDerivacoes() {
+        return produtoFacade.listarProdutosDerivacoesAtivas();
+    }
+
+    public List<PlanoPagamento> getPlanosPagamentos() {
+        return planosPagamentos;
+    }
+
+    public List<Pessoa> getListaFornecedoresFiltrando(String filtro) {
+        return pessoaFacade.listaFornecedorFiltrando(filtro, "nome", "cpfcnpj");
+    }
+
+    public List<Produto> getListaProdutosFiltrando(String filtro) {
+        return produtoFacade.listaFiltrar(filtro, "categoria", "tipo");
+    }
+
+    //pdf
     public void exportarPDF(List<Compra> comprasParaExportar) throws DocumentException, IOException {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
@@ -348,20 +362,16 @@ public class CompraControle implements Serializable {
         subtitle.setSpacingAfter(20);
         document.add(subtitle);
 
-        // Fonte para os cabeçalhos
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.BOLD, Color.BLACK);
         Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
 
         int vendaCounter = 1;
 
-        // Para cada venda, criamos uma nova seção
         for (Compra com : comprasParaExportar) {
-            // Seção de cabeçalho de cada venda
             Paragraph compraHeader = new Paragraph("Detalhes da Compra: " + vendaCounter, headerFont);
             compraHeader.setSpacingAfter(10);
             document.add(compraHeader);
 
-            // Informações principais da venda
             PdfPTable compraTable = new PdfPTable(2);
             compraTable.setWidthPercentage(100);
             compraTable.setSpacingBefore(5);
@@ -391,13 +401,11 @@ public class CompraControle implements Serializable {
 
             document.add(compraTable);
 
-            // Tabela de itens da compra
             PdfPTable itemTable = new PdfPTable(4);
             itemTable.setWidthPercentage(100);
             itemTable.setWidths(new float[]{2f, 1f, 1f, 1f});
             itemTable.setSpacingBefore(10);
 
-            // Cabeçalhos da tabela de itens
             String[] itemHeaders = {"Produto", "Quantidade", "Valor Unitário", "Subtotal"};
             for (String itemHeader : itemHeaders) {
                 PdfPCell itemHeaderCell = new PdfPCell(new Phrase(itemHeader, headerFont));
@@ -407,7 +415,6 @@ public class CompraControle implements Serializable {
                 itemTable.addCell(itemHeaderCell);
             }
 
-            // Adiciona os detalhes dos itens da venda
             for (ItensCompra item : com.getItensCompra()) {
                 itemTable.addCell(new PdfPCell(new Phrase(item.getProdutoDerivacao().getTexto(), contentFont)));
                 itemTable.addCell(new PdfPCell(new Phrase(item.getQuantidade().toString(), contentFont)));
@@ -415,10 +422,8 @@ public class CompraControle implements Serializable {
                 itemTable.addCell(new PdfPCell(new Phrase(item.getSubTotal().toString(), contentFont)));
             }
 
-            // Adiciona a tabela de itens ao documento
             document.add(itemTable);
 
-            // Linha de separação entre compras
             Paragraph separator = new Paragraph(" ", headerFont);
             separator.setSpacingBefore(10);
             separator.setSpacingAfter(20);
@@ -431,21 +436,30 @@ public class CompraControle implements Serializable {
         facesContext.responseComplete();
     }
 
-    public void novo() {
-        edit = false;
-        compra = new Compra();
-        itensCompra = new ItensCompra();
+    public List<MetodoPagamento> getMetodosParcelados() {
+        List<MetodoPagamento> metodosParcelados = new ArrayList<>();
+        metodosParcelados.add(MetodoPagamento.CARTAO_CREDITO);
+        return metodosParcelados;
     }
 
-    public void excluir(Compra ven) {
-        compraFacade.remover(ven);
+    public void exportarPDFFiltrado() throws DocumentException, IOException {
+        List<Compra> comprasParaExportar = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
+        exportarPDF(comprasParaExportar);
     }
 
-    public void editar(Compra ven) {
-        edit = true;
-        this.compra = compraFacade.findWithItens(ven.getId());
+    public void aplicarFiltro() {
+        listaComprasFiltradas = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
     }
 
+    public void limparFiltros() {
+        fornecedorFiltro = null;
+        produtoFiltro = null;
+        dataInicio = null;
+        dataFim = null;
+        listaComprasFiltradas = compraFacade.listaTodosComItens(); // ou vazio, como preferir
+    }
+
+    //get e set
     public Compra getCompra() {
         return compra;
     }
@@ -454,24 +468,12 @@ public class CompraControle implements Serializable {
         this.compra = compra;
     }
 
-    public List<Compra> getListaCompras() {
-        return compraFacade.listaTodos();
+    public ItensCompra getItensCompra() {
+        return itensCompra;
     }
 
-    public List<Compra> getListaComprasReais() {
-        return compraFacade.listaTodasReais();
-    }
-
-    public List<Compra> getListaComprasCanceladas() {
-        return compraFacade.listaComprasCanceladas();
-    }
-
-    public List<Produto> getListaProdutos() {
-        return produtoFacade.listarProdutosAtivos();
-    }
-
-    public List<ProdutoDerivacao> getListaDerivacoes() {
-        return produtoFacade.listarProdutosDerivacoesAtivas();
+    public void setItensCompra(ItensCompra itensCompra) {
+        this.itensCompra = itensCompra;
     }
 
     public Date getDataInicio() {
@@ -520,6 +522,14 @@ public class CompraControle implements Serializable {
 
     public void setProdutoFiltro(Produto produtoFiltro) {
         this.produtoFiltro = produtoFiltro;
+    }
+
+    public ProdutoControle getProdutoControle() {
+        return produtoControle;
+    }
+
+    public void setProdutoControle(ProdutoControle produtoControle) {
+        this.produtoControle = produtoControle;
     }
 
 }

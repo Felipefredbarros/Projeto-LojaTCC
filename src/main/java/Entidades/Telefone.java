@@ -39,7 +39,7 @@ public class Telefone implements Serializable, ClassePai {
     @Column(name = "tel_tipotelefone")
     @Enumerated(EnumType.STRING)
     private tipoTelefone tipoTelefone;
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pessoa_id")
     private Pessoa pessoa;
 
