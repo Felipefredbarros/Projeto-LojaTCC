@@ -21,6 +21,7 @@ Entidades\MovimentacaoMensalFuncionario.class
 Entidades\ItensCompra.class
 Entidades\Enums\TipoLancamento.class
 Entidades\ClassePai.class
+Facade\CidadeFacade.class
 Entidades\Enums\StatusLancamento.class
 Controladores\dataExporterView.class
 Entidades\FolhaPagamento.class
@@ -36,6 +37,7 @@ Facade\ContaPagarFacade.class
 Facade\LancamentoFinanceiroFacade.class
 Facade\FolhaFacade.class
 Controladores\ContaPagarControle.class
+Controladores\TesteBean.class
 Controladores\ContaControle$FiltroEstorno.class
 Entidades\Venda.class
 Entidades\Usuario.class
@@ -43,11 +45,13 @@ Entidades\Estado.class
 Facade\CategoriaFacade.class
 Entidades\Categoria.class
 Facade\VendaFacade$1.class
+Services\IbgeService$1.class
 Entidades\Enums\PlanoPagamento.class
 Entidades\Endereco.class
 Entidades\ParcelaCompra.class
 Facade\ContaReceberFacade.class
 Entidades\ContaReceber.class
+Services\IbgeService.class
 Entidades\ContratoTrabalho.class
 Entidades\Telefone.class
 Utilitario\FinanceDesc.class
@@ -62,6 +66,7 @@ Entidades\ItensVenda.class
 Controladores\UsuarioControle.class
 Entidades\ContaPagar.class
 Controladores\VendaControle$1.class
+Services\IbgeService$2.class
 Entidades\Enums\TipoConta.class
 Facade\ProdutoDerivacaoFacade.class
 Facade\MovimentacaoMensalFacade.class

@@ -66,10 +66,10 @@
                         <p:panelGrid columns="4" layout="grid" rendered="#{pessoaControle.pessoa.tipo == 'FUNCIONARIO'}" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4">
                             <p:outputLabel for="diaIncio" value="Dia de Inicio de Contrato" styleClass="font-semibold"/>
                             <p:calendar id="diaIncio" value="#{pessoaControle.pessoa.contrato.dataInicio}" pattern="MM/yyyy" mask="true" locale="pt_BR" required="true" style="width: 100%;"/>
-                            
+
                             <p:outputLabel for="jornada" value="Jornada de Trabalho diaria(Horas):" styleClass="font-semibold"/>
                             <p:inputNumber id="jornada" value="#{pessoaControle.pessoa.contrato.jornadaDiariaHoras}" required="true" minValue="0" decimalPlaces="0" placeholder="0" style="width: 100%;"/>
-                            
+
                             <p:outputLabel for="salario" value="Salário:" styleClass="font-semibold"/>
                             <p:inputNumber id="salario" value="#{pessoaControle.pessoa.contrato.salario}" symbol="R$ " decimalSeparator="," thousandSeparator="." required="true" minValue="0" style="width: 100%;"/>
 
@@ -90,16 +90,41 @@
                     <p:tabView>
                         <p:tab title="Endereços Adicionais">
                             <p:panelGrid id="panelNovoEndereco" columns="4" layout="grid" styleClass="ui-panelgrid-blank ui-fluid card mb-3" columnClasses="ui-grid-col-2, ui-grid-col-4, ui-grid-col-2, ui-grid-col-4">
-                                <p:outputLabel for="endRua" value="Rua:" styleClass="font-semibold"/> <p:inputText id="endRua" value="#{pessoaControle.novoEndereco.rua}" maxlength="150"/>
-                                <p:outputLabel for="endNumero" value="Número:" styleClass="font-semibold"/> <p:inputText id="endNumero" value="#{pessoaControle.novoEndereco.numero}" maxlength="10"/>
-                                <p:outputLabel for="endBairro" value="Bairro:" styleClass="font-semibold"/> <p:inputText id="endBairro" value="#{pessoaControle.novoEndereco.bairro}" maxlength="100"/>
-                                <p:outputLabel for="endCep" value="CEP:" styleClass="font-semibold"/> <p:inputMask id="endCep" value="#{pessoaControle.novoEndereco.cep}" mask="99999-999"/>
+
+                                <p:outputLabel for="endEstado" value="Estado:" styleClass="font-semibold"/>
+                                <p:selectOneMenu id="endEstado" value="#{pessoaControle.estadoSelecionadoId}" filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="Selecione um Estado" itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItems value="#{pessoaControle.listaEstados}" var="est" itemLabel="#{est.nome} - #{est.sigla}" itemValue="#{est.id}" />
+
+                                    <p:ajax listener="#{pessoaControle.onEstadoSelect}" update="endCidade" />
+                                </p:selectOneMenu>
+
+                                <p:outputLabel for="endCidade" value="Cidade:" styleClass="font-semibold"/>
+                                <p:selectOneMenu id="endCidade" value="#{pessoaControle.cidadeSelecionadaId}" filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="Selecione uma Cidade" itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItems value="#{pessoaControle.listaCidades}" var="cid" itemLabel="#{cid.nome}" itemValue="#{cid.id}" />
+                                </p:selectOneMenu>
+
+                                <p:outputLabel for="endRua" value="Rua:" styleClass="font-semibold"/>
+                                <p:inputText id="endRua" value="#{pessoaControle.novoEndereco.rua}" maxlength="150"/>
+
+                                <p:outputLabel for="endNumero" value="Número:" styleClass="font-semibold"/>
+                                <p:inputText id="endNumero" value="#{pessoaControle.novoEndereco.numero}" maxlength="10"/>
+
+                                <p:outputLabel for="endBairro" value="Bairro:" styleClass="font-semibold"/>
+                                <p:inputText id="endBairro" value="#{pessoaControle.novoEndereco.bairro}" maxlength="100"/>
+
+                                <p:outputLabel for="endCep" value="CEP:" styleClass="font-semibold"/>
+                                <p:inputMask id="endCep" value="#{pessoaControle.novoEndereco.cep}" mask="99999-999"/>
                             </p:panelGrid>
                             <p:commandButton value="Adicionar Endereço" icon="pi pi-plus" actionListener="#{pessoaControle.adicionarEndereco}"
-                                             update="tabelaEnderecos :form:growlMessages panelNovoEndereco" process="@this endRua endNumero endBairro endCep"
+                                             update="tabelaEnderecos :form:growlMessages panelNovoEndereco" process="@this panelNovoEndereco"
+
                                              styleClass="p-mb-2" style="margin-right: 10px"/>
 
                             <p:dataTable id="tabelaEnderecos" scrollable="true" scrollHeight="165" var="end" value="#{pessoaControle.pessoa.listaEnderecos}" emptyMessage="Nenhum endereço adicional." rows="5" paginator="false">
+                                <p:column headerText="Estado"><h:outputText value="#{end.cidade.estado.nome}" /></p:column>
+                                <p:column headerText="Cidade"><h:outputText value="#{end.cidade.nome}" /></p:column>
                                 <p:column headerText="Rua"><h:outputText value="#{end.rua}" /></p:column>
                                 <p:column headerText="Nº"><h:outputText value="#{end.numero}" /></p:column>
                                 <p:column headerText="Bairro"><h:outputText value="#{end.bairro}" /></p:column>

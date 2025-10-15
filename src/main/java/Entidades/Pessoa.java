@@ -48,15 +48,8 @@ public class Pessoa implements Serializable, ClassePai {
     private String email;
     @Column(name = "pes_cpfcnpj")
     private String cpfcnpj;
-    //@Column(name = "pes_salario")
-    //private Double salario;
-    //@Column(name = "pes_cargo")
-    //private String cargo;
     @Column(name = "pes_regiao")
     private String regiao;
-    //@Column(name = "pes_dia_pagamentos")
-    //@Temporal(TemporalType.TIMESTAMP)
-    //private Date diaPagamentos;
     @Column(name = "pes_tipo", nullable = false)
     @Enumerated(EnumType.STRING)
     private TipoPessoa tipo;

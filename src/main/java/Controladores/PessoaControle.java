@@ -13,7 +13,10 @@ import javax.faces.application.FacesMessage;
 import Entidades.Pessoa;
 import Entidades.Telefone;
 import Entidades.Enums.tipoTelefone;
+import Entidades.Estado;
+import Facade.CidadeFacade;
 import Facade.PessoaFacade;
+import Services.IbgeService;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
@@ -28,102 +31,121 @@ import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.faces.view.ViewScoped;
+
+import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 
 /**
  *
  * @author felip
  */
-@ManagedBean
-@SessionScoped
+@Named("pessoaControle")
+@ViewScoped
 public class PessoaControle implements Serializable {
 
     private Pessoa pessoa = new Pessoa();
     @EJB
     private PessoaFacade pessoaFacade;
+    @EJB
+    private CidadeFacade cidadeFacade;
     private ConverterGenerico pessoaConverter;
     private Endereco novoEndereco = new Endereco();
     private Telefone novoTelefone = new Telefone();
     private ContratoTrabalho contrato = new ContratoTrabalho();
-
-    private List<Cidade> cidadesDisponiveis;
     private Boolean edit = false;
     private Pessoa pessoaSelecionado;
+    private Long estadoSelecionadoId;
+    private Long cidadeSelecionadaId;
+    private List<Estado> listaEstados;
+    private List<Cidade> listaCidades;
+    @Inject
+    private IbgeService ibgeService;
 
-    //novo
+    @PostConstruct
+    public void init() {
+        pessoa = new Pessoa();
+        novoEndereco = new Endereco();
+        listaCidades = new ArrayList<>();
+        carregarEstados();
+    }
+
     public void limparFormulario() {
-        pessoa = new Pessoa(); // Pessoa constructor now defaults tipoPessoa to "FISICA"
+        pessoa = new Pessoa();
         novoEndereco = new Endereco();
         novoTelefone = new Telefone();
     }
 
+    private void carregarEstados() {
+        try {
+            listaEstados = ibgeService.buscarEstados();
+        } catch (Exception e) {
+            // Adicionar uma mensagem de erro para o usuário (FacesMessage)
+            e.printStackTrace();
+            listaEstados = new ArrayList<>(); // Garante que a lista não seja nula
+        }
+    }
+
+    public void onEstadoSelect() {
+        if (estadoSelecionadoId != null) {
+            try {
+                listaCidades = ibgeService.buscarCidadesPorEstado(estadoSelecionadoId);
+            } catch (Exception e) {
+                e.printStackTrace();
+                listaCidades = new ArrayList<>();
+            }
+        } else {
+            listaCidades = new ArrayList<>();
+        }
+    }
+
     public void prepararVisualizacao(Pessoa pes) {
-        // Adicione logs para depuração
         if (pes == null || pes.getId() == null) {
             this.pessoaSelecionado = null;
-            System.err.println("prepararVisualizacao - Pessoa ou ID nulo. pessoaSelecionado definido como null.");
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Não foi possível selecionar a pessoa para visualização."));
             return;
         }
 
         try {
             this.pessoaSelecionado = pessoaFacade.findWithAll(pes.getId());
-            if (this.pessoaSelecionado != null) {
-                System.out.println("prepararVisualizacao - Pessoa encontrada: " + this.pessoaSelecionado.getNome());
-                System.out.println("prepararVisualizacao - Qtd Endereços: " + (this.pessoaSelecionado.getListaEnderecos() != null ? this.pessoaSelecionado.getListaEnderecos().size() : "null ou 0"));
-                System.out.println("prepararVisualizacao - Qtd Telefones: " + (this.pessoaSelecionado.getListaTelefones() != null ? this.pessoaSelecionado.getListaTelefones().size() : "null ou 0"));
-            } else {
-                System.out.println("prepararVisualizacao - Nenhuma pessoa encontrada com o ID: " + pes.getId());
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Pessoa não encontrada."));
-            }
         } catch (javax.persistence.NoResultException nre) {
-            this.pessoaSelecionado = null; // Garante que fique nulo se não encontrar
-            System.err.println("prepararVisualizacao - NoResultException ao buscar pessoa com ID " + pes.getId() + ": " + nre.getMessage());
+            this.pessoaSelecionado = null;
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Aviso", "Pessoa não encontrada com o ID fornecido."));
         } catch (Exception e) {
-            this.pessoaSelecionado = null; // Garante que fique nulo em caso de outros erros
-            System.err.println("prepararVisualizacao - Erro ao buscar Pessoa: " + e.getMessage());
-            e.printStackTrace(); // Importante para ver a causa raiz do erro no console do servidor
+            this.pessoaSelecionado = null;
+            e.printStackTrace();
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Ocorreu um erro inesperado ao carregar os detalhes da pessoa."));
         }
     }
 
-    //novos
     public void onTipoPessoaChange() {
-        //pessoa.setSalario(null);
-        //pessoa.setCargo(null);
-        //pessoa.setDiaPagamentos(null);
+
         pessoa.getContrato().setSalario(null);
         pessoa.getContrato().setCargo(null);
         pessoa.getContrato().setDiaPagamentos(null);
         pessoa.setRegiao(null);
 
-        // Default the nature of the person to FISICA when the main type changes.
-        // The Pessoa entity's tipoPessoa field stores "FISICA" or "JURIDICA".
         pessoa.setTipoPessoa("FISICA");
 
         pessoa.setCpfcnpj(null);
 
-        System.out.println("Tipo de Pessoa (Enum Role) alterado para: " + pessoa.getTipo());
-        System.out.println("Natureza da Pessoa (String FISICA/JURIDICA) definida para: " + pessoa.getTipoPessoa());
     }
 
-    //novo
     public void onNaturezaPessoaChange() {
-        pessoa.setCpfcnpj(null); // Clear CPF/CNPJ to reapply mask and avoid validation errors
-        System.out.println("Natureza da Pessoa (FISICA/JURIDICA) alterada para: " + pessoa.getTipoPessoa());
-        // The <p:ajax update="xxx"/> in JSF will handle UI updates.
+        pessoa.setCpfcnpj(null);
     }
 
     public void onTipoTelefonePessoaChange() {
         novoTelefone.setNumero(null);
-        System.out.println("Telefone da Pessoa (FISICA/JURIDICA) alterada para: " + novoTelefone.getTipoTelefone());
     }
 
     public String getMascaraTelefone() {
@@ -140,19 +162,59 @@ public class PessoaControle implements Serializable {
 
     //novo
     public void adicionarEndereco() {
-        if (novoEndereco.getRua() == null || novoEndereco.getRua().trim().isEmpty()
+        if (estadoSelecionadoId == null || cidadeSelecionadaId == null
+                || novoEndereco.getRua() == null || novoEndereco.getRua().trim().isEmpty()
                 || novoEndereco.getNumero() == null || novoEndereco.getNumero().trim().isEmpty()
                 || novoEndereco.getBairro() == null || novoEndereco.getBairro().trim().isEmpty()
                 || novoEndereco.getCep() == null || novoEndereco.getCep().trim().isEmpty()) {
+
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Atenção", "Preencha todos os campos obrigatórios do endereço."));
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Atenção", "Preencha todos os campos do endereço (Estado, Cidade, Rua, etc.)."));
             return;
         }
-        novoEndereco.setPessoa(pessoa);
-        pessoa.getListaEnderecos().add(novoEndereco);
-        novoEndereco = new Endereco();
-        FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Endereço adicionado."));
+
+        try {
+            // achar o objeto Estado completo na lista em memória
+            Estado estadoSelecionado = listaEstados.stream()
+                    .filter(e -> e.getId().equals(estadoSelecionadoId))
+                    .findFirst()
+                    .orElse(null);
+
+            // achar o objeto Cidade completo na lista em memória
+            Cidade cidadeSelecionada = listaCidades.stream()
+                    .filter(c -> c.getId().equals(cidadeSelecionadaId))
+                    .findFirst()
+                    .orElse(null);
+
+            // se acnou , montar o objeto
+            if (cidadeSelecionada != null && estadoSelecionado != null) {
+                // associa o estado à cidade 
+                cidadeSelecionada.setEstado(estadoSelecionado);
+
+                // associa a cidade ao endereço que será adicionado
+                novoEndereco.setCidade(cidadeSelecionada);
+
+                // associa o endereço à pessoa
+                novoEndereco.setPessoa(pessoa);
+                pessoa.getListaEnderecos().add(novoEndereco);
+
+                // limpa
+                novoEndereco = new Endereco();
+                estadoSelecionadoId = null;
+                cidadeSelecionadaId = null;
+                listaCidades = new ArrayList<>(); // limpa a lista de cidades
+
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Endereço adicionado."));
+            } else {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Estado ou Cidade selecionada não foi encontrada. Tente novamente."));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_FATAL, "Erro Crítico", "Ocorreu um erro inesperado ao adicionar o endereço."));
+        }
     }
 
     //novo
@@ -199,14 +261,10 @@ public class PessoaControle implements Serializable {
             pessoa.prepararParaSalvar();
 
             if (pessoa.getTipo() != TipoPessoa.FUNCIONARIO) {
-                //pessoa.setSalario(null);
-                //pessoa.setCargo(null);
-                //pessoa.setDiaPagamentos(null);
                 pessoa.getContrato().setSalario(null);
                 pessoa.getContrato().setCargo(null);
                 pessoa.getContrato().setDiaPagamentos(null);
             } else {
-                // garante vínculo contrato ↔ pessoa
                 if (pessoa.getContrato() != null) {
                     pessoa.getContrato().setFuncionario(pessoa);
                 }
@@ -221,7 +279,7 @@ public class PessoaControle implements Serializable {
             contrato = new ContratoTrabalho();
 
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Pessoa salva com sucesso! (Simulado)"));
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Pessoa salva com sucesso!"));
             limparFormulario();
             return "listaPessoas.xhtml?faces-redirect=true";
         } catch (Exception e) {
@@ -364,14 +422,6 @@ public class PessoaControle implements Serializable {
         this.novoTelefone = novoTelefone;
     }
 
-    public List<Cidade> getCidadesDisponiveis() {
-        return cidadesDisponiveis;
-    }
-
-    public void setCidadesDisponiveis(List<Cidade> cidadesDisponiveis) {
-        this.cidadesDisponiveis = cidadesDisponiveis;
-    }
-
     public List<Pessoa> getListaClientes() {
         return pessoaFacade.listaClienteAtivo();
     }
@@ -464,42 +514,40 @@ public class PessoaControle implements Serializable {
             mainTable.addCell(headerCell);
         }
 
-        // --- Table Body ---
         Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 8);
         Font nestedHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, Color.DARK_GRAY);
         Font nestedContentFont = FontFactory.getFont(FontFactory.HELVETICA, 7);
 
         for (Pessoa p : pessoas) {
-            // Add basic person data directly to the main table
             mainTable.addCell(new PdfPCell(new Phrase(p.getTipo().getLabel(), contentFont)));
             mainTable.addCell(new PdfPCell(new Phrase(p.getTipoPessoa(), contentFont)));
             mainTable.addCell(new PdfPCell(new Phrase(p.getNome(), contentFont)));
             mainTable.addCell(new PdfPCell(new Phrase(p.getEmail(), contentFont)));
             mainTable.addCell(new PdfPCell(new Phrase(p.getCpfcnpjFormatado(), contentFont)));
 
-            // Add status with centered alignment
             PdfPCell statusCell = new PdfPCell(new Phrase(p.getStatus(), contentFont));
             statusCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             mainTable.addCell(statusCell);
 
-            // --- Create a nested table for addresses and add it to a single cell ---
             PdfPCell addressesCell = new PdfPCell();
             addressesCell.setPadding(2);
 
-            // This check is safe because of the JOIN FETCH in your facade
             if (p.getListaEnderecos() != null && !p.getListaEnderecos().isEmpty()) {
-                PdfPTable addressTable = new PdfPTable(4);
+                PdfPTable addressTable = new PdfPTable(6);
                 addressTable.setWidthPercentage(100);
-                addressTable.setWidths(new float[]{4.5f, 1.8f, 2.5f, 3.2f});
+                addressTable.setWidths(new float[]{3.0f, 3.0f, 4.5f, 1.8f, 2.5f, 3.2f}
+                );
 
-                // Headers for the nested address table
+                addressTable.addCell(new PdfPCell(new Phrase("Estado", nestedHeaderFont)));
+                addressTable.addCell(new PdfPCell(new Phrase("Cidade", nestedHeaderFont)));
                 addressTable.addCell(new PdfPCell(new Phrase("Rua", nestedHeaderFont)));
                 addressTable.addCell(new PdfPCell(new Phrase("Nº", nestedHeaderFont)));
                 addressTable.addCell(new PdfPCell(new Phrase("Bairro", nestedHeaderFont)));
                 addressTable.addCell(new PdfPCell(new Phrase("CEP", nestedHeaderFont)));
 
-                // Add address rows
                 for (Endereco end : p.getListaEnderecos()) {
+                    addressTable.addCell(new PdfPCell(new Phrase(end.getCidade().getEstado().getNome(), nestedContentFont)));
+                    addressTable.addCell(new PdfPCell(new Phrase(end.getCidade().getNome(), nestedContentFont)));
                     addressTable.addCell(new PdfPCell(new Phrase(end.getRua(), nestedContentFont)));
                     addressTable.addCell(new PdfPCell(new Phrase(end.getNumero(), nestedContentFont)));
                     addressTable.addCell(new PdfPCell(new Phrase(end.getBairro(), nestedContentFont)));
@@ -511,7 +559,6 @@ public class PessoaControle implements Serializable {
             }
             mainTable.addCell(addressesCell);
 
-            // --- Create another nested table for phones ---
             PdfPCell phonesCell = new PdfPCell();
             phonesCell.setPadding(2);
             if (p.getListaTelefones() != null && !p.getListaTelefones().isEmpty()) {
@@ -533,7 +580,34 @@ public class PessoaControle implements Serializable {
         }
 
         document.add(mainTable);
+
         document.close();
+
         facesContext.responseComplete();
     }
+
+    public Long getEstadoSelecionadoId() {
+        return estadoSelecionadoId;
+    }
+
+    public void setEstadoSelecionadoId(Long estadoSelecionadoId) {
+        this.estadoSelecionadoId = estadoSelecionadoId;
+    }
+
+    public List<Estado> getListaEstados() {
+        return listaEstados;
+    }
+
+    public List<Cidade> getListaCidades() {
+        return listaCidades;
+    }
+
+    public Long getCidadeSelecionadaId() {
+        return cidadeSelecionadaId;
+    }
+
+    public void setCidadeSelecionadaId(Long cidadeSelecionadaId) {
+        this.cidadeSelecionadaId = cidadeSelecionadaId;
+    }
+
 }

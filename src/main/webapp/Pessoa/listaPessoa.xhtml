@@ -186,6 +186,9 @@
                         <!-- Endereços -->
                         <h3 class="section-title"><strong>Endereços</strong></h3>
                         <p:dataTable value="#{pessoaControle.pessoaSelecionado.listaEnderecos}" var="endereco" style="width:100%; margin-bottom: 30px;">
+                            <p:column headerText="Estado"><h:outputText value="#{endereco.cidade.estado.nome}"/></p:column>
+                            <p:column headerText="Cidade"><h:outputText value="#{endereco.cidade.nome}"/></p:column>
+
                             <p:column headerText="Rua"><h:outputText value="#{endereco.rua}"/></p:column>
                             <p:column headerText="Número"><h:outputText value="#{endereco.numero}"/></p:column>
                             <p:column headerText="Bairro"><h:outputText value="#{endereco.bairro}"/></p:column>

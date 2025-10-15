@@ -41,7 +41,9 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
         try {
             Pessoa p = em.createQuery(
                     "SELECT DISTINCT p FROM Pessoa p "
-                    + "LEFT JOIN FETCH p.listaEnderecos "
+                    + "LEFT JOIN FETCH p.listaEnderecos e "
+                    + "LEFT JOIN FETCH e.cidade c "
+                    + "LEFT JOIN FETCH c.estado "
                     + "LEFT JOIN FETCH p.listaTelefones "
                     + "WHERE p.id = :id",
                     Pessoa.class)
@@ -49,7 +51,6 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
                     .getSingleResult();
             return p;
         } catch (javax.persistence.NoResultException nre) {
-
             return null;
         }
     }
@@ -73,37 +74,31 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
                 .getResultList();
     }
 
-    public List<Pessoa> listaCliAtivo() {
+    private List<Pessoa> listaPessoasAtivasPorTipo(TipoPessoa tipo) {
         String query = "SELECT DISTINCT p FROM Pessoa p "
-                + "LEFT JOIN FETCH p.listaEnderecos "
+                + "LEFT JOIN FETCH p.listaEnderecos e "
+                + "LEFT JOIN FETCH e.cidade c "
+                + "LEFT JOIN FETCH c.estado "
                 + "LEFT JOIN FETCH p.listaTelefones "
                 + "WHERE p.ativo = true AND p.tipo = :tipo";
+
         return getEntityManager().createQuery(query, Pessoa.class)
-                .setParameter("tipo", TipoPessoa.CLIENTE)
+                .setParameter("tipo", tipo)
                 .getResultList();
+    }
+
+    public List<Pessoa> listaCliAtivo() {
+        return listaPessoasAtivasPorTipo(TipoPessoa.CLIENTE);
     }
 
     public List<Pessoa> listaFuncAtivo() {
-        String query = "SELECT DISTINCT p FROM Pessoa p "
-                + "LEFT JOIN FETCH p.listaEnderecos "
-                + "LEFT JOIN FETCH p.listaTelefones "
-                + "WHERE p.ativo = true AND p.tipo = :tipo";
-        return getEntityManager().createQuery(query, Pessoa.class)
-                .setParameter("tipo", TipoPessoa.FUNCIONARIO)
-                .getResultList();
+        return listaPessoasAtivasPorTipo(TipoPessoa.FUNCIONARIO);
     }
 
     public List<Pessoa> listaFornAtivo() {
-        String query = "SELECT DISTINCT p FROM Pessoa p "
-                + "LEFT JOIN FETCH p.listaEnderecos "
-                + "LEFT JOIN FETCH p.listaTelefones "
-                + "WHERE p.ativo = true AND p.tipo = :tipo";
-        return getEntityManager().createQuery(query, Pessoa.class)
-                .setParameter("tipo", TipoPessoa.FORNECEDOR)
-                .getResultList();
+        return listaPessoasAtivasPorTipo(TipoPessoa.FORNECEDOR);
     }
 
-//ATIVOS
     public List<Pessoa> listaPorTipoAtivo(TipoPessoa tipo) {
         Query q = getEntityManager().createQuery("from Pessoa as p where p.tipo = :tipo and p.ativo = true order by p.id desc");
         q.setParameter("tipo", tipo);
