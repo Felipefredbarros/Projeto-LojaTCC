@@ -12,11 +12,17 @@
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
                 <h1>📑 Contas a Receber Canceladas</h1>
-                <p:commandButton value="Contas a Receber"
-                                 icon="pi pi-times-circle"
-                                 styleClass="btn-canceladas"
-                                 action="listaContasAReceber.xhtml?faces-redirect=true"/>
-                
+                <p:toolbar style="margin-bottom:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                    <p:toolbarGroup>
+
+                        <p:commandButton value="Contas a Receber"
+                                         icon="pi pi-check"                                
+                                         styleClass="btn-canceladas"
+                                         action="listaContasAReceber.xhtml?faces-redirect=true"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+
                 <p:dataTable id="tabelaContaReceber"  
                              widgetVar="tabelaContaReceberWV"
                              var="contaReceberItem" 
@@ -28,7 +34,7 @@
                              currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
                              paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport}"
                              styleClass="tabela-contas">
-                    
+
                     <p:column headerText="ID: " sortBy="#{contaReceberItem.id}" filterBy="#{contaReceberItem.id}" filterMatchMode="contains">
                         <h:outputText value="#{contaReceberItem.id}">
                             <f:convertNumber integerOnly="true" groupingUsed="true" />
@@ -54,7 +60,7 @@
                             <f:convertNumber type="currency" currencySymbol="R$ " maxFractionDigits="2"/>
                         </h:outputText>
                     </p:column>
-                    
+
                     <p:column headerText="Metodo de Pagamento" sortBy="#{contaReceberItem.metodoPagamento}" filterBy="#{contaReceberItem.metodoPagamento}" filterMatchMode="contains">
                         <h:outputText value="#{contaReceberItem.metodoPagamento}"/>
                     </p:column>
@@ -178,7 +184,7 @@
                 .resumo-card.recebido {
                     background: linear-gradient(135deg, #28a745, #5cd65c);
                 }
-                
+
                 .btn-canceladas {
                     background-color: #dc3545;
                     color: white;

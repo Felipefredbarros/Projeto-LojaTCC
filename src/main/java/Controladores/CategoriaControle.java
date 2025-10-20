@@ -20,7 +20,7 @@ import javax.inject.Named;
  */
 @Named("categoriaControle")
 @ViewScoped
-public class CategoriaControle implements Serializable{
+public class CategoriaControle implements Serializable {
 
     private Categoria categoria = new Categoria();
     @EJB
@@ -39,7 +39,9 @@ public class CategoriaControle implements Serializable{
         if (categoriaFacade.categoriaTemProduto(est.getId())) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Erro", "Esta categoria ja tem um produto registrado e não pode ser excluida"));
+                            "Erro", "Categoria Inativada"));
+            est.setAtivo(false);
+            categoriaFacade.salvar(est);
             return;
         }
         categoriaFacade.remover(est);
@@ -70,8 +72,16 @@ public class CategoriaControle implements Serializable{
     public void setCategoriaFacade(CategoriaFacade categoriaFacade) {
         this.categoriaFacade = categoriaFacade;
     }
-    
+
     public List<Categoria> getListaCategorias() {
         return categoriaFacade.listaTodos();
+    }
+    
+    public List<Categoria> getListaCategoriasAtivas(){
+        return categoriaFacade.listaCategoriaAtiva();
+    }
+    
+    public List<Categoria> getListaCategoriasInativa(){
+        return categoriaFacade.listaCategoriaInativa();
     }
 }

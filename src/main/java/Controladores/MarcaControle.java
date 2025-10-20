@@ -25,7 +25,8 @@ import javax.inject.Named;
 public class MarcaControle implements Serializable {
 
     private Marca marca = new Marca();
-    
+    private boolean mostrandoAtivas = true;
+
     @EJB
     private MarcaFacade marcaFacade;
 
@@ -42,7 +43,9 @@ public class MarcaControle implements Serializable {
         if (marcaFacade.categoriaTemProduto(est.getId())) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Erro", "Esta marca ja tem um produto registrado e não pode ser excluida"));
+                            "Erro", "Marca Inativada"));
+            est.setAtivo(false);
+            marcaFacade.salvar(est);
             return;
         }
         marcaFacade.remover(est);
@@ -58,8 +61,36 @@ public class MarcaControle implements Serializable {
         this.marca = est;
     }
 
+    public boolean isMostrandoAtivas() {
+        return mostrandoAtivas;
+    }
+
+    public void setMostrandoAtivas(boolean mostrandoAtivas) {
+        this.mostrandoAtivas = mostrandoAtivas;
+    }
+    
+    public void toggleLista() {
+        this.mostrandoAtivas = !this.mostrandoAtivas;
+    }
+    
+    public List<Marca> getListaMarcasAqui() {
+    if (mostrandoAtivas) {
+        return marcaFacade.listaMarcaAtiva(); 
+    } else {
+        return marcaFacade.listaMarcaInativa(); 
+    }
+}
+
     public List<Marca> getListaMarcas() {
         return marcaFacade.listaTodos();
+    }
+
+    public List<Marca> getListaMarcasAtivas() {
+        return marcaFacade.listaMarcaAtiva();
+    }
+
+    public List<Marca> getListaMarcasInativas() {
+        return marcaFacade.listaMarcaInativa();
     }
 
     public Marca getMarca() {

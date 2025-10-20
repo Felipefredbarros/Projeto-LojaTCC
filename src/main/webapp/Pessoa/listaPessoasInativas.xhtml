@@ -11,11 +11,11 @@
             <h:form id="formListagemPessoas">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1>Listagem de Pessoas</h1>
+                <h1>📑Listagem de Pessoas</h1>
 
-                <p:toolbar styleClass="mb-3">
+                <p:toolbar style="margin-bottom:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
                     <p:toolbarGroup>
-                        <p:commandButton value="Lista de Pessoas" icon="pi pi-plus"
+                        <p:commandButton value="Lista de Pessoas" icon="pi pi-eye"
                                          action="listaPessoa.xhtml?faces-redirect=true"
                                          styleClass="ui-button-success"
                                          process="@this"/>
@@ -74,12 +74,12 @@
                                          styleClass="rounded-button ui-button-info"
                                          style="margin-right: 5px;"/>
 
-                        <p:commandButton icon="pi pi-trash" title="Excluir"
-                                         action="#{pessoaControle.excluir(pessoaItem)}"
+                        <p:commandButton icon="pi pi-check" title="Ativar"
+                                         action="#{pessoaControle.ativar(pessoaItem)}"
                                          process="@this"
                                          update=":formListagemPessoas:tabelaPessoas :formListagemPessoas:growlMessages"
                                          styleClass="rounded-button ui-button-danger">
-                            <p:confirm header="Confirmação" message="Deseja realmente excluir esta pessoa: #{pessoaItem.nome}?" icon="pi pi-exclamation-triangle"/>
+                            <p:confirm header="Confirmação" message="Deseja realmente ativar esta pessoa: #{pessoaItem.nome}?" icon="pi pi-exclamation-triangle"/>
                         </p:commandButton>
                     </p:column>
                 </p:dataTable>

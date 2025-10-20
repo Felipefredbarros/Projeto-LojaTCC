@@ -13,7 +13,7 @@
 
                 <h1>📑 Listagem de Pessoas</h1>
 
-                <p:toolbar styleClass="mb-3">
+                <p:toolbar style="margin-bottom:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
                     <p:toolbarGroup>
                         <p:commandButton value="Nova Pessoa" icon="pi pi-plus"
                                          action="#{pessoaControle.novo()}"
@@ -22,7 +22,7 @@
                                          process="@this"
                                          style="margin-right: 10px"/>
 
-                        <p:commandButton value="Lista de Pessoas Inativadas" icon="pi pi-plus"
+                        <p:commandButton value="Lista de Pessoas Inativadas" icon="pi pi-eye"
                                          action="listaPessoasInativas.xhtml?faces-redirect=true"
                                          styleClass="ui-button-success"
                                          process="@this"

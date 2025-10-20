@@ -5,9 +5,11 @@
 package Facade;
 
 import Entidades.Categoria;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 /**
  *
@@ -35,5 +37,15 @@ public class CategoriaFacade extends AbstractFacade<Categoria> {
                 .getSingleResult();
 
         return count != null && count > 0;
+    }
+    
+    public List<Categoria> listaCategoriaAtiva() {
+        Query q = getEntityManager().createQuery("from Categoria as p where p.ativo = true order by p.id desc");
+        return q.getResultList();
+    }
+    
+    public List<Categoria> listaCategoriaInativa() {
+        Query q = getEntityManager().createQuery("from Categoria as p where p.ativo = false order by p.id desc");
+        return q.getResultList();
     }
 }

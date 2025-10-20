@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="/index.xhtml">
+        <ui:define name="body">
+            <h2>Cadastro de Vendas</h2>
+            <br/>
+            <h:form id="form">
+                <p:growl id="mdialog" showDetail="true"/>
+
+                <!-- Seção com data da venda e cliente -->
+                <h:panelGrid columns="2">
+                    <p:outputLabel value="Data da Venda:" />
+                    <p:calendar id="dataVenda" value="#{vendaControle.venda.dataVenda}"
+                                pattern="dd/MM/yyyy" locale="pt_BR" />
+
+                    <p:outputLabel value="Cliente:" />
+                    <p:autoComplete id="cliente" value="#{vendaControle.venda.cliente}"
+                                    converter="#{vendaControle.pessoaConverter}"
+                                    completeMethod="#{vendaControle.getListaClientesFiltrando}"
+                                    var="cli"
+                                    itemLabel="#{cli.nome}" itemValue="#{cli}" />
+
+                    <p:outputLabel value="Funcionario:" />
+                    <p:autoComplete id="funcionario" value="#{vendaControle.venda.funcionario}"
+                                    converter="#{vendaControle.pessoaConverter}"
+                                    completeMethod="#{vendaControle.getListaFuncionariosFiltrando}"
+                                    var="forc"
+                                    itemLabel="#{forc.nome}" itemValue="#{forc}" />
+                    <p:outputLabel value="Plano de Pagamento:" />
+                    <p:selectOneMenu id="plano" value="#{vendaControle.venda.planoPagamento}">
+                        <f:selectItems value="#{vendaControle.planosPagamentos}" var="plano"
+                                       itemLabel="#{plano.descricao}" itemValue="#{plano}" />
+
+                        <p:ajax listener="#{vendaControle.atualizarMetodosPagamento}"
+                                update="metodos parcelasWrapper" />                  
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="Metodo de Pagamento:" />
+                    <p:selectOneMenu id="metodos" value="#{vendaControle.venda.metodoPagamento}">
+                        <f:selectItems value="#{vendaControle.metodosPagamentoFiltrados}" var="metodo"
+                                       itemLabel="#{metodo.descricao}" itemValue="#{metodo}" />
+                    </p:selectOneMenu>
+
+                    <!-- WRAPPER sempre presente -->
+                    <h:panelGroup id="parcelasWrapper" layout="block">
+                        <!-- bloco condicional -->
+                        <h:panelGroup layout="block"
+                                      rendered="#{not empty vendaControle.venda.planoPagamento
+                                                  and vendaControle.venda.planoPagamento eq 'FIADO'}">
+
+                            <p:outputLabel for="parcelas" value="Parcelas:" />
+                            <p:inputNumber id="parcelas" value="#{vendaControle.venda.parcelas}"
+                                           minValue="1" maxValue="12" />
+
+                            <p:outputLabel for="dataVencimento" value="Data de Vencimento" />
+                            <p:calendar id="dataVencimento" value="#{vendaControle.venda.dataVencimento}"
+                                        pattern="dd/MM/yyyy" locale="pt_BR" />
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+
+                </h:panelGrid>
+
+                <!-- Total da Venda -->
+                <p:outputLabel value="Total da Venda:" style="color: blue; font-size: x-large" />
+                <h:outputText id="totalVenda" value="#{vendaControle.venda.total}">
+                    <f:convertNumber type="currency" />
+                </h:outputText>
+
+                <!-- Seção de Itens da Venda -->
+                <p:panel header="Itens da Venda" rendered="#{!vendaControle.edit}">
+                    <h:panelGrid columns="2">
+                        <p:outputLabel value="Produto:" />
+                        <p:selectOneMenu id="produto" value="#{vendaControle.itensVenda.produtoDerivacao}" 
+                                         converter="#{vendaControle.produtoDevConverter}">
+                            <f:selectItems value="#{vendaControle.listaDerivacoes}" var="dev"
+                                           itemLabel="#{dev.texto}" itemValue="#{dev}"/>
+                            <p:ajax event="change" listener="#{vendaControle.atualizarPreco}" 
+                                    update="valorUnitario" />
+                        </p:selectOneMenu>
+
+                        <p:outputLabel value="Quantidade:" />
+                        <p:inputNumber id="quantidade" disabled="#{vendaControle.edit}" value="#{vendaControle.itensVenda.quantidade}" 
+                                       minValue="0" decimalPlaces="0" />
+
+                        <p:outputLabel value="Preço:" />
+                        <p:inputNumber id="valorUnitario" value="#{vendaControle.itensVenda.valorUnitario}" widgetVar="valorUnitario" disabled="#{vendaControle.edit}"
+                                     symbol="R$ " decimalSeparator="," thousandSeparator="."  minValue="0" style="width: 100%;"/>
+                    </h:panelGrid>
+
+                    <!-- Botão para adicionar o item -->
+                    <p:commandButton value="Adicionar" actionListener="#{vendaControle.adicionarItem()}"
+                                     update="mdialog itensTable totalVenda" disabled="#{vendaControle.edit}" ajax="true" />
+                </p:panel>
+
+                <!-- Tabela de Itens no Carrinho -->
+                <p:dataTable id="itensTable" value="#{vendaControle.venda.itensVenda}" var="item" rendered="#{!vendaControle.edit}" emptyMessage="Nenhum item no carrinho">
+                    <p:column headerText="Produto">
+                        <h:outputText value="#{item.produtoDerivacao.produto.categoria.categoria}" />
+                    </p:column>
+                    <p:column headerText="Quantidade">
+                        <h:outputText value="#{item.quantidade}" />
+                    </p:column>
+                    <p:column headerText="Preço">
+                        <h:outputText value="#{item.valorUnitario}">
+                            <f:convertNumber type="currency" />
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="Subtotal">
+                        <h:outputText value="#{item.subTotal}">
+                            <f:convertNumber type="currency" />
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="Operações">
+                        <p:commandButton value="Remover" 
+                                         actionListener="#{vendaControle.removerItem(item)}" 
+                                         update=":form:itensTable :form:totalVenda :form:mdialog" 
+                                         ajax="true"/>
+
+
+                    </p:column>
+                </p:dataTable>
+
+                <!-- Botões de ação -->
+                <p:commandButton value="Salvar" actionListener="#{vendaControle.salvar()}" 
+                                 update="form mdialog" ajax="false" />
+
+                <p:commandButton value="Cancelar" action="listaVenda.xhtml" immediate="true" ajax="false" />
+            </h:form>
+        </ui:define>        
+    </ui:composition>
+</html>

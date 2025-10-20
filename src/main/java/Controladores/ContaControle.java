@@ -8,19 +8,39 @@ import Entidades.Enums.TipoLancamento;
 import Entidades.LancamentoFinanceiro;
 import Facade.ContaFacade;
 import Facade.LancamentoFinanceiroFacade;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+import java.awt.Color;
+import java.io.IOException;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletResponse;
 
 @ManagedBean
 @SessionScoped
 public class ContaControle implements Serializable {
+
+    private static final Locale PT_BR = new Locale("pt", "BR");
+    private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(PT_BR);
 
     private Conta conta = new Conta();
     private Conta contaSelecionada;
@@ -39,6 +59,9 @@ public class ContaControle implements Serializable {
     private String descricaoMovimentacao;
     private Long paramContaId;
     private FiltroEstorno filtroEstorno = FiltroEstorno.TODAS;
+    private Date dataInicioRelatorio;
+    private Date dataFimRelatorio;
+    private String filtroTipoExtrato = "TODOS";
 
     private List<LancamentoFinanceiro> movimentacoesFiltradas;
     private List<LancamentoFinanceiro> movimentacoesDaConta;
@@ -55,7 +78,7 @@ public class ContaControle implements Serializable {
         carregarMovimentacoes();
         filtroTipo = "";
         filtroPeriodo = null;
-        movimentacoesFiltradas = new ArrayList<>();
+        movimentacoesDaConta = new ArrayList<>();
         tipoMovimentacao = "ENTRADA";
         dataMovimentacao = new Date();
         dataTransferencia = new Date();
@@ -140,6 +163,16 @@ public class ContaControle implements Serializable {
         } catch (Exception e) {
             addMensagem(FacesMessage.SEVERITY_ERROR, "Erro ao excluir/inativar: " + e.getMessage());
         }
+    }
+
+    public void ativar(Conta conta) {
+        conta.setAtivo(true);
+        conta.setStatus("ATIVA");
+        contaFacade.salvar(conta);
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO,
+                        "Sucesso",
+                        "Conta ativada com sucesso!"));
     }
 
     public void transferir() {
@@ -326,20 +359,22 @@ public class ContaControle implements Serializable {
     }
 
     public List<LancamentoFinanceiro> getMovimentacoesFiltradas() {
-        if (movimentacoesDaConta == null) {
-            return java.util.Collections.emptyList();
+        if (contaSelecionada == null || movimentacoesDaConta == null) {
+            return Collections.emptyList();
         }
-        switch (filtroEstorno) {
+        FiltroEstorno filtroAtual = (filtroEstorno != null) ? filtroEstorno : FiltroEstorno.TODAS;
+
+        switch (filtroAtual) { 
             case SEM_ESTORNOS:
                 return movimentacoesDaConta.stream()
                         .filter(l -> !isEstorno(l))
-                        .collect(java.util.stream.Collectors.toList());
+                        .collect(Collectors.toList());
             case APENAS_ESTORNOS:
                 return movimentacoesDaConta.stream()
                         .filter(this::isEstorno)
-                        .collect(java.util.stream.Collectors.toList());
-            default:
-                return movimentacoesDaConta;
+                        .collect(Collectors.toList());
+            default: 
+                return new ArrayList<>(movimentacoesDaConta); 
         }
     }
 
@@ -538,6 +573,298 @@ public class ContaControle implements Serializable {
                 .addMessage(null, new FacesMessage(severity, msg, null));
     }
 
+    public void exportarPDFContasAtivas() throws DocumentException, IOException {
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_geral_contas.pdf");
+
+        Document document = new Document(PageSize.A4.rotate(), 20, 20, 30, 20); // Paisagem
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
+
+        Locale ptBr = new Locale("pt", "BR");
+        NumberFormat moeda = NumberFormat.getCurrencyInstance(ptBr);
+        DateFormat dfCompleto = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, ptBr);
+        java.util.function.Function<Object, String> s = obj -> (obj == null || obj.toString().trim().isEmpty()) ? "-" : obj.toString();
+        java.util.function.Function<Number, String> sm = num -> (num == null) ? moeda.format(0) : moeda.format(num);
+
+        try {
+            document.open();
+
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
+            Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(5);
+            document.add(title);
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 14, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph("Relatório Geral de Contas Ativas", subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(20);
+            document.add(subtitle);
+
+            List<Conta> contasAtivas = contaFacade.listaContaAtivo();
+
+            if (contasAtivas == null || contasAtivas.isEmpty()) {
+                document.add(new Paragraph("Nenhuma conta ativa encontrada.", FontFactory.getFont(FontFactory.HELVETICA, 12)));
+            } else {
+                PdfPTable table = new PdfPTable(6);
+                table.setWidthPercentage(100);
+                table.setWidths(new float[]{0.8f, 3f, 1f, 3f, 1.5f, 1.5f});
+
+                table.addCell(createHeaderCell("ID"));
+                table.addCell(createHeaderCell("Nome da Conta"));
+                table.addCell(createHeaderCell("Tipo"));
+                table.addCell(createHeaderCell("Banco/Agência/Conta"));
+                table.addCell(createHeaderCell("Vl. Inicial"));
+                table.addCell(createHeaderCell("Saldo Atual"));
+
+                double saldoTotalGeral = 0.0;
+
+                for (Conta c : contasAtivas) {
+                    table.addCell(createDataCell(s.apply(c.getId()), Element.ALIGN_CENTER));
+                    table.addCell(createDataCell(s.apply(c.getNome()), Element.ALIGN_LEFT));
+                    table.addCell(createDataCell(s.apply(c.getTipoConta()), Element.ALIGN_CENTER));
+
+                    String bancoInfo = "-";
+                    if (c.getTipoConta() == TipoConta.BANCO) {
+                        bancoInfo = String.format("Banco: %s / Ag: %s / CC: %s", s.apply(c.getBanco()), s.apply(c.getAgencia()), s.apply(c.getConta()));
+                    } else if (c.getTipoConta() == TipoConta.COFRE) {
+                        bancoInfo = "Cofre Físico";
+                    }
+                    table.addCell(createDataCell(bancoInfo, Element.ALIGN_LEFT));
+
+                    table.addCell(createDataCell(sm.apply(c.getValorInicial()), Element.ALIGN_RIGHT));
+                    table.addCell(createDataCell(sm.apply(c.getSaldo()), Element.ALIGN_RIGHT));
+
+                    saldoTotalGeral += (c.getSaldo() != null ? c.getSaldo() : 0.0);
+                }
+                document.add(table);
+
+                Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Font.BOLD, new Color(0, 51, 102));
+                Paragraph totalPar = new Paragraph("Saldo Total Geral (Contas Ativas): " + sm.apply(saldoTotalGeral), totalFont);
+                totalPar.setAlignment(Element.ALIGN_RIGHT);
+                totalPar.setSpacingBefore(15);
+                document.add(totalPar);
+            }
+
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.GRAY);
+            Paragraph footer = new Paragraph("Relatório gerado em: " + dfCompleto.format(new Date()), footerFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            float currentY = writer.getVerticalPosition(true);
+            footer.setSpacingBefore(Math.max(15, currentY - document.bottomMargin() - footer.getTotalLeading()));
+            document.add(footer);
+
+        } finally {
+            document.close();
+            facesContext.responseComplete();
+        }
+    }
+
+    public void exportarPDFExtratoContaSelecionada() throws DocumentException, IOException {
+        if (contaSelecionada == null || contaSelecionada.getId() == null) {
+            addMsg(FacesMessage.SEVERITY_ERROR, "Nenhuma conta selecionada para gerar o extrato.");
+            return;
+        }
+
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=extrato_" + contaSelecionada.getNome().replaceAll("[^a-zA-Z0-9]", "_") + ".pdf");
+
+        Document document = new Document(PageSize.A4, 30, 30, 40, 30);
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
+
+        Locale ptBr = new Locale("pt", "BR");
+        NumberFormat moeda = NumberFormat.getCurrencyInstance(ptBr);
+        DateFormat dfExtrato = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, ptBr);
+        DateFormat dfRelatorio = DateFormat.getDateInstance(DateFormat.SHORT, ptBr);
+        DateFormat dfCompleto = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, ptBr);
+        java.util.function.Function<Object, String> s = obj -> (obj == null || obj.toString().trim().isEmpty()) ? "" : obj.toString();
+        java.util.function.Function<Number, String> sm = num -> (num == null) ? "" : moeda.format(num);
+        java.util.function.Function<Date, String> sd = dt -> (dt == null) ? "__/__/____" : dfRelatorio.format(dt);
+
+        try {
+            document.open();
+
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, Font.BOLD, new Color(0, 51, 102));
+            Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(5);
+            document.add(title);
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph("Extrato de Conta", subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15);
+            document.add(subtitle);
+
+            Font detailHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.BLACK);
+            Font detailContentFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.NORMAL, Color.DARK_GRAY);
+            PdfPTable contaInfoTable = new PdfPTable(2);
+            contaInfoTable.setWidthPercentage(100);
+            contaInfoTable.setWidths(new float[]{1f, 3f});
+            contaInfoTable.getDefaultCell().setBorder(PdfPCell.NO_BORDER);
+            contaInfoTable.setSpacingAfter(10);
+            contaInfoTable.addCell(new Phrase("Conta:", detailHeaderFont));
+            contaInfoTable.addCell(new Phrase(s.apply(contaSelecionada.getNome()), detailContentFont));
+            contaInfoTable.addCell(new Phrase("Tipo:", detailHeaderFont));
+            contaInfoTable.addCell(new Phrase(s.apply(contaSelecionada.getTipoConta()), detailContentFont));
+            if (contaSelecionada.getTipoConta() == TipoConta.BANCO) {
+                contaInfoTable.addCell(new Phrase("Banco:", detailHeaderFont));
+                contaInfoTable.addCell(new Phrase(s.apply(contaSelecionada.getBanco()), detailContentFont));
+                contaInfoTable.addCell(new Phrase("Agência:", detailHeaderFont));
+                contaInfoTable.addCell(new Phrase(s.apply(contaSelecionada.getAgencia()), detailContentFont));
+                contaInfoTable.addCell(new Phrase("Conta Nº:", detailHeaderFont));
+                contaInfoTable.addCell(new Phrase(s.apply(contaSelecionada.getConta()), detailContentFont));
+            }
+            contaInfoTable.addCell(new Phrase("Período:", detailHeaderFont));
+            contaInfoTable.addCell(new Phrase(sd.apply(dataInicioRelatorio) + " a " + sd.apply(dataFimRelatorio), detailContentFont));
+            contaInfoTable.addCell(new Phrase("Filtro Tipo:", detailHeaderFont));
+            contaInfoTable.addCell(new Phrase(filtroTipoExtrato != null ? filtroTipoExtrato.toUpperCase() : "TODOS", detailContentFont)); // Mostra o filtro
+            document.add(contaInfoTable);
+
+            List<LancamentoFinanceiro> todosLancamentos = lancamentoFinanceiroFacade.buscarPorContaEPeriodoOrdenado(contaSelecionada, dataInicioRelatorio, dataFimRelatorio);
+
+            List<LancamentoFinanceiro> lancamentosFiltrados;
+            if ("ENTRADA".equals(filtroTipoExtrato)) {
+                lancamentosFiltrados = todosLancamentos.stream()
+                        .filter(l -> l.getTipo() == TipoLancamento.ENTRADA)
+                        .collect(Collectors.toList());
+            } else if ("SAIDA".equals(filtroTipoExtrato)) {
+                lancamentosFiltrados = todosLancamentos.stream()
+                        .filter(l -> l.getTipo() == TipoLancamento.SAIDA)
+                        .collect(Collectors.toList());
+            } else {
+                lancamentosFiltrados = todosLancamentos;
+            }
+
+            Double saldoAnterior = lancamentoFinanceiroFacade.calcularSaldoAnteriorAData(contaSelecionada, dataInicioRelatorio);
+            Double saldoCorrente = saldoAnterior;
+
+            PdfPTable table = new PdfPTable(5);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[]{1.5f, 4f, 1.5f, 1.5f, 1.8f});
+            table.setHeaderRows(1);
+
+            table.addCell(createHeaderCell("Data/Hora"));
+            table.addCell(createHeaderCell("Descrição"));
+            table.addCell(createHeaderCell("Entrada (R$)"));
+            table.addCell(createHeaderCell("Saída (R$)"));
+            table.addCell(createHeaderCell("Saldo (R$)"));
+
+            Font italicFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.DARK_GRAY);
+            Phrase saldoAnteriorTextoPhrase = new Phrase("Saldo Anterior", italicFont);
+            PdfPCell saldoAntCell = new PdfPCell(saldoAnteriorTextoPhrase);
+            saldoAntCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+            saldoAntCell.setColspan(4);
+            saldoAntCell.setBorder(PdfPCell.BOTTOM);
+            saldoAntCell.setBorderWidthBottom(0.5f);
+            saldoAntCell.setPaddingBottom(4);
+            table.addCell(saldoAntCell);
+            Phrase saldoAnteriorValorPhrase = new Phrase(moeda(saldoAnterior), italicFont);
+            PdfPCell saldoAntValorCell = new PdfPCell(saldoAnteriorValorPhrase);
+            saldoAntValorCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            saldoAntValorCell.setBorder(PdfPCell.BOTTOM);
+            saldoAntValorCell.setBorderWidthBottom(0.5f);
+            saldoAntValorCell.setPaddingBottom(4);
+            table.addCell(saldoAntValorCell);
+
+            if (lancamentosFiltrados == null || lancamentosFiltrados.isEmpty()) {
+                PdfPCell noMovCell = createDataCell("Nenhuma movimentação encontrada para os filtros selecionados.", Element.ALIGN_CENTER);
+                noMovCell.setColspan(5);
+                noMovCell.setPadding(10);
+                table.addCell(noMovCell);
+            } else {
+                for (LancamentoFinanceiro mov : lancamentosFiltrados) {
+                    Double valorEntrada = null;
+                    Double valorSaida = null;
+                    Double valorMovimento = (mov.getValor() != null ? mov.getValor() : 0.0);
+                    boolean isEstornoMarcado = (mov.getStatus() == StatusLancamento.ESTORNADO);
+                    boolean isLancamentoDeEstorno = (mov.getDescricao() != null && mov.getDescricao().toUpperCase().startsWith("ESTORNO"));
+                    boolean ignorarNoSaldo = isEstornoMarcado || isLancamentoDeEstorno;
+
+                    if (!ignorarNoSaldo) {
+                        if (mov.getTipo() == TipoLancamento.ENTRADA) {
+                            valorEntrada = valorMovimento;
+                            saldoCorrente += valorMovimento;
+                        } else if (mov.getTipo() == TipoLancamento.SAIDA) {
+                            valorSaida = valorMovimento;
+                            saldoCorrente -= valorMovimento;
+                        }
+                    } else {
+                        if (mov.getTipo() == TipoLancamento.ENTRADA) {
+                            valorEntrada = valorMovimento;
+                        } else if (mov.getTipo() == TipoLancamento.SAIDA) {
+                            valorSaida = valorMovimento;
+                        }
+                    }
+
+                    table.addCell(createDataCell(dfExtrato.format(mov.getDataHora()), Element.ALIGN_CENTER));
+                    String descricaoCompleta = s.apply(mov.getDescricao());
+                    if (isEstornoMarcado) {
+                        descricaoCompleta += " (ESTORNADO)";
+                    }
+                    table.addCell(createDataCell(descricaoCompleta, Element.ALIGN_LEFT));
+                    table.addCell(createDataCell(sm.apply(valorEntrada), Element.ALIGN_RIGHT));
+                    table.addCell(createDataCell(sm.apply(valorSaida), Element.ALIGN_RIGHT));
+                    table.addCell(createDataCell(moeda(saldoCorrente), Element.ALIGN_RIGHT));
+                }
+            }
+            document.add(table);
+
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.GRAY);
+            Paragraph footer = new Paragraph("Relatório gerado em: " + dfCompleto.format(new Date()), footerFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            float currentY = writer.getVerticalPosition(true);
+            footer.setSpacingBefore(Math.max(15, currentY - document.bottomMargin() - footer.getTotalLeading()));
+            document.add(footer);
+
+        } finally {
+            document.close();
+            facesContext.responseComplete();
+        }
+    }
+
+    public void limparFiltroExtrato() {
+        this.dataInicioRelatorio = null;
+        this.dataFimRelatorio = null;
+        this.filtroTipoExtrato = "TODOS"; // Volta para o padrão
+    }
+
+    private PdfPCell createHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Font.BOLD, Color.WHITE);
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(0, 51, 102));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    private PdfPCell createDataCell(String content, int alignment) {
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.NORMAL, Color.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(content, contentFont));
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(4);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        cell.setBorderWidthLeft(0);
+        cell.setBorderWidthRight(0);
+        cell.setBorderWidthTop(0.5f);
+        cell.setBorderWidthBottom(0.5f);
+
+        return cell;
+    }
+
+    private String moeda(Double valor) {
+        if (valor == null) {
+            // Se o valor for nulo, retorna zero formatado
+            return CURRENCY_FORMATTER.format(0.0);
+        }
+        // Formata o valor recebido
+        return CURRENCY_FORMATTER.format(valor);
+    }
+
     // get e set
     public void selecionarConta(Conta conta) {
         this.contaSelecionada = conta;
@@ -685,6 +1012,30 @@ public class ContaControle implements Serializable {
 
     public void setFiltroEstorno(FiltroEstorno filtroEstorno) {
         this.filtroEstorno = filtroEstorno;
+    }
+
+    public Date getDataInicioRelatorio() {
+        return dataInicioRelatorio;
+    }
+
+    public void setDataInicioRelatorio(Date dataInicioRelatorio) {
+        this.dataInicioRelatorio = dataInicioRelatorio;
+    }
+
+    public Date getDataFimRelatorio() {
+        return dataFimRelatorio;
+    }
+
+    public void setDataFimRelatorio(Date dataFimRelatorio) {
+        this.dataFimRelatorio = dataFimRelatorio;
+    }
+
+    public String getFiltroTipoExtrato() {
+        return filtroTipoExtrato;
+    }
+
+    public void setFiltroTipoExtrato(String filtroTipoExtrato) {
+        this.filtroTipoExtrato = filtroTipoExtrato;
     }
 
 }

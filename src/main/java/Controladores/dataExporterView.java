@@ -23,7 +23,6 @@ public class dataExporterView implements Serializable {
 
     @EJB
     private ProdutoFacade produtoFacade;
-    private Exporter<DataTable> textExporter;
 
     public ProdutoFacade getProdutoFacade() {
         return produtoFacade;

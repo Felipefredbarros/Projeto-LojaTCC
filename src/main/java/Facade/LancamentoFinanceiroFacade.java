@@ -10,11 +10,13 @@ import Entidades.ContaReceber;
 import Entidades.Enums.StatusLancamento;
 import Entidades.Enums.TipoLancamento;
 import Entidades.LancamentoFinanceiro;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
 /**
@@ -112,6 +114,96 @@ public class LancamentoFinanceiroFacade extends AbstractFacade<LancamentoFinance
                 .setMaxResults(1)
                 .getResultList();
         return list.isEmpty() ? null : list.get(0);
+    }
+
+    public List<LancamentoFinanceiro> buscarPorContaEPeriodoOrdenado(Conta conta, Date ini, Date fim) {
+        StringBuilder jpql = new StringBuilder("SELECT l FROM LancamentoFinanceiro l WHERE l.conta = :conta ");
+
+        if (ini != null) {
+            jpql.append(" AND l.dataHora >= :dataInicio ");
+        }
+        if (fim != null) {
+            jpql.append(" AND l.dataHora <= :dataFim ");
+        }
+        jpql.append(" ORDER BY l.dataHora ASC, l.id ASC");
+
+        TypedQuery<LancamentoFinanceiro> query = em.createQuery(jpql.toString(), LancamentoFinanceiro.class);
+        query.setParameter("conta", conta);
+
+        if (ini != null) {
+            query.setParameter("dataInicio", ini, TemporalType.TIMESTAMP);
+        }
+        if (fim != null) {
+            query.setParameter("dataFim", ajustarDataFim(fim), TemporalType.TIMESTAMP);
+        }
+        return query.getResultList();
+    }
+
+    public Double calcularSaldoAnteriorAData(Conta conta, Date dataInicioPeriodo) {
+        if (conta == null || conta.getId() == null) {
+            return 0.0;
+        }
+        Double valorInicial = conta.getValorInicial() != null ? conta.getValorInicial() : 0.0;
+
+        if (dataInicioPeriodo == null) {
+            return valorInicial;
+        }
+        Date inicioDoDia = obterInicioDoDia(dataInicioPeriodo); 
+        Double entradasAnteriores = somarPorContaETipoEPeriodoCerto(conta, TipoLancamento.ENTRADA, null, inicioDoDia, false);
+        Double saidasAnteriores = somarPorContaETipoEPeriodoCerto(conta, TipoLancamento.SAIDA, null, inicioDoDia, false);
+
+        return valorInicial + (entradasAnteriores != null ? entradasAnteriores : 0.0) - (saidasAnteriores != null ? saidasAnteriores : 0.0);
+    }
+
+    public Double somarPorContaETipoEPeriodoCerto(Conta conta, TipoLancamento tipo, Date ini, Date fim, boolean incluirDataFim) {
+        String jpql = "SELECT COALESCE(SUM(l.valor), 0) "
+                + "FROM LancamentoFinanceiro l "
+                + "WHERE l.conta = :conta "
+                + "  AND l.tipo = :tipo "
+                + "  AND (l.status IS NULL OR l.status <> :statusEstornado) "
+                + "  AND (l.descricao IS NULL OR UPPER(l.descricao) NOT LIKE 'ESTORNO%') "
+                + (ini != null ? " AND l.dataHora >= :ini" : "")
+                + (fim != null ? (incluirDataFim ? " AND l.dataHora <= :fim" : " AND l.dataHora < :fim") : "");
+
+        TypedQuery<Double> q = em.createQuery(jpql, Double.class);
+        q.setParameter("conta", conta);
+        q.setParameter("tipo", tipo);
+        q.setParameter("statusEstornado", StatusLancamento.ESTORNADO);
+        if (ini != null) {
+            q.setParameter("ini", ini, TemporalType.TIMESTAMP);
+        }
+        if (fim != null) {
+            q.setParameter("fim", incluirDataFim ? ajustarDataFim(fim) : fim, TemporalType.TIMESTAMP);
+        }
+
+        Double resultado = q.getSingleResult();
+        return resultado != null ? resultado : 0.0;
+    }
+
+    private Date ajustarDataFim(Date dataFim) {
+        if (dataFim == null) {
+            return null;
+        }
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dataFim);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+        return cal.getTime();
+    }
+
+    private Date obterInicioDoDia(Date data) {
+        if (data == null) {
+            return null;
+        }
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(data);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 
 }

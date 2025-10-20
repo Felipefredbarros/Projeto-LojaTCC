@@ -4,11 +4,12 @@
  */
 package Facade;
 
-import Entidades.Marca;
 import Entidades.ProdutoDerivacao;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -27,6 +28,13 @@ public class ProdutoDerivacaoFacade extends AbstractFacade<ProdutoDerivacao>{
 
     public ProdutoDerivacaoFacade() {
         super(ProdutoDerivacao.class);
+    }
+    
+    public List<ProdutoDerivacao> listarTodasOrdenadasComProduto() {
+        TypedQuery<ProdutoDerivacao> query = em.createQuery(
+            "SELECT pd FROM ProdutoDerivacao pd JOIN FETCH pd.produto p ORDER BY p.categoria.categoria, pd.tamanho, pd.cor",
+            ProdutoDerivacao.class);
+        return query.getResultList();
     }
     
 

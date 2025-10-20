@@ -11,7 +11,7 @@
             <h:form id="formListagemContas">
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
-                <h1 style="font-size: 2rem; color: #003366; margin-bottom: 20px;">
+                <h1>
                     📑 Listagem de Contas
                 </h1>
 
@@ -19,7 +19,7 @@
                     <p:toolbarGroup>
                         <p:commandButton value="Contas Ativas" icon="pi pi-eye"
                                          action="contas.xhtml?faces-redirect=true"
-                                         styleClass="ui-button-secondary"/>
+                                         styleClass="ui-button-secondary" />
                     </p:toolbarGroup>
                 </p:toolbar>
 
@@ -63,11 +63,23 @@
                                          action="#{contaControle.irParaDetalhe(contaItem)}"
                                          process="@this"
                                          update="@none"
-                                         styleClass="ui-button-info"/>
-                    </p:column>
+                                         styleClass="ui-button-info" style="margin-right: 5px"/>
 
+                        <p:commandButton icon="pi pi-check" title="Ativar"
+                                         actionListener="#{contaControle.ativar(contaItem)}"
+                                         update="tabelaContas :formListagemContas:growlMessages"
+                                         styleClass="ui-button-danger"
+                                         process="@this">
+                            <p:confirm header="Confirmação" message="Deseja realmente ativar esta conta?" icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+                    </p:column>
                 </p:dataTable>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                    <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+                    <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+                </p:confirmDialog>
             </h:form>
+
             <style>
 
                 .status-label {

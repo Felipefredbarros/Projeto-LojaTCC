@@ -30,6 +30,7 @@ import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,9 +40,7 @@ import java.util.Objects;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
@@ -58,8 +57,8 @@ public class CompraControle implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Locale PT_BR = new Locale("pt", "BR");
     private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(PT_BR);
-
     private Compra compra = new Compra();
+
     private ItensCompra itensCompra = new ItensCompra();
     private Date dataInicio;
     private Date dataFim;
@@ -340,100 +339,128 @@ public class CompraControle implements Serializable {
     }
 
     //pdf
-    public void exportarPDF(List<Compra> comprasParaExportar) throws DocumentException, IOException {
+    public void exportarPDF(List<Compra> comprasParaExportar, String tituloRelatorio, Date dataIni, Date dataFim) throws DocumentException, IOException {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
         response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "attachment; filename=relatorio_compra.pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_compras.pdf");
 
-        Document document = new Document(PageSize.A4, 20, 20, 20, 30); // Margens
-        PdfWriter.getInstance(document, response.getOutputStream());
-        document.open();
+        Document document = new Document(PageSize.A4, 20, 20, 30, 20);
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
 
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
-        Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
-        title.setAlignment(Element.ALIGN_CENTER);
-        title.setSpacingAfter(10);
-        document.add(title);
+        NumberFormat moeda = NumberFormat.getCurrencyInstance(PT_BR);
+        DateFormat dfRelatorio = DateFormat.getDateInstance(DateFormat.SHORT, PT_BR); // 31/10/2025
+        DateFormat dfCompleto = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, PT_BR); // 31/10/2025 10:30
 
-        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
-        Paragraph subtitle = new Paragraph("Relatório de Compras", subtitleFont);
-        subtitle.setAlignment(Element.ALIGN_CENTER);
-        subtitle.setSpacingAfter(20);
-        document.add(subtitle);
+        java.util.function.Function<Object, String> s = obj -> (obj == null) ? "-" : obj.toString();
+        java.util.function.Function<Date, String> sd = dt -> (dt == null) ? "-" : dfRelatorio.format(dt);
+        java.util.function.Function<Number, String> sm = num -> (num == null) ? moeda.format(0) : moeda.format(num);
 
-        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.BOLD, Color.BLACK);
-        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        try {
+            document.open();
 
-        int vendaCounter = 1;
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
+            Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(5);
+            document.add(title);
 
-        for (Compra com : comprasParaExportar) {
-            Paragraph compraHeader = new Paragraph("Detalhes da Compra: " + vendaCounter, headerFont);
-            compraHeader.setSpacingAfter(10);
-            document.add(compraHeader);
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 14, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph(tituloRelatorio, subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(5);
+            document.add(subtitle);
 
-            PdfPTable compraTable = new PdfPTable(2);
-            compraTable.setWidthPercentage(100);
-            compraTable.setSpacingBefore(5);
-            compraTable.setSpacingAfter(10);
-            compraTable.addCell(new PdfPCell(new Phrase("Data da Compra:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getDataCompra().toString(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Fornecedor:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getFornecedor().getNome(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Método de Pagamento:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getMetodoPagamento().toString(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Parcelas:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getParcelas().toString(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Valor Total:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getValorTotal().toString(), contentFont)));
-
-            NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-            String textoParcela;
-            if (com.getParcelasCompra() != null && !com.getParcelasCompra().isEmpty()) {
-                double vParc = com.getParcelasCompra().get(0).getValorParcela(); // assume todas iguais
-                int qtd = com.getParcelasCompra().size();
-                textoParcela = qtd + "x de " + fmt.format(vParc);
+            Font periodFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.ITALIC, Color.GRAY);
+            String periodoStr = "Período: ";
+            if (dataIni == null && dataFim == null) {
+                periodoStr += "Todos os registros";
             } else {
-                textoParcela = "-";
+                periodoStr += (dataIni != null ? sd.apply(dataIni) : "__/__/____") + " até " + (dataFim != null ? sd.apply(dataFim) : "__/__/____");
             }
-            compraTable.addCell(new PdfPCell(new Phrase("Valor Parcelas:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(textoParcela, contentFont)));
+            Paragraph periodo = new Paragraph(periodoStr, periodFont);
+            periodo.setAlignment(Element.ALIGN_CENTER);
+            periodo.setSpacingAfter(20);
+            document.add(periodo);
 
-            document.add(compraTable);
+            if (comprasParaExportar == null || comprasParaExportar.isEmpty()) {
+                document.add(new Paragraph("Nenhum registro encontrado para o período.", FontFactory.getFont(FontFactory.HELVETICA, 12)));
+            } else {
 
-            PdfPTable itemTable = new PdfPTable(4);
-            itemTable.setWidthPercentage(100);
-            itemTable.setWidths(new float[]{2f, 1f, 1f, 1f});
-            itemTable.setSpacingBefore(10);
+                double valorTotalRelatorio = 0.0;
 
-            String[] itemHeaders = {"Produto", "Quantidade", "Valor Unitário", "Subtotal"};
-            for (String itemHeader : itemHeaders) {
-                PdfPCell itemHeaderCell = new PdfPCell(new Phrase(itemHeader, headerFont));
-                itemHeaderCell.setBackgroundColor(new Color(192, 192, 192)); // Cinza claro
-                itemHeaderCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                itemHeaderCell.setPadding(5);
-                itemTable.addCell(itemHeaderCell);
+                for (Compra com : comprasParaExportar) {
+
+                    PdfPTable compraTable = new PdfPTable(4);
+                    compraTable.setWidthPercentage(100);
+                    compraTable.setSpacingBefore(15);
+                    compraTable.setWidths(new float[]{1.5f, 3f, 1.5f, 3f});
+
+                    compraTable.addCell(createHeaderCell("Compra ID:"));
+                    compraTable.addCell(createDataCell(s.apply(com.getId()), Element.ALIGN_LEFT));
+                    compraTable.addCell(createHeaderCell("Fornecedor:"));
+                    compraTable.addCell(createDataCell(s.apply(com.getFornecedor().getNome()), Element.ALIGN_LEFT));
+
+                    compraTable.addCell(createHeaderCell("Data:"));
+                    compraTable.addCell(createDataCell(sd.apply(com.getDataCompra()), Element.ALIGN_LEFT));
+                    compraTable.addCell(createHeaderCell("Status:"));
+                    compraTable.addCell(createDataCell(s.apply(com.getStatus()), Element.ALIGN_LEFT));
+
+                    compraTable.addCell(createHeaderCell("Vencimento:")); // Adicionado vencimento
+                    compraTable.addCell(createDataCell(sd.apply(com.getDataVencimento()), Element.ALIGN_LEFT));
+                    compraTable.addCell(createHeaderCell("Valor Total Compra:"));
+                    compraTable.addCell(createDataCell(sm.apply(com.getValorTotal()), Element.ALIGN_RIGHT));
+
+                    document.add(compraTable);
+
+                    if (com.getItensCompra() != null && !com.getItensCompra().isEmpty()) {
+                        PdfPTable itemTable = new PdfPTable(4); // 4 colunas
+                        itemTable.setWidthPercentage(100);
+                        itemTable.setSpacingBefore(5);
+                        itemTable.setWidths(new float[]{4f, 1f, 1.5f, 1.5f}); // Produto, Qtd, Vl. Unit., Subtotal
+
+                        itemTable.addCell(createSubHeaderCell("Produto (Derivação)"));
+                        itemTable.addCell(createSubHeaderCell("Qtd."));
+                        itemTable.addCell(createSubHeaderCell("Vl. Unit."));
+                        itemTable.addCell(createSubHeaderCell("Subtotal"));
+
+                        for (ItensCompra item : com.getItensCompra()) {
+                            itemTable.addCell(createDataCell(s.apply(item.getProdutoDerivacao().getTexto()), Element.ALIGN_LEFT));
+                            itemTable.addCell(createDataCell(s.apply(item.getQuantidade()), Element.ALIGN_CENTER));
+                            itemTable.addCell(createDataCell(sm.apply(item.getValorUnitario()), Element.ALIGN_RIGHT));
+                            itemTable.addCell(createDataCell(sm.apply(item.getSubTotal()), Element.ALIGN_RIGHT));
+
+                            if (item.getSubTotal() != null) {
+                                valorTotalRelatorio += item.getSubTotal();
+                            }
+                        }
+                        document.add(itemTable);
+                    }
+
+                    Paragraph separator = new Paragraph(" ");
+                    separator.setSpacingAfter(10);
+                    document.add(separator);
+                }
+
+                Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Font.BOLD, new Color(0, 51, 102));
+                Paragraph totalPar = new Paragraph("Valor Total (Soma de todos os itens): " + sm.apply(valorTotalRelatorio), totalFont);
+                totalPar.setAlignment(Element.ALIGN_RIGHT);
+                totalPar.setSpacingBefore(15);
+                document.add(totalPar);
             }
 
-            for (ItensCompra item : com.getItensCompra()) {
-                itemTable.addCell(new PdfPCell(new Phrase(item.getProdutoDerivacao().getTexto(), contentFont)));
-                itemTable.addCell(new PdfPCell(new Phrase(item.getQuantidade().toString(), contentFont)));
-                itemTable.addCell(new PdfPCell(new Phrase(item.getValorUnitario().toString(), contentFont)));
-                itemTable.addCell(new PdfPCell(new Phrase(item.getSubTotal().toString(), contentFont)));
-            }
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.GRAY);
+            Paragraph footer = new Paragraph("Relatório gerado em: " + dfCompleto.format(new Date()), footerFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            footer.setSpacingBefore(30);
+            document.add(footer);
 
-            document.add(itemTable);
-
-            Paragraph separator = new Paragraph(" ", headerFont);
-            separator.setSpacingBefore(10);
-            separator.setSpacingAfter(20);
-            document.add(separator);
-
-            vendaCounter++;
+        } finally {
+            document.close();
+            writer.flush();
+            writer.close();
+            facesContext.responseComplete();
         }
-
-        document.close();
-        facesContext.responseComplete();
     }
 
     public List<MetodoPagamento> getMetodosParcelados() {
@@ -444,7 +471,7 @@ public class CompraControle implements Serializable {
 
     public void exportarPDFFiltrado() throws DocumentException, IOException {
         List<Compra> comprasParaExportar = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
-        exportarPDF(comprasParaExportar);
+        exportarPDF(comprasParaExportar, "Relatório de Compras Detalhado", dataInicio, dataFim);
     }
 
     public void aplicarFiltro() {
@@ -457,6 +484,40 @@ public class CompraControle implements Serializable {
         dataInicio = null;
         dataFim = null;
         listaComprasFiltradas = compraFacade.listaTodosComItens(); // ou vazio, como preferir
+    }
+
+    private PdfPCell createHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.WHITE);
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(0, 51, 102)); // Azul escuro
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT); // Alinhado à direita
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(6);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    // Helper - Célula de Sub-Cabeçalho (Cinza)
+    private PdfPCell createSubHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.BLACK); // Texto preto
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(220, 220, 220)); // Cinza claro
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    // Helper para Célula de Dados (Branca)
+    private PdfPCell createDataCell(String content, int alignment) {
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Font.NORMAL, Color.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(content, contentFont));
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
     }
 
     //get e set

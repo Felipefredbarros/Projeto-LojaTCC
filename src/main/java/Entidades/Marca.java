@@ -29,7 +29,18 @@ public class Marca implements Serializable, ClassePai {
 
     @Column(name = "marca_nome", nullable = true)
     private String marca;
-    
+
+    @Column(name = "marca_ativo")
+    private Boolean ativo = true;
+
+    public String getStatus() {
+        if (ativo == true) {
+            return "Ativo";
+        } else {
+            return "Inativo";
+        }
+    }
+
     @Override
     public Long getId() {
         return id;
@@ -45,6 +56,14 @@ public class Marca implements Serializable, ClassePai {
 
     public void setMarca(String marca) {
         this.marca = marca;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 
     @Override
@@ -68,6 +87,5 @@ public class Marca implements Serializable, ClassePai {
         final Marca other = (Marca) obj;
         return Objects.equals(this.id, other.id);
     }
-    
-    
+
 }

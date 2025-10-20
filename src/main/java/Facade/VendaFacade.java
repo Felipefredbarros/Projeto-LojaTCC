@@ -306,7 +306,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
         Date inicio = Date.from(inicioLD.atStartOfDay(zone).toInstant());
         Date fim = Date.from(hoje.plusDays(1).atStartOfDay(zone).toInstant());
 
-        // PREENCHE 30 dias com zero (mantém o gráfico contínuo)
         for (int i = 0; i < 30; i++) {
             LocalDate d = inicioLD.plusDays(i);
             Date chave = Date.from(d.atStartOfDay(zone).toInstant());
@@ -435,6 +434,40 @@ public class VendaFacade extends AbstractFacade<Venda> {
         }
 
         return q.getResultList();
+    }
+    
+    public List<Object[]> buscarProdutosMaisVendidos(Date dataInicio, Date dataFim) {
+        String jpql = "SELECT iv.produtoDerivacao.id, SUM(iv.quantidade) as totalVendido " +
+                      "FROM ItensVenda iv JOIN iv.venda v " +
+                      "WHERE v.status = :statusVenda " +
+                      (dataInicio != null ? "AND v.dataVenda >= :dataInicio " : "") +
+                      (dataFim != null ? "AND v.dataVenda <= :dataFim " : "") +
+                      "GROUP BY iv.produtoDerivacao.id " + 
+                      "ORDER BY totalVendido DESC";
+
+        Query query = getEntityManager().createQuery(jpql);
+        query.setParameter("statusVenda", "FECHADA");
+
+        if (dataInicio != null) {
+            query.setParameter("dataInicio", dataInicio);
+        }
+        if (dataFim != null) {
+             Date dataFimAjustada = ajustarDataFim(dataFim);
+            query.setParameter("dataFim", dataFimAjustada);
+        }
+        
+        return query.getResultList();
+    }
+    
+    private Date ajustarDataFim(Date dataFim) {
+        if (dataFim == null) return null;
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(dataFim);
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+        cal.set(java.util.Calendar.MINUTE, 59);
+        cal.set(java.util.Calendar.SECOND, 59);
+        cal.set(java.util.Calendar.MILLISECOND, 999);
+        return cal.getTime();
     }
 
     public VendaFacade() {

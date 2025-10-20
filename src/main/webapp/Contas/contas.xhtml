@@ -24,7 +24,10 @@
                                          process="@this" style="margin-right: 10px"/>
                         <p:commandButton value="Contas Inativadas" icon="pi pi-eye"
                                          action="contasInativas.xhtml?faces-redirect=true"
-                                         styleClass="ui-button-secondary"/>
+                                         styleClass="ui-button-secondary" style="margin-right: 10px"/>
+                        <p:commandButton value="Relatório Geral (PDF)" icon="pi pi-file-pdf" ajax="false"
+                                         actionListener="#{contaControle.exportarPDFContasAtivas}"
+                                         styleClass="ui-button-help"/>
                     </p:toolbarGroup>
                 </p:toolbar>
 
@@ -62,7 +65,7 @@
                             <f:convertDateTime pattern="dd/MM/yyyy" />
                         </h:outputText>
                     </p:column>
-                    
+
                     <p:column headerText="Ações" style="width:180px;text-align:center">
                         <p:commandButton icon="pi pi-search" 
                                          title="Visualizar Conta" 

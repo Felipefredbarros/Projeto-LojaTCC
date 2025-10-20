@@ -330,6 +330,40 @@ public class CompraFacade extends AbstractFacade<Compra> {
 
         return q.getResultList();
     }
+    
+    public List<Object[]> buscarProdutosMaisComprados(Date dataInicio, Date dataFim) {
+        String jpql = "SELECT ic.produtoDerivacao.id, SUM(ic.quantidade) as totalComprado " +
+                      "FROM ItensCompra ic JOIN ic.compra c " +
+                      "WHERE c.status = :statusCompra " +
+                      (dataInicio != null ? "AND c.dataCompra >= :dataInicio " : "") +
+                      (dataFim != null ? "AND c.dataCompra <= :dataFim " : "") +
+                      "GROUP BY ic.produtoDerivacao.id " + 
+                      "ORDER BY totalComprado DESC";
+
+        Query query = getEntityManager().createQuery(jpql);
+         query.setParameter("statusCompra", "FECHADA");
+
+        if (dataInicio != null) {
+            query.setParameter("dataInicio", dataInicio);
+        }
+        if (dataFim != null) {
+             Date dataFimAjustada = ajustarDataFim(dataFim);
+            query.setParameter("dataFim", dataFimAjustada);
+        }
+
+        return query.getResultList();
+    }
+    
+    private Date ajustarDataFim(Date dataFim) {
+        if (dataFim == null) return null;
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(dataFim);
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+        cal.set(java.util.Calendar.MINUTE, 59);
+        cal.set(java.util.Calendar.SECOND, 59);
+        cal.set(java.util.Calendar.MILLISECOND, 999);
+        return cal.getTime();
+    }
 
     public CompraFacade() {
         super(Compra.class);
