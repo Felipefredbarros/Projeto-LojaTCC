@@ -20,9 +20,7 @@ import Utilitario.FinanceDesc;
 
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.Color;
@@ -35,9 +33,12 @@ import java.util.Objects;
 
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
+import javax.annotation.PostConstruct;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 
-@ManagedBean
-@SessionScoped
+@Named("vendaControle")
+@ViewScoped
 public class VendaControle implements Serializable {
 
     private Venda venda = new Venda();
@@ -90,6 +91,25 @@ public class VendaControle implements Serializable {
 
     @ManagedProperty("#{produtoControle}")
     private ProdutoControle produtoControle;
+    
+    @PostConstruct
+    public void init() {
+        if (FacesContext.getCurrentInstance().isPostback()) {
+            return;
+        }
+        edit = false;
+        venda = new Venda();
+        itensVenda = new ItensVenda();
+        Object id = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getFlash()
+                .get("vendaId");
+        if (id != null) {
+            Long pid = (id instanceof Long) ? (Long) id : Long.valueOf(id.toString());
+            this.venda = vendaFacade.findWithItens(pid);
+        }
+
+    }
 
     // Construtor
     public VendaControle() {
@@ -114,17 +134,26 @@ public class VendaControle implements Serializable {
 
     public void editar(Venda ven) {
         edit = true;
-        this.venda = vendaFacade.findWithItens(ven.getId());
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("vendaId", ven.getId());
+
+        try {
+            FacesContext.getCurrentInstance().getExternalContext().redirect("vendaCadastro.xhtml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void excluir(Venda ven) {
         vendaFacade.remover(ven);
     }
 
-    public void novo() {
+    public String novo() {
         edit = false;
         venda = new Venda();
         itensVenda = new ItensVenda();
+        
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("vendaId");
+        return "vendaCadastro.xhtml?faces-redirect=true";
     }
 
     public void atualizarMetodosPagamento() {

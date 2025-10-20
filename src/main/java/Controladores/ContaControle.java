@@ -22,111 +22,33 @@ import javax.faces.context.FacesContext;
 @SessionScoped
 public class ContaControle implements Serializable {
 
-    // Estado
+    private Conta conta = new Conta();
     private Conta contaSelecionada;
-
-    // Filtros tabela
-    private String filtroTipo;              // "ENTRADA" | "SAIDA" | null
-    private Date[] filtroPeriodo;           // [ini, fim]
-    private List<LancamentoFinanceiro> movimentacoesFiltradas;
-
-    // Transferência
+    private String filtroTipo;
+    private Date[] filtroPeriodo;
     private Conta contaDestino;
     private Double valorTransferencia;
     private Date dataTransferencia;
     private String descricaoTransferencia;
-
-    // Retirada (Cofre)
     private Double valorRetirada;
     private Date dataRetirada;
     private String motivoRetirada;
-
-    // Movimentação genérica
-    private String tipoMovimentacao;        // "ENTRADA" | "SAIDA"
+    private String tipoMovimentacao;
     private Double valorMovimentacao;
     private Date dataMovimentacao;
     private String descricaoMovimentacao;
+    private Long paramContaId;
+    private FiltroEstorno filtroEstorno = FiltroEstorno.TODAS;
+
+    private List<LancamentoFinanceiro> movimentacoesFiltradas;
+    private List<LancamentoFinanceiro> movimentacoesDaConta;
 
     @EJB
     private ContaFacade contaFacade;
-
     @EJB
     private LancamentoFinanceiroFacade lancamentoFinanceiroFacade;
 
-    private Conta conta = new Conta();
-
     private ConverterGenerico contaConverter;
-
-    private List<LancamentoFinanceiro> movimentacoesDaConta;
-
-    private Long paramContaId;
-
-    private FiltroEstorno filtroEstorno = FiltroEstorno.TODAS;
-
-    public enum FiltroEstorno {
-        TODAS, // mostra tudo
-        SEM_ESTORNOS, // só lançamentos normais
-        APENAS_ESTORNOS // apenas estornados + reversos
-    }
-
-    public boolean isEstorno(LancamentoFinanceiro l) {
-        if (l == null) {
-            return false;
-        }
-        if (l.getStatus() == Entidades.Enums.StatusLancamento.ESTORNADO) {
-            return true;
-        }
-        String d = l.getDescricao();
-        return d != null && d.trim().toLowerCase().startsWith("estorno");
-    }
-
-    public List<LancamentoFinanceiro> getMovimentacoesFiltradas() {
-        if (movimentacoesDaConta == null) {
-            return java.util.Collections.emptyList();
-        }
-        switch (filtroEstorno) {
-            case SEM_ESTORNOS:
-                return movimentacoesDaConta.stream()
-                        .filter(l -> !isEstorno(l))
-                        .collect(java.util.stream.Collectors.toList());
-            case APENAS_ESTORNOS:
-                return movimentacoesDaConta.stream()
-                        .filter(this::isEstorno)
-                        .collect(java.util.stream.Collectors.toList());
-            default:
-                return movimentacoesDaConta;
-        }
-    }
-
-    public void initDetalhe() {
-        if (contaSelecionada == null || (paramContaId != null && !paramContaId.equals(contaSelecionada.getId()))) {
-            if (paramContaId != null) {
-                contaSelecionada = contaFacade.buscar(paramContaId);
-                carregarMovimentacoes();
-            }
-        }
-    }
-
-    public void carregarMovimentacoes() {
-        if (contaSelecionada == null || contaSelecionada.getId() == null) {
-            this.movimentacoesDaConta = Collections.emptyList();
-            return;
-        }
-        this.movimentacoesDaConta = lancamentoFinanceiroFacade
-                .buscarPorConta(contaSelecionada);
-    }
-
-    public List<LancamentoFinanceiro> getMovimentacoesDaConta() {
-        return movimentacoesDaConta;
-    }
-
-    public Long getParamContaId() {
-        return paramContaId;
-    }
-
-    public void setParamContaId(Long paramContaId) {
-        this.paramContaId = paramContaId;
-    }
 
     @PostConstruct
     public void init() {
@@ -140,29 +62,84 @@ public class ContaControle implements Serializable {
         dataRetirada = new Date();
     }
 
-    public Double somarEntradas(Conta conta) {
-        return somaPorTipo(conta, TipoLancamento.ENTRADA, null, null);
-    }
-
-    public Double somarSaidas(Conta conta) {
-        return somaPorTipo(conta, TipoLancamento.SAIDA, null, null);
-    }
-
-    public Double totalEntradasMes(Conta conta) {
-        Date[] mes = boundariesDoMesAtual();
-        return somaPorTipo(conta, TipoLancamento.ENTRADA, mes[0], mes[1]);
-    }
-
-    public Double totalSaidasMes(Conta conta) {
-        Date[] mes = boundariesDoMesAtual();
-        return somaPorTipo(conta, TipoLancamento.SAIDA, mes[0], mes[1]);
-    }
-
-    public LancamentoFinanceiro ultimaMovimentacao(Conta conta) {
-        if (conta == null || conta.getId() == null) {
-            return null;
+    public void carregarMovimentacoes() {
+        if (contaSelecionada == null || contaSelecionada.getId() == null) {
+            this.movimentacoesDaConta = Collections.emptyList();
+            return;
         }
-        return lancamentoFinanceiroFacade.buscarUltimoPorConta(conta);
+        this.movimentacoesDaConta = lancamentoFinanceiroFacade
+                .buscarPorConta(contaSelecionada);
+    }
+
+    public void initDetalhe() {
+        if (contaSelecionada == null || (paramContaId != null && !paramContaId.equals(contaSelecionada.getId()))) {
+            if (paramContaId != null) {
+                contaSelecionada = contaFacade.buscar(paramContaId);
+                carregarMovimentacoes();
+            }
+        }
+    }
+
+    public String irParaDetalhe(Conta c) {
+        this.contaSelecionada = c;
+        if (contaSelecionada.getAtivo() == true) {
+            carregarMovimentacoes();
+            return "/Contas/contaDetalhe.xhtml?faces-redirect=true&contaId=" + c.getId();
+        } else {
+            carregarMovimentacoes();
+            return "/Contas/contaDetalheInativa.xhtml?faces-redirect=true&contaId=" + c.getId();
+        }
+    }
+
+    public ConverterGenerico getContaConverter() {
+        if (contaConverter == null) {
+            contaConverter = new ConverterGenerico(contaFacade);
+        }
+        return contaConverter;
+    }
+
+    public void novo() {
+        conta = new Conta();
+    }
+
+    public void salvar() {
+        conta.setDataCriacao(new Date());
+        conta.setStatus("ATIVA");
+        if (Boolean.TRUE.equals(conta.getIsCofre())) {
+            conta.setTipoConta(TipoConta.COFRE);
+        } else {
+            conta.setTipoConta(TipoConta.BANCO);
+        }
+
+        if (conta.getNome() == null || conta.getNome().trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome da conta é obrigatório!");
+        }
+        conta.setSaldo(conta.getValorInicial());
+
+        contaFacade.salvar(conta);
+        conta = new Conta();
+    }
+
+    public void excluirOuInativar(Conta conta) {
+        try {
+            // Verifica se existem lançamentos financeiros para essa conta
+            boolean temLancamentos = !lancamentoFinanceiroFacade.listarPorConta(conta).isEmpty();
+
+            if (temLancamentos) {
+                // Só inativa
+                conta.setAtivo(false);
+                conta.setStatus("INATIVA");
+                contaFacade.salvar(conta);
+                addMensagem(FacesMessage.SEVERITY_WARN, "Conta inativada pois possui lançamentos relacionados.");
+            } else {
+                // Pode excluir de vez
+                contaFacade.remover(conta);
+                addMensagem(FacesMessage.SEVERITY_INFO, "Conta removida com sucesso!");
+            }
+
+        } catch (Exception e) {
+            addMensagem(FacesMessage.SEVERITY_ERROR, "Erro ao excluir/inativar: " + e.getMessage());
+        }
     }
 
     public void transferir() {
@@ -331,7 +308,45 @@ public class ContaControle implements Serializable {
         addMsg(FacesMessage.SEVERITY_INFO, "Movimentação salva.");
     }
 
-    /* ====================== Suporte a Combos/Filtros ==================== */
+    public enum FiltroEstorno {
+        TODAS,
+        SEM_ESTORNOS,
+        APENAS_ESTORNOS
+    }
+
+    public boolean isEstorno(LancamentoFinanceiro l) {
+        if (l == null) {
+            return false;
+        }
+        if (l.getStatus() == Entidades.Enums.StatusLancamento.ESTORNADO) {
+            return true;
+        }
+        String d = l.getDescricao();
+        return d != null && d.trim().toLowerCase().startsWith("estorno");
+    }
+
+    public List<LancamentoFinanceiro> getMovimentacoesFiltradas() {
+        if (movimentacoesDaConta == null) {
+            return java.util.Collections.emptyList();
+        }
+        switch (filtroEstorno) {
+            case SEM_ESTORNOS:
+                return movimentacoesDaConta.stream()
+                        .filter(l -> !isEstorno(l))
+                        .collect(java.util.stream.Collectors.toList());
+            case APENAS_ESTORNOS:
+                return movimentacoesDaConta.stream()
+                        .filter(this::isEstorno)
+                        .collect(java.util.stream.Collectors.toList());
+            default:
+                return movimentacoesDaConta;
+        }
+    }
+
+    public List<LancamentoFinanceiro> getMovimentacoesDaConta() {
+        return movimentacoesDaConta;
+    }
+
     public List<Conta> contasTransferiveis(Conta origem) {
         List<Conta> todas;
         try {
@@ -343,7 +358,6 @@ public class ContaControle implements Serializable {
             todas = Collections.emptyList();
         }
 
-        // Se não há origem definida ainda, apenas retorne todas (ou vazio, se preferir)
         if (origem == null || origem.getId() == null) {
             return new ArrayList<>(todas);
         }
@@ -361,8 +375,67 @@ public class ContaControle implements Serializable {
         return filtradas;
     }
 
+    public List<Conta> getContasBancoAtivas() {
+        List<Conta> todas = getListaContaAtiva();
+        List<Conta> out = new ArrayList<>();
+        if (todas != null) {
+            for (Conta c : todas) {
+                if (c != null && c.getTipoConta() == Entidades.Enums.TipoConta.BANCO) {
+                    out.add(c);
+                }
+            }
+        }
+        return out;
+    }
 
-    /* ============================ Helpers =============================== */
+    public List<Conta> getContasCofreAtivas() {
+        List<Conta> todas = getListaContaAtiva();
+        List<Conta> out = new ArrayList<>();
+        if (todas != null) {
+            for (Conta c : todas) {
+                if (c != null && c.getTipoConta() == Entidades.Enums.TipoConta.COFRE) {
+                    out.add(c);
+                }
+            }
+        }
+        return out;
+    }
+
+    public List<Conta> getListaContaAtiva() {
+        return contaFacade.listaContaAtivo();
+    }
+
+    public List<Conta> getListaContaInativa() {
+        return contaFacade.listaContaInativo();
+    }
+
+    public Long getParamContaId() {
+        return paramContaId;
+    }
+
+    public void setParamContaId(Long paramContaId) {
+        this.paramContaId = paramContaId;
+    }
+
+    //metodos de somar o saldo
+    public Double somarEntradas(Conta conta) {
+        return somaPorTipo(conta, TipoLancamento.ENTRADA, null, null);
+    }
+
+    public Double somarSaidas(Conta conta) {
+        return somaPorTipo(conta, TipoLancamento.SAIDA, null, null);
+    }
+
+    public Double totalEntradasMes(Conta conta) {
+        Date[] mes = boundariesDoMesAtual();
+        return somaPorTipo(conta, TipoLancamento.ENTRADA, mes[0], mes[1]);
+    }
+
+    public Double totalSaidasMes(Conta conta) {
+        Date[] mes = boundariesDoMesAtual();
+        return somaPorTipo(conta, TipoLancamento.SAIDA, mes[0], mes[1]);
+    }
+
     private Double somaPorTipo(Conta conta, TipoLancamento tipo, Date ini, Date fim) {
         if (conta == null || conta.getId() == null) {
             return 0.0;
@@ -371,6 +444,7 @@ public class ContaControle implements Serializable {
         return (soma != null) ? soma : 0.0;
     }
 
+    //metodo de atualizar o saldo
     private void atualizarSaldoMaterializado(Conta conta) {
         Double inicial = conta.getValorInicial() != null ? conta.getValorInicial() : 0.0;
         Double entradas = somaPorTipo(conta, TipoLancamento.ENTRADA, null, null);
@@ -388,6 +462,14 @@ public class ContaControle implements Serializable {
         contaFacade.salvar(conta);
     }
 
+    public LancamentoFinanceiro ultimaMovimentacao(Conta conta) {
+        if (conta == null || conta.getId() == null) {
+            return null;
+        }
+        return lancamentoFinanceiroFacade.buscarUltimoPorConta(conta);
+    }
+
+    //helpers
     private static Date atStartOfDay(Date d) {
         Calendar c = Calendar.getInstance();
         c.setTime(d);
@@ -430,6 +512,7 @@ public class ContaControle implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(s, msg, null));
     }
 
+    //metodos de limpar as coisas
     public void limparTransferencia() {
         contaDestino = null;
         valorTransferencia = null;
@@ -450,105 +533,16 @@ public class ContaControle implements Serializable {
         dataMovimentacao = new Date();
     }
 
-    public List<Conta> getListaContaAtiva() {
-        return contaFacade.listaContaAtivo();
-    }
-
-    public List<Conta> getListaContaInativa() {
-        return contaFacade.listaContaInativo();
-    }
-
-    public String irParaDetalhe(Conta c) {
-        this.contaSelecionada = c;
-        if (contaSelecionada.getAtivo() == true) {
-            carregarMovimentacoes();
-            return "/Contas/contaDetalhe.xhtml?faces-redirect=true&contaId=" + c.getId();
-        } else {
-            carregarMovimentacoes();
-            return "/Contas/contaDetalheInativa.xhtml?faces-redirect=true&contaId=" + c.getId();
-        }
-    }
-
-    public void excluirOuInativar(Conta conta) {
-        try {
-            // Verifica se existem lançamentos financeiros para essa conta
-            boolean temLancamentos = !lancamentoFinanceiroFacade.listarPorConta(conta).isEmpty();
-
-            if (temLancamentos) {
-                // Só inativa
-                conta.setAtivo(false);
-                conta.setStatus("INATIVA");
-                contaFacade.salvar(conta);
-                addMensagem(FacesMessage.SEVERITY_WARN, "Conta inativada pois possui lançamentos relacionados.");
-            } else {
-                // Pode excluir de vez
-                contaFacade.remover(conta);
-                addMensagem(FacesMessage.SEVERITY_INFO, "Conta removida com sucesso!");
-            }
-
-        } catch (Exception e) {
-            addMensagem(FacesMessage.SEVERITY_ERROR, "Erro ao excluir/inativar: " + e.getMessage());
-        }
-    }
-
-    public void novo() {
-        conta = new Conta();
-    }
-
-    public void salvar() {
-        conta.setDataCriacao(new Date());
-        conta.setStatus("ATIVA");
-        if (Boolean.TRUE.equals(conta.getIsCofre())) {
-            conta.setTipoConta(TipoConta.COFRE);
-        } else {
-            conta.setTipoConta(TipoConta.BANCO);
-        }
-
-        if (conta.getNome() == null || conta.getNome().trim().isEmpty()) {
-            throw new IllegalArgumentException("Nome da conta é obrigatório!");
-        }
-        conta.setSaldo(conta.getValorInicial());
-
-        contaFacade.salvar(conta);
-        conta = new Conta();
-    }
-
     private void addMensagem(FacesMessage.Severity severity, String msg) {
         FacesContext.getCurrentInstance()
                 .addMessage(null, new FacesMessage(severity, msg, null));
     }
 
+    // get e set
     public void selecionarConta(Conta conta) {
         this.contaSelecionada = conta;
     }
 
-    public List<Conta> getContasBancoAtivas() {
-        List<Conta> todas = getListaContaAtiva();
-        List<Conta> out = new ArrayList<>();
-        if (todas != null) {
-            for (Conta c : todas) {
-                if (c != null && c.getTipoConta() == Entidades.Enums.TipoConta.BANCO) {
-                    out.add(c);
-                }
-            }
-        }
-        return out;
-    }
-
-    public List<Conta> getContasCofreAtivas() {
-        List<Conta> todas = getListaContaAtiva();
-        List<Conta> out = new ArrayList<>();
-        if (todas != null) {
-            for (Conta c : todas) {
-                if (c != null && c.getTipoConta() == Entidades.Enums.TipoConta.COFRE) {
-                    out.add(c);
-                }
-            }
-        }
-        return out;
-    }
-
-    /* ============================ Getters/Setters ======================= */
     public Conta getContaSelecionada() {
         return contaSelecionada;
     }
@@ -671,13 +665,6 @@ public class ContaControle implements Serializable {
 
     public void setConta(Conta conta) {
         this.conta = conta;
-    }
-
-    public ConverterGenerico getContaConverter() {
-        if (contaConverter == null) {
-            contaConverter = new ConverterGenerico(contaFacade);
-        }
-        return contaConverter;
     }
 
     public ContaFacade getContaFacade() {

@@ -83,10 +83,11 @@
 
                         <!-- Editar -->
                         <p:commandButton icon="pi pi-pencil" title="Editar"
-                                         actionListener="#{compraControle.editar(compraItem)}"
+                                         action="#{compraControle.editar(compraItem)}"
+                                         ajax="false"
                                          process="@this"
                                          styleClass="rounded-button ui-button-info"
-                                         rendered="#{compraItem.status eq 'ABERTA'}"
+                                         rendered="#{compraItem.status eq 'Aberta'}"
                                          style="margin-right: 5px;"/>
 
                         <!-- Excluir -->

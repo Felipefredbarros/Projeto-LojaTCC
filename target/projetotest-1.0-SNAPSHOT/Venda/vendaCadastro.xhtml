@@ -91,8 +91,7 @@
 
                         <p:outputLabel value="Preço:" />
                         <p:inputNumber id="valorUnitario" value="#{vendaControle.itensVenda.valorUnitario}" widgetVar="valorUnitario" disabled="#{vendaControle.edit}"
-                                     symbol="R$ " decimalSeparator="," thousandSeparator="."
-                                   required="true" minValue="0" style="width: 100%;"/>
+                                     symbol="R$ " decimalSeparator="," thousandSeparator="."  minValue="0" style="width: 100%;"/>
                     </h:panelGrid>
 
                     <!-- Botão para adicionar o item -->
@@ -121,8 +120,8 @@
                     <p:column headerText="Operações">
                         <p:commandButton value="Remover" 
                                          actionListener="#{vendaControle.removerItem(item)}" 
-                                         update="itensTable totalVenda" 
-                                         ajax="false"/>
+                                         update=":form:itensTable :form:totalVenda :form:mdialog" 
+                                         ajax="true"/>
 
 
                     </p:column>

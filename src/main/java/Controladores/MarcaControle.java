@@ -9,18 +9,23 @@ import Facade.MarcaFacade;
 import java.io.Serializable;
 import java.util.List;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 
 /**
  *
  * @author felip
  */
-@ManagedBean
-@SessionScoped
-public class MarcaControle implements Serializable{
+@Named("marcaControle")
+@ViewScoped
+public class MarcaControle implements Serializable {
 
     private Marca marca = new Marca();
+    
     @EJB
     private MarcaFacade marcaFacade;
 
@@ -34,11 +39,27 @@ public class MarcaControle implements Serializable{
     }
 
     public void excluir(Marca est) {
+        if (marcaFacade.categoriaTemProduto(est.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta marca ja tem um produto registrado e não pode ser excluida"));
+            return;
+        }
         marcaFacade.remover(est);
     }
 
     public void editar(Marca est) {
+        if (marcaFacade.categoriaTemProduto(est.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta marca ja tem um produto registrado e não pode ser editado"));
+            return;
+        }
         this.marca = est;
+    }
+
+    public List<Marca> getListaMarcas() {
+        return marcaFacade.listaTodos();
     }
 
     public Marca getMarca() {
@@ -56,10 +77,5 @@ public class MarcaControle implements Serializable{
     public void setMarcaFacade(MarcaFacade marcaFacade) {
         this.marcaFacade = marcaFacade;
     }
-    
-    public List<Marca> getListaMarcas() {
-        return marcaFacade.listaTodos();
-    }
-    
-    
+
 }

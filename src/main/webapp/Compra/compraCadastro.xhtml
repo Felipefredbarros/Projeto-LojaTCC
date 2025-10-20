@@ -40,7 +40,7 @@
 
                 <!-- Total da Compra -->
                 <p:outputLabel value="Total da Compra:" style="color: blue; font-size: x-large" />
-                <h:outputText id="totalCompra" value="#{compraControle.compra.total}">
+                <h:outputText id="totalCompra" value="#{compraControle.compra.valorTotal}">
                     <f:convertNumber type="currency" />
                 </h:outputText>
 
@@ -48,11 +48,14 @@
                 <p:panel header="Itens da Compra" rendered="#{!compraControle.edit}">
                     <h:panelGrid columns="2">
                         <p:outputLabel value="Produto:" />
-                        <p:selectOneMenu id="produto" value="#{compraControle.itensCompra.produtoDerivacao}" converter="#{compraControle.produtoDevConverter}">
+                        <p:selectOneMenu id="produto"
+                                         value="#{compraControle.itensCompra.produtoDerivacao}"
+                                         converter="#{compraControle.produtoDevConverter}">
                             <f:selectItems value="#{compraControle.listaDerivacoes}" var="dev"
-                                           itemLabel="#{dev.texto}" itemValue="#{dev}"/>
-                            <p:ajax event="itemSelect" listener="#{compraControle.atualizarPreco}" update="valorUnitario" />
-
+                                           itemLabel="#{dev.texto}" itemValue="#{dev}" />
+                            <p:ajax listener="#{compraControle.atualizarPreco}"
+                                    process="@this"
+                                    update="valorUnitario" />
                         </p:selectOneMenu>
 
                         <p:outputLabel value="Quantidade:" />
@@ -61,13 +64,16 @@
 
                         <p:outputLabel value="Preço:" />
                         <p:inputNumber id="valorUnitario" value="#{compraControle.itensCompra.valorUnitario}" widgetVar="valorUnitario"
-                                     symbol="R$ " decimalSeparator="," thousandSeparator="."
-                                   required="true" minValue="0" style="width: 100%;"/>
+                                       symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                       minValue="0" style="width: 100%;"/>
                     </h:panelGrid>
 
                     <!-- Botão para adicionar o item -->
-                    <p:commandButton value="Adicionar" actionListener="#{compraControle.adicionarItem()}"
-                                     update="mdialog itensTable totalCompra" ajax="true"  />
+                    <p:commandButton value="Adicionar"
+                                     actionListener="#{compraControle.adicionarItem}"
+                                     process="@form"
+                                     update=":form:mdialog :form:itensTable :form:totalCompra"
+                                     ajax="true" />
                 </p:panel>
 
                 <!-- Tabela de Itens no Carrinho -->
@@ -91,8 +97,8 @@
                     <p:column headerText="Operações">
                         <p:commandButton value="Remover" 
                                          actionListener="#{compraControle.removerItem(item)}" 
-                                         update="itensTable totalCompra" 
-                                         ajax="false"/>
+                                         update=":form:itensTable :form:totalCompra :form:mdialog"
+                                         ajax="true"/>
 
 
                     </p:column>

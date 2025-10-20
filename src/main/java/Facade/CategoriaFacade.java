@@ -14,7 +14,7 @@ import javax.persistence.PersistenceContext;
  * @author felip
  */
 @Stateless
-public class CategoriaFacade extends AbstractFacade<Categoria>{
+public class CategoriaFacade extends AbstractFacade<Categoria> {
 
     @PersistenceContext(unitName = "projetotestPU")
     private EntityManager em;
@@ -28,4 +28,12 @@ public class CategoriaFacade extends AbstractFacade<Categoria>{
         super(Categoria.class);
     }
 
+    public boolean categoriaTemProduto(Long categoriaId) {
+        Long count = em.createQuery(
+                "SELECT COUNT(p) FROM Produto p WHERE p.categoria.id = :categoriaId", Long.class)
+                .setParameter("categoriaId", categoriaId)
+                .getSingleResult();
+
+        return count != null && count > 0;
+    }
 }

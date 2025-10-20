@@ -71,15 +71,35 @@ public class Compra implements Serializable, ClassePai {
     @JoinColumn(nullable = false, name = "fornecedor_id")
     private Pessoa fornecedor;
 
-    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ItensCompra> itensCompra;
 
-    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @OrderColumn(name = "ordem")
     private List<ParcelaCompra> parcelasCompra;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ContaPagar> contasPagar = new ArrayList<>();
+
+    public void addItem(ItensCompra item) {
+        itensCompra.add(item);
+        item.setCompra(this);
+    }
+
+    public void removeItem(ItensCompra item) {
+        itensCompra.remove(item);
+        item.setCompra(null);   // <<< zera o dono do relacionamento
+    }
+
+    public void addParcela(ParcelaCompra p) {
+        parcelasCompra.add(p);
+        p.setCompra(this);
+    }
+
+    public void removeParcela(ParcelaCompra p) {
+        parcelasCompra.remove(p);
+        p.setCompra(null);
+    }
 
     public List<ParcelaCompra> getParcelasCompra() {
         return parcelasCompra;
@@ -98,21 +118,21 @@ public class Compra implements Serializable, ClassePai {
             throw new IllegalStateException("A data de vencimento não está definida.");
         }
 
-        parcelasCompra.clear();
-        if (parcelas > 0 && valorTotal != null) {
-            double valorParcela = valorTotal / parcelas;
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(dataVencimento);  
+        for (int i = parcelasCompra.size() - 1; i >= 0; i--) {
+            removeParcela(parcelasCompra.get(i));
+        }
 
-            for (int i = 0; i < parcelas; i++) {
-                ParcelaCompra parcela = new ParcelaCompra();
-                parcela.setCompra(this);
-                parcela.setValorParcela(valorParcela);
-                parcela.setMetodoPagamento(MetodoPagamento.A_DENIFIR);
-                parcela.setDataVencimento(calendar.getTime());  
-                parcelasCompra.add(parcela);
-                calendar.add(Calendar.MONTH, 1);  
-            }
+        double valorParcela = (valorTotal != null ? valorTotal : 0d) / parcelas;
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dataVencimento);
+
+        for (int i = 0; i < parcelas; i++) {
+            ParcelaCompra p = new ParcelaCompra();
+            p.setValorParcela(valorParcela);
+            p.setMetodoPagamento(MetodoPagamento.A_DENIFIR);
+            p.setDataVencimento(cal.getTime());
+            addParcela(p);
+            cal.add(Calendar.MONTH, 1);
         }
     }
 
@@ -218,8 +238,6 @@ public class Compra implements Serializable, ClassePai {
     public void setContasPagar(List<ContaPagar> contasPagar) {
         this.contasPagar = contasPagar;
     }
-    
-    
 
     @Override
     public int hashCode() {

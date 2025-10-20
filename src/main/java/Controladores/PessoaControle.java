@@ -30,10 +30,8 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import javax.ejb.EJB;
-import javax.faces.view.ViewScoped;
 
 import javax.faces.context.FacesContext;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
@@ -41,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 
 /**
  *
@@ -70,10 +70,28 @@ public class PessoaControle implements Serializable {
 
     @PostConstruct
     public void init() {
+
+        if (FacesContext.getCurrentInstance().isPostback()) {
+            return;
+        }
+
         pessoa = new Pessoa();
+        edit = false;
         novoEndereco = new Endereco();
         listaCidades = new ArrayList<>();
         carregarEstados();
+
+        Object id = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getFlash()
+                .get("pessoaId");
+        if (id != null) {
+            Long pid = (id instanceof Long) ? (Long) id : Long.valueOf(id.toString());
+            this.pessoa = pessoaFacade.findWithAll(pid);
+        }
+        if (pessoa.getContrato() == null) {
+            pessoa.setContrato(new ContratoTrabalho());
+        }
     }
 
     public void limparFormulario() {
@@ -115,16 +133,15 @@ public class PessoaControle implements Serializable {
     }
 
     public void onTipoPessoaChange() {
-
+        if (pessoa.getContrato() == null) {
+            pessoa.setContrato(new ContratoTrabalho());
+        }
         pessoa.getContrato().setSalario(null);
         pessoa.getContrato().setCargo(null);
         pessoa.getContrato().setDiaPagamentos(null);
+
         pessoa.setRegiao(null);
-
         pessoa.setTipoPessoa("FISICA");
-
-        pessoa.setCpfcnpj(null);
-
     }
 
     public void onNaturezaPessoaChange() {
@@ -228,7 +245,6 @@ public class PessoaControle implements Serializable {
         this.pessoa.getListaTelefones().remove(telefoneParaRemover);
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Telefone removido."));
-        novoTelefone = new Telefone();
     }
 
     //novo
@@ -249,6 +265,8 @@ public class PessoaControle implements Serializable {
                 pessoa.getContrato().setSalario(null);
                 pessoa.getContrato().setCargo(null);
                 pessoa.getContrato().setDiaPagamentos(null);
+                pessoa.getContrato().setDataInicio(null);
+                pessoa.getContrato().setJornadaDiariaHoras(null);
             } else {
                 if (pessoa.getContrato() != null) {
                     pessoa.getContrato().setFuncionario(pessoa);
@@ -265,6 +283,9 @@ public class PessoaControle implements Serializable {
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Pessoa salva com sucesso!"));
+            FacesContext.getCurrentInstance().getExternalContext().getFlash().setKeepMessages(true);
+            FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("pessoaId");
+
             limparFormulario();
             return "listaPessoas.xhtml?faces-redirect=true";
         } catch (Exception e) {
@@ -330,9 +351,16 @@ public class PessoaControle implements Serializable {
         pessoa = new Pessoa();
     }
 
-    public void novo() {
+    public String novo() {
         edit = false;
         pessoa = new Pessoa();
+        novoEndereco = new Endereco();
+        novoTelefone = new Telefone();
+        contrato = new ContratoTrabalho();
+        pessoa.setContrato(new ContratoTrabalho());
+
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("pessoaId");
+        return "pessoaCadastro.xhtml?faces-redirect=true";
     }
 
     public void excluir(Pessoa pessoa) {
@@ -373,12 +401,24 @@ public class PessoaControle implements Serializable {
     }
 
     public void editar(Pessoa pes) {
-        edit = true;
-        this.pessoa = pessoaFacade.findWithAll(pes.getId());
+        if (pessoaFacade.pessoaTemVendas(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui vendas relacionadas e não pode ser editado"));
+            return;
+        }
+
+        if (pessoaFacade.pessoaTemCompras(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui compras relacionadas e não pode ser editado"));
+            return;
+        }
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("pessoaId", pes.getId());
 
         try {
             FacesContext.getCurrentInstance().getExternalContext().redirect("pessoaCadastro.xhtml");
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

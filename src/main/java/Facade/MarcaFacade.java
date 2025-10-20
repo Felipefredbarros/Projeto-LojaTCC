@@ -27,5 +27,14 @@ public class MarcaFacade extends AbstractFacade<Marca>{
     public MarcaFacade() {
         super(Marca.class);
     }
+    
+    public boolean categoriaTemProduto(Long marcaId) {
+        Long count = em.createQuery(
+                "SELECT COUNT(p) FROM Produto p WHERE p.marca.id = :marcaId", Long.class)
+                .setParameter("marcaId", marcaId)
+                .getSingleResult();
+
+        return count != null && count > 0;
+    }
 
 }

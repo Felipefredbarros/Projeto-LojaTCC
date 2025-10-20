@@ -64,7 +64,7 @@
                                     <p:column headerText="Ações" style="width:120px; text-align:center;">
                                         <p:commandButton icon="pi pi-pencil" title="Editar Marca"
                                                          actionListener="#{marcaControle.editar(cat)}"
-                                                         update=":formMarca" process="@this"
+                                                         update=":formMarca:growlMessagesMarca" process="@this"
                                                          styleClass="ui-button-info rounded-button" style="margin-right: 5px;"/>
                                         <p:commandButton icon="pi pi-trash" title="Excluir Marca"
                                                          actionListener="#{marcaControle.excluir(cat)}"

@@ -16,8 +16,8 @@
                 <p:toolbar styleClass="mb-3">
                     <p:toolbarGroup>
                         <p:commandButton value="Novo Produto" icon="pi pi-plus"
-                                         action="produtoCadastro.xhtml"
-                                         actionListener="#{produtoControle.novo()}"
+                                         action="#{produtoControle.novo()}"
+                                         ajax="false"
                                          styleClass="ui-button-success"
                                          process="@this"
                                          style="margin-right: 10px"/>
@@ -86,7 +86,8 @@
                                          style="margin-right: 5px;"/>
 
                         <p:commandButton icon="pi pi-pencil" title="Editar"
-                                         actionListener="#{produtoControle.editar(produtoItem)}"
+                                         action="#{produtoControle.editar(produtoItem)}"
+                                         ajax="false"
                                          process="@this"
                                          styleClass="rounded-button ui-button-info"
                                          style="margin-right: 5px;"/>
@@ -109,7 +110,7 @@
                         <!-- Bloco com informações principais -->
                         <h3 class="section-title"><strong>Informações Gerais</strong></h3>
 
-                        <div class="info-box-grid" rendered="#{not empty produtoControle.produtoSelecionado}">
+                        <h:panelGroup class="info-box-grid" rendered="#{not empty produtoControle.produtoSelecionado}">
                             <div class="info-box">
                                 <span class="label"><strong>Categoria</strong></span>
                                 <span class="value">#{produtoControle.produtoSelecionado.categoria.categoria}</span>
@@ -135,7 +136,7 @@
                                     </h:outputText>
                                 </span>
                             </div>
-                        </div>
+                        </h:panelGroup>
                         <!-- Derivações -->
                         <h3 class="section-title"><strong>Derivações</strong></h3>
                         <p:dataTable value="#{produtoControle.produtoSelecionado.variacoes}" var="var" style="width:100%; margin-bottom: 30px;">
@@ -162,7 +163,7 @@
                     <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
                 </p:confirmDialog>
 
-                
+
             </h:form>
             <style>
                 .info-box-grid {
