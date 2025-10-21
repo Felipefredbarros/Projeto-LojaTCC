@@ -44,8 +44,6 @@ public class Usuario implements Serializable, ClassePai {
     if (senhaPura == null || this.senha == null) {
         return false;
     }
-    // O método checkpw compara a senha em texto puro com o hash armazenado.
-    // Ele extrai o "sal" do hash automaticamente para fazer a comparação.
     return BCrypt.checkpw(senhaPura, this.senha);
 }
 

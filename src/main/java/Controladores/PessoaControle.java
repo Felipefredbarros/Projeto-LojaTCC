@@ -30,17 +30,20 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import javax.ejb.EJB;
-import javax.faces.view.ViewScoped;
 
 import javax.faces.context.FacesContext;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import javax.annotation.PostConstruct;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 
 /**
  *
@@ -70,10 +73,28 @@ public class PessoaControle implements Serializable {
 
     @PostConstruct
     public void init() {
+
+        if (FacesContext.getCurrentInstance().isPostback()) {
+            return;
+        }
+
         pessoa = new Pessoa();
+        edit = false;
         novoEndereco = new Endereco();
         listaCidades = new ArrayList<>();
         carregarEstados();
+
+        Object id = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getFlash()
+                .get("pessoaId");
+        if (id != null) {
+            Long pid = (id instanceof Long) ? (Long) id : Long.valueOf(id.toString());
+            this.pessoa = pessoaFacade.findWithAll(pid);
+        }
+        if (pessoa.getContrato() == null) {
+            pessoa.setContrato(new ContratoTrabalho());
+        }
     }
 
     public void limparFormulario() {
@@ -115,16 +136,15 @@ public class PessoaControle implements Serializable {
     }
 
     public void onTipoPessoaChange() {
-
+        if (pessoa.getContrato() == null) {
+            pessoa.setContrato(new ContratoTrabalho());
+        }
         pessoa.getContrato().setSalario(null);
         pessoa.getContrato().setCargo(null);
         pessoa.getContrato().setDiaPagamentos(null);
+
         pessoa.setRegiao(null);
-
         pessoa.setTipoPessoa("FISICA");
-
-        pessoa.setCpfcnpj(null);
-
     }
 
     public void onNaturezaPessoaChange() {
@@ -228,7 +248,6 @@ public class PessoaControle implements Serializable {
         this.pessoa.getListaTelefones().remove(telefoneParaRemover);
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Telefone removido."));
-        novoTelefone = new Telefone();
     }
 
     //novo
@@ -249,6 +268,8 @@ public class PessoaControle implements Serializable {
                 pessoa.getContrato().setSalario(null);
                 pessoa.getContrato().setCargo(null);
                 pessoa.getContrato().setDiaPagamentos(null);
+                pessoa.getContrato().setDataInicio(null);
+                pessoa.getContrato().setJornadaDiariaHoras(null);
             } else {
                 if (pessoa.getContrato() != null) {
                     pessoa.getContrato().setFuncionario(pessoa);
@@ -265,6 +286,9 @@ public class PessoaControle implements Serializable {
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Pessoa salva com sucesso!"));
+            FacesContext.getCurrentInstance().getExternalContext().getFlash().setKeepMessages(true);
+            FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("pessoaId");
+
             limparFormulario();
             return "listaPessoas.xhtml?faces-redirect=true";
         } catch (Exception e) {
@@ -330,9 +354,16 @@ public class PessoaControle implements Serializable {
         pessoa = new Pessoa();
     }
 
-    public void novo() {
+    public String novo() {
         edit = false;
         pessoa = new Pessoa();
+        novoEndereco = new Endereco();
+        novoTelefone = new Telefone();
+        contrato = new ContratoTrabalho();
+        pessoa.setContrato(new ContratoTrabalho());
+
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("pessoaId");
+        return "pessoaCadastro.xhtml?faces-redirect=true";
     }
 
     public void excluir(Pessoa pessoa) {
@@ -371,14 +402,35 @@ public class PessoaControle implements Serializable {
                         "Sucesso",
                         "Pessoa excluída com sucesso!"));
     }
+    
+    public void ativar(Pessoa pes){
+        pes.setAtivo(true);
+        pessoaFacade.salvar(pes);
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO,
+                        "Sucesso",
+                        "Pessoa ativado com sucesso!"));
+    }
 
     public void editar(Pessoa pes) {
-        edit = true;
-        this.pessoa = pessoaFacade.findWithAll(pes.getId());
+        if (pessoaFacade.pessoaTemVendas(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui vendas relacionadas e não pode ser editado"));
+            return;
+        }
+
+        if (pessoaFacade.pessoaTemCompras(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui compras relacionadas e não pode ser editado"));
+            return;
+        }
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("pessoaId", pes.getId());
 
         try {
             FacesContext.getCurrentInstance().getExternalContext().redirect("pessoaCadastro.xhtml");
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -448,127 +500,190 @@ public class PessoaControle implements Serializable {
     }
 
     public void exportarRelatorioClientes() throws DocumentException, IOException {
-        exportarPDF(pessoaFacade.listaCliAtivo(), "relatorio_clientes.pdf");
+        exportarPDF(pessoaFacade.listaCliAtivo(), "Relatório de Clientes Ativos");
     }
 
     public void exportarRelatorioFuncionarios() throws DocumentException, IOException {
-        exportarPDF(pessoaFacade.listaFuncAtivo(), "relatorio_funcionarios.pdf");
+        exportarPDF(pessoaFacade.listaFuncAtivo(), "Relatório de Funcionários Ativos");
     }
 
     public void exportarRelatorioFornecedores() throws DocumentException, IOException {
-        exportarPDF(pessoaFacade.listaFornAtivo(), "relatorio_fornecedores.pdf");
+        exportarPDF(pessoaFacade.listaFornAtivo(), "Relatório de Fornecedores Ativos");
     }
 
-    private void exportarPDF(List<Pessoa> pessoas, String reportTitle) throws DocumentException, IOException {
+    private void exportarPDF(List<Pessoa> pessoas, String tituloRelatorio) throws DocumentException, IOException {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
 
-        String fileName = reportTitle.toLowerCase().replaceAll("[^a-z0-9]", "_") + ".pdf";
+        String fileName = tituloRelatorio.toLowerCase().replaceAll("[^a-z0-9]", "_") + ".pdf";
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
 
-        Document document = new Document(PageSize.A4.rotate(), 20, 20, 20, 30);
-        PdfWriter.getInstance(document, response.getOutputStream());
-        document.open();
+        Document document = new Document(PageSize.A4.rotate(), 20, 20, 30, 20);
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
 
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
-        Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
-        title.setAlignment(Element.ALIGN_CENTER);
-        title.setSpacingAfter(10);
-        document.add(title);
+        Locale ptBr = new Locale("pt", "BR");
+        DateFormat dfCompleto = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, ptBr);
 
-        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
-        Paragraph subtitle = new Paragraph("Relatório de Pessoas(Funcionario, Fornecedor e Cliente)", subtitleFont);
-        subtitle.setAlignment(Element.ALIGN_CENTER);
-        subtitle.setSpacingAfter(20);
-        document.add(subtitle);
+        java.util.function.Function<Object, String> s = obj -> (obj == null || obj.toString().trim().isEmpty()) ? "-" : obj.toString();
 
-        PdfPTable mainTable = new PdfPTable(8);
-        mainTable.setWidthPercentage(100);
-        mainTable.setWidths(new float[]{1f, 1f, 2.5f, 3f, 1.5f, 1f, 4f, 2f});
+        try {
+            document.open();
 
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
+            Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(5);
+            document.add(title);
+
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 14, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph(tituloRelatorio, subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(20);
+            document.add(subtitle);
+
+            if (pessoas == null || pessoas.isEmpty()) {
+                document.add(new Paragraph("Nenhuma pessoa encontrada para este relatório.", FontFactory.getFont(FontFactory.HELVETICA, 12)));
+            } else {
+
+                PdfPTable mainTable = new PdfPTable(8);
+                mainTable.setWidthPercentage(100);
+                mainTable.setWidths(new float[]{1.2f, 1f, 3f, 3f, 1.5f, 0.8f, 4.5f, 2.5f});
+
+                mainTable.addCell(createHeaderCell("Tipo Pessoa"));
+                mainTable.addCell(createHeaderCell("Natureza"));
+                mainTable.addCell(createHeaderCell("Nome"));
+                mainTable.addCell(createHeaderCell("Email"));
+                mainTable.addCell(createHeaderCell("CPF/CNPJ"));
+                mainTable.addCell(createHeaderCell("Status"));
+                mainTable.addCell(createHeaderCell("Endereços"));
+                mainTable.addCell(createHeaderCell("Telefones"));
+
+                for (Pessoa p : pessoas) {
+                    mainTable.addCell(createDataCell(s.apply(p.getTipo().getLabel()), Element.ALIGN_LEFT));
+                    mainTable.addCell(createDataCell(s.apply(p.getTipoPessoa()), Element.ALIGN_CENTER));
+                    mainTable.addCell(createDataCell(s.apply(p.getNome()), Element.ALIGN_LEFT));
+                    mainTable.addCell(createDataCell(s.apply(p.getEmail()), Element.ALIGN_LEFT));
+                    mainTable.addCell(createDataCell(s.apply(p.getCpfcnpjFormatado()), Element.ALIGN_CENTER));
+                    mainTable.addCell(createDataCell(p.getAtivo() ? "Ativo" : "Inativo", Element.ALIGN_CENTER));
+
+                    PdfPCell addressesCell = new PdfPCell();
+                    addressesCell.setPadding(2);
+                    if (p.getListaEnderecos() != null && !p.getListaEnderecos().isEmpty()) {
+                        PdfPTable addressTable = new PdfPTable(4);
+                        addressTable.setWidthPercentage(100);
+                        addressTable.setWidths(new float[]{3f, 1f, 2.5f, 3.5f});
+
+                        addressTable.addCell(createNestedHeaderCell("Rua"));
+                        addressTable.addCell(createNestedHeaderCell("Nº"));
+                        addressTable.addCell(createNestedHeaderCell("Bairro"));
+                        addressTable.addCell(createNestedHeaderCell("Cidade/UF/CEP"));
+
+                        for (Endereco end : p.getListaEnderecos()) {
+                            addressTable.addCell(createNestedDataCell(s.apply(end.getRua()), Element.ALIGN_LEFT));
+                            addressTable.addCell(createNestedDataCell(s.apply(end.getNumero()), Element.ALIGN_CENTER));
+                            addressTable.addCell(createNestedDataCell(s.apply(end.getBairro()), Element.ALIGN_LEFT));
+                            String cidadeUfCep = String.format("%s/%s - %s",
+                                    s.apply(end.getCidade().getNome()),
+                                    s.apply(end.getCidade().getEstado().getSigla()),
+                                    s.apply(end.getCep()));
+                            addressTable.addCell(createNestedDataCell(cidadeUfCep, Element.ALIGN_LEFT));
+                        }
+                        addressesCell.addElement(addressTable);
+                    } else {
+                        Font nestedContentFont = FontFactory.getFont(FontFactory.HELVETICA, 7, Font.NORMAL, Color.BLACK);
+                        Phrase emptyAddressPhrase = new Phrase("Nenhum endereço", nestedContentFont);
+                        addressesCell.addElement(emptyAddressPhrase);
+                        addressesCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        addressesCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    }
+                    mainTable.addCell(addressesCell);
+
+                    PdfPCell phonesCell = new PdfPCell();
+                    phonesCell.setPadding(2);
+                    if (p.getListaTelefones() != null && !p.getListaTelefones().isEmpty()) {
+                        PdfPTable phoneTable = new PdfPTable(2);
+                        phoneTable.setWidthPercentage(100);
+                        phoneTable.setWidths(new float[]{1f, 2f});
+
+                        phoneTable.addCell(createNestedHeaderCell("Tipo"));
+                        phoneTable.addCell(createNestedHeaderCell("Número"));
+
+                        for (Telefone tel : p.getListaTelefones()) {
+                            phoneTable.addCell(createNestedDataCell(s.apply(tel.getTipoTelefone().toString()), Element.ALIGN_LEFT));
+                            phoneTable.addCell(createNestedDataCell(s.apply(tel.getNumero()), Element.ALIGN_LEFT));
+                        }
+                        phonesCell.addElement(phoneTable);
+                    } else {
+                        Font nestedContentFont = FontFactory.getFont(FontFactory.HELVETICA, 7, Font.NORMAL, Color.BLACK);
+                        Phrase emptyPhonePhrase = new Phrase("Nenhum telefone", nestedContentFont);
+                        phonesCell.addElement(emptyPhonePhrase);
+                        phonesCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        phonesCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    }
+
+                    mainTable.addCell(phonesCell);
+                }
+
+                document.add(mainTable);
+            }
+
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.GRAY);
+            Paragraph footer = new Paragraph("Relatório gerado em: " + dfCompleto.format(new Date()), footerFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+
+            float currentY = writer.getVerticalPosition(true);
+            footer.setSpacingBefore(currentY < 50 ? 10 : currentY - 30);
+            document.add(footer);
+
+        } finally {
+            document.close();
+            facesContext.responseComplete();
+        }
+    }
+
+    private PdfPCell createHeaderCell(String content) {
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Font.BOLD, Color.WHITE);
-        String[] headers = {"Tipo Pessoa", "Natureza", "Nome", "Email", "CPF/CNPJ", "Status", "Endereços", "Telefones"};
-        for (String header : headers) {
-            PdfPCell headerCell = new PdfPCell(new Phrase(header, headerFont));
-            headerCell.setBackgroundColor(new Color(102, 102, 102));
-            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-            headerCell.setPadding(5);
-            headerCell.setBorderColor(new Color(200, 200, 200));
-            mainTable.addCell(headerCell);
-        }
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(0, 51, 102));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
 
-        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 8);
-        Font nestedHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, Color.DARK_GRAY);
-        Font nestedContentFont = FontFactory.getFont(FontFactory.HELVETICA, 7);
+    private PdfPCell createDataCell(String content, int alignment) {
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.NORMAL, Color.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(content, contentFont));
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(4);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
 
-        for (Pessoa p : pessoas) {
-            mainTable.addCell(new PdfPCell(new Phrase(p.getTipo().getLabel(), contentFont)));
-            mainTable.addCell(new PdfPCell(new Phrase(p.getTipoPessoa(), contentFont)));
-            mainTable.addCell(new PdfPCell(new Phrase(p.getNome(), contentFont)));
-            mainTable.addCell(new PdfPCell(new Phrase(p.getEmail(), contentFont)));
-            mainTable.addCell(new PdfPCell(new Phrase(p.getCpfcnpjFormatado(), contentFont)));
+    private PdfPCell createNestedHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7, Font.BOLD, Color.DARK_GRAY);
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(230, 230, 230));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(3);
+        cell.setBorderWidth(0.5f);
+        cell.setBorderColor(Color.GRAY);
+        return cell;
+    }
 
-            PdfPCell statusCell = new PdfPCell(new Phrase(p.getStatus(), contentFont));
-            statusCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            mainTable.addCell(statusCell);
-
-            PdfPCell addressesCell = new PdfPCell();
-            addressesCell.setPadding(2);
-
-            if (p.getListaEnderecos() != null && !p.getListaEnderecos().isEmpty()) {
-                PdfPTable addressTable = new PdfPTable(6);
-                addressTable.setWidthPercentage(100);
-                addressTable.setWidths(new float[]{3.0f, 3.0f, 4.5f, 1.8f, 2.5f, 3.2f}
-                );
-
-                addressTable.addCell(new PdfPCell(new Phrase("Estado", nestedHeaderFont)));
-                addressTable.addCell(new PdfPCell(new Phrase("Cidade", nestedHeaderFont)));
-                addressTable.addCell(new PdfPCell(new Phrase("Rua", nestedHeaderFont)));
-                addressTable.addCell(new PdfPCell(new Phrase("Nº", nestedHeaderFont)));
-                addressTable.addCell(new PdfPCell(new Phrase("Bairro", nestedHeaderFont)));
-                addressTable.addCell(new PdfPCell(new Phrase("CEP", nestedHeaderFont)));
-
-                for (Endereco end : p.getListaEnderecos()) {
-                    addressTable.addCell(new PdfPCell(new Phrase(end.getCidade().getEstado().getNome(), nestedContentFont)));
-                    addressTable.addCell(new PdfPCell(new Phrase(end.getCidade().getNome(), nestedContentFont)));
-                    addressTable.addCell(new PdfPCell(new Phrase(end.getRua(), nestedContentFont)));
-                    addressTable.addCell(new PdfPCell(new Phrase(end.getNumero(), nestedContentFont)));
-                    addressTable.addCell(new PdfPCell(new Phrase(end.getBairro(), nestedContentFont)));
-                    addressTable.addCell(new PdfPCell(new Phrase(end.getCep(), nestedContentFont)));
-                }
-                addressesCell.addElement(addressTable);
-            } else {
-                addressesCell.addElement(new Phrase("Nenhum endereço cadastrado", nestedContentFont));
-            }
-            mainTable.addCell(addressesCell);
-
-            PdfPCell phonesCell = new PdfPCell();
-            phonesCell.setPadding(2);
-            if (p.getListaTelefones() != null && !p.getListaTelefones().isEmpty()) {
-                PdfPTable phoneTable = new PdfPTable(2);
-                phoneTable.setWidthPercentage(100);
-
-                phoneTable.addCell(new PdfPCell(new Phrase("Tipo", nestedHeaderFont)));
-                phoneTable.addCell(new PdfPCell(new Phrase("Número", nestedHeaderFont)));
-
-                for (Telefone tel : p.getListaTelefones()) {
-                    phoneTable.addCell(new PdfPCell(new Phrase(tel.getTipoTelefone().toString(), nestedContentFont)));
-                    phoneTable.addCell(new PdfPCell(new Phrase(tel.getNumero(), nestedContentFont)));
-                }
-                phonesCell.addElement(phoneTable);
-            } else {
-                phonesCell.addElement(new Phrase("Nenhum telefone cadastrado", nestedContentFont));
-            }
-            mainTable.addCell(phonesCell);
-        }
-
-        document.add(mainTable);
-
-        document.close();
-
-        facesContext.responseComplete();
+    private PdfPCell createNestedDataCell(String content, int alignment) {
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 7, Font.NORMAL, Color.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(content, contentFont));
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(3);
+        cell.setBorderWidth(0.5f);
+        cell.setBorderColor(Color.GRAY);
+        return cell;
     }
 
     public Long getEstadoSelecionadoId() {

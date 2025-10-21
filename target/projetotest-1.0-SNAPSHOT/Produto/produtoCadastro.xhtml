@@ -21,14 +21,14 @@
                         <p:selectOneMenu id="categoria" value="#{produtoControle.produto.categoria}"
                                          converter="#{produtoControle.categoriaConverter}" required="true" requiredMessage="Categoria é obrigatória.">
 
-                            <f:selectItems value="#{categoriaControle.listaCategorias}" var="categoria"
+                            <f:selectItems value="#{categoriaControle.listaCategoriasAtivas}" var="categoria"
                                            itemLabel="#{categoria.categoria}" itemValue="#{categoria}"/>
                         </p:selectOneMenu>
 
                         <p:outputLabel for="marca" value="Marca:" styleClass="font-semibold"/>
                         <p:selectOneMenu id="marca" value="#{produtoControle.produto.marca}"
                                          converter="#{produtoControle.marcaConverter}" required="true" requiredMessage="Marca é obrigatória.">
-                            <f:selectItems value="#{marcaControle.listaMarcas}" var="marca"
+                            <f:selectItems value="#{marcaControle.listaMarcasAtivas}" var="marca"
                                            itemLabel="#{marca.marca}" itemValue="#{marca}"/>
                         </p:selectOneMenu>
 

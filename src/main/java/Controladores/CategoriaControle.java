@@ -9,16 +9,18 @@ import Facade.CategoriaFacade;
 import java.io.Serializable;
 import java.util.List;
 import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 
 /**
  *
  * @author felip
  */
-@ManagedBean
-@SessionScoped
-public class CategoriaControle implements Serializable{
+@Named("categoriaControle")
+@ViewScoped
+public class CategoriaControle implements Serializable {
 
     private Categoria categoria = new Categoria();
     @EJB
@@ -34,10 +36,24 @@ public class CategoriaControle implements Serializable{
     }
 
     public void excluir(Categoria est) {
+        if (categoriaFacade.categoriaTemProduto(est.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Categoria Inativada"));
+            est.setAtivo(false);
+            categoriaFacade.salvar(est);
+            return;
+        }
         categoriaFacade.remover(est);
     }
 
     public void editar(Categoria est) {
+        if (categoriaFacade.categoriaTemProduto(est.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta categoria ja tem um produto registrado e não pode ser editado"));
+            return;
+        }
         this.categoria = est;
     }
 
@@ -56,8 +72,16 @@ public class CategoriaControle implements Serializable{
     public void setCategoriaFacade(CategoriaFacade categoriaFacade) {
         this.categoriaFacade = categoriaFacade;
     }
-    
+
     public List<Categoria> getListaCategorias() {
         return categoriaFacade.listaTodos();
+    }
+    
+    public List<Categoria> getListaCategoriasAtivas(){
+        return categoriaFacade.listaCategoriaAtiva();
+    }
+    
+    public List<Categoria> getListaCategoriasInativa(){
+        return categoriaFacade.listaCategoriaInativa();
     }
 }

@@ -37,7 +37,6 @@ public class ProdutoFacade extends AbstractFacade<Produto> {
         super(Produto.class);
     }
 
-    // Total de produtos cadastrados
     public Long totalProdutosCadastrados() {
         String jpql = "SELECT COUNT(p) FROM Produto p";
         return em.createQuery(jpql, Long.class).getSingleResult();
@@ -48,13 +47,11 @@ public class ProdutoFacade extends AbstractFacade<Produto> {
         return em.createQuery(jpql, Long.class).getSingleResult();
     }
 
-// Produtos com estoque abaixo de 5
     public List<ProdutoDerivacao> listarProdutosEstoqueBaixo() {
         String jpql = "SELECT d FROM ProdutoDerivacao d WHERE d.quantidade < 5 AND d.produto.ativo = true";
         return em.createQuery(jpql, ProdutoDerivacao.class).getResultList();
     }
 
-// Quantidade total de estoque
     public Double totalEstoqueGeral() {
         String jpql = "SELECT SUM(d.quantidade) FROM ProdutoDerivacao d WHERE d.produto.ativo = true";
         Double total = em.createQuery(jpql, Double.class).getSingleResult();
@@ -78,14 +75,11 @@ public class ProdutoFacade extends AbstractFacade<Produto> {
                 case "ncm":
                     hql.append("LOWER(obj.ncm) LIKE :filtro OR ");
                     break;
-                // adicione outros CAMPOS REAIS de Produto aqui, se existirem
                 default:
-                    // ignora atributos inexistentes para não quebrar
                     break;
             }
         }
 
-        // se nada válido foi adicionado, evita HQL inválida
         int posOr = hql.lastIndexOf(" OR ");
         String hqlFinal = (posOr > 0) ? hql.substring(0, posOr) : "FROM Produto";
 

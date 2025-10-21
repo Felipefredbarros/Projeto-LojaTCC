@@ -13,7 +13,7 @@
 
                 <h1>📑 Listagem de Vendas</h1>
 
-                <p:toolbar styleClass="mb-3">
+                <p:toolbar style="margin-bottom:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
                     <p:toolbarGroup>
                         <p:commandButton value="Nova Venda" icon="pi pi-plus"
                                          action="vendaCadastro.xhtml"
@@ -96,7 +96,7 @@
                                          process="@this"
                                          styleClass="rounded-button ui-button-info"
                                          style="margin-right: 5px;"
-                                         rendered="#{vendaItem.status eq 'ABERTA'}"/>
+                                         rendered="#{vendaItem.status eq 'Aberta'}"/>
 
                         <p:commandButton icon="pi pi-trash" title="Excluir"
                                          action="#{vendaControle.excluir(vendaItem)}"

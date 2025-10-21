@@ -84,17 +84,38 @@ public class Venda implements Serializable, ClassePai {
     @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ContaReceber> contasReceber = new ArrayList<>();
     
-    @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @OrderColumn(name = "ordem")
     private List<ParcelaCompra> parcelasVenda;
     
     @Column(name = "ven_parcelas")
     private Integer parcelas;
+    
 
     public Venda() {
         itensVenda = new ArrayList<>();
         dataVenda = new Date();
         this.parcelasVenda = new ArrayList<>();
+    }
+    
+    public void addItem(ItensVenda item) {
+        itensVenda.add(item);
+        item.setVenda(this);
+    }
+
+    public void removeItem(ItensVenda item) {
+        itensVenda.remove(item);
+        item.setVenda(null);   
+    }
+
+    public void addParcela(ParcelaCompra p) {
+        parcelasVenda.add(p);
+        p.setVenda(this);
+    }
+
+    public void removeParcela(ParcelaCompra p) {
+        parcelasVenda.remove(p);
+        p.setVenda(null);
     }
     
     public void calcularParcelas() {

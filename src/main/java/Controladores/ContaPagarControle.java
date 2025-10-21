@@ -6,7 +6,6 @@ package Controladores;
 
 import Entidades.Conta;
 import Entidades.ContaPagar;
-import Entidades.ContaReceber;
 import Entidades.Enums.MetodoPagamento;
 import Entidades.Enums.StatusLancamento;
 import Entidades.Enums.TipoConta;
@@ -34,16 +33,16 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
-import javax.faces.bean.ViewScoped;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 
 /**
  *
  * @author felip
  */
-@ManagedBean
+@Named("contaPagarControle")
 @ViewScoped
 public class ContaPagarControle implements Serializable {
 
@@ -241,40 +240,37 @@ public class ContaPagarControle implements Serializable {
     public void limparFiltros() {
         dataInicio = null;
         dataFim = null;
-        dataInicioPagas = null; 
+        dataInicioPagas = null;
         dataFimPagas = null;
         listaContas = contaPagarFacade.listaTodos();
     }
 
     public void exportarPDFFiltradoPagas() throws DocumentException, IOException {
         List<ContaPagar> contasParaExportar = contaPagarFacade.buscarPorFiltrosPagas(dataInicioPagas, dataFimPagas);
-        exportarPDF(contasParaExportar, false);
-        limparFiltros();
+        exportarPDF(contasParaExportar, "Relatório de Contas Pagas", dataInicioPagas, dataFimPagas);
     }
 
     public void exportarPDFFiltradoPagar() throws DocumentException, IOException {
         List<ContaPagar> contasParaExportar = contaPagarFacade.buscarPorFiltrosPagar(dataInicio, dataFim);
-        exportarPDF(contasParaExportar, true);
-        limparFiltros();
+        exportarPDF(contasParaExportar, "Relatório de Contas a Pagar", dataInicio, dataFim);
     }
 
-    public void exportarPDF(List<ContaPagar> contasParaExportar, Boolean is) throws DocumentException, IOException {
+    public void exportarPDF(List<ContaPagar> contasParaExportar, String tituloRelatorio, Date dataIni, Date dataFim) throws DocumentException, IOException {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
         response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "attachment; filename=relatorio_contas.pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_contas_pagar.pdf");
 
-        Document document = new Document(PageSize.A4, 20, 20, 20, 30);
+        Document document = new Document(PageSize.A4.rotate(), 20, 20, 30, 20);
         PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
 
-        // Helpers de formatação
         java.text.NumberFormat moeda = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
-        java.text.DateFormat df = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+        java.text.DateFormat dfRelatorio = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        java.text.DateFormat dfCompleto = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-        // Funções para evitar NPE
         java.util.function.Function<Object, String> s = o -> o == null ? "-" : o.toString();
-        java.util.function.Function<java.util.Date, String> sd = d -> d == null ? "-" : df.format(d);
-        java.util.function.Function<java.lang.Number, String> sm = n -> n == null ? "-" : moeda.format(n);
+        java.util.function.Function<java.util.Date, String> sd = d -> d == null ? "-" : dfRelatorio.format(d);
+        java.util.function.Function<java.lang.Number, String> sm = n -> n == null ? moeda.format(0) : moeda.format(n);
 
         try {
             document.open();
@@ -282,82 +278,102 @@ public class ContaPagarControle implements Serializable {
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
             Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
-            title.setSpacingAfter(10);
+            title.setSpacingAfter(5);
             document.add(title);
 
-            // se for a pagar true, senao true
-            if (is == true) {
-                Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
-                Paragraph subtitle = new Paragraph("Relatório de Contas a Pagar", subtitleFont);
-                subtitle.setAlignment(Element.ALIGN_CENTER);
-                subtitle.setSpacingAfter(20);
-                document.add(subtitle);
-            } else {
-                Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
-                Paragraph subtitle = new Paragraph("Relatório de Contas Pagas", subtitleFont);
-                subtitle.setAlignment(Element.ALIGN_CENTER);
-                subtitle.setSpacingAfter(20);
-                document.add(subtitle);
-            }
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 14, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph(tituloRelatorio, subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(5);
+            document.add(subtitle);
 
-            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.BOLD, Color.BLACK);
-            Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            Font periodFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.ITALIC, Color.GRAY);
+            String periodoStr = "Período: ";
+            if (dataIni == null && dataFim == null) {
+                periodoStr += "Todos os registros";
+            } else {
+                periodoStr += (dataIni != null ? sd.apply(dataIni) : "__/__/____") + " até " + (dataFim != null ? sd.apply(dataFim) : "__/__/____");
+            }
+            Paragraph periodo = new Paragraph(periodoStr, periodFont);
+            periodo.setAlignment(Element.ALIGN_CENTER);
+            periodo.setSpacingAfter(20);
+            document.add(periodo);
 
             if (contasParaExportar == null || contasParaExportar.isEmpty()) {
-                document.add(new Paragraph("Nenhum registro encontrado.", contentFont));
+                document.add(new Paragraph("Nenhum registro encontrado para o período.", FontFactory.getFont(FontFactory.HELVETICA, 12)));
             } else {
-                int contaCounter = 1;
+
+                PdfPTable table = new PdfPTable(7);
+                table.setWidthPercentage(100);
+                table.setWidths(new float[]{0.8f, 3.2f, 1.5f, 1.5f, 1.5f, 1.0f, 1.5f});
+
+                table.addCell(createHeaderCell("ID"));
+                table.addCell(createHeaderCell("Descrição"));
+                table.addCell(createHeaderCell("Data Criação"));
+                table.addCell(createHeaderCell("Data Vencimento"));
+                table.addCell(createHeaderCell("Data Pagamento")); // Nome corrigido
+                table.addCell(createHeaderCell("Status"));
+                table.addCell(createHeaderCell("Valor"));
+
+                double valorTotal = 0.0;
+
                 for (ContaPagar con : contasParaExportar) {
-                    Paragraph contaHeader = new Paragraph("Conta: " + contaCounter, headerFont);
-                    contaHeader.setSpacingAfter(10);
-                    document.add(contaHeader);
 
-                    PdfPTable contaTable = new PdfPTable(2);
-                    contaTable.setWidthPercentage(100);
-                    contaTable.setSpacingBefore(5);
-                    contaTable.setSpacingAfter(10);
+                    table.addCell(createDataCell(s.apply(con.getId()), Element.ALIGN_CENTER));
+                    table.addCell(createDataCell(s.apply(con.getDescricao()), Element.ALIGN_LEFT));
+                    table.addCell(createDataCell(sd.apply(con.getDataCriação()), Element.ALIGN_CENTER));
+                    table.addCell(createDataCell(sd.apply(con.getDataVencimento()), Element.ALIGN_CENTER));
+                    table.addCell(createDataCell(sd.apply(con.getDataRecebimento()), Element.ALIGN_CENTER));
+                    table.addCell(createDataCell(s.apply(con.getStatus()), Element.ALIGN_CENTER));
+                    table.addCell(createDataCell(sm.apply(con.getValor()), Element.ALIGN_RIGHT));
 
-                    contaTable.addCell(new PdfPCell(new Phrase("ID:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(s.apply(con.getId()), contentFont)));
-
-                    contaTable.addCell(new PdfPCell(new Phrase("Descrição:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(s.apply(con.getDescricao()), contentFont)));
-
-                    contaTable.addCell(new PdfPCell(new Phrase("Método de Recebimento:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(
-                            con.getMetodoPagamento() == null ? "-" : con.getMetodoPagamento().toString(),
-                            contentFont)));
-
-                    contaTable.addCell(new PdfPCell(new Phrase("Data de Criação:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(sd.apply(con.getDataCriação()), contentFont)));
-
-                    contaTable.addCell(new PdfPCell(new Phrase("Data de Recebimento:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(sd.apply(con.getDataRecebimento()), contentFont)));
-
-                    contaTable.addCell(new PdfPCell(new Phrase("Data de Vencimento:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(sd.apply(con.getDataVencimento()), contentFont)));
-
-                    contaTable.addCell(new PdfPCell(new Phrase("Status:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(s.apply(con.getStatus()), contentFont)));
-
-                    contaTable.addCell(new PdfPCell(new Phrase("Valor:", headerFont)));
-                    contaTable.addCell(new PdfPCell(new Phrase(sm.apply(con.getValor()), contentFont)));
-
-                    document.add(contaTable);
-
-                    Paragraph separator = new Paragraph(" ");
-                    separator.setSpacingAfter(20);
-                    document.add(separator);
-
-                    contaCounter++;
+                    if (con.getValor() != null) {
+                        valorTotal += con.getValor();
+                    }
                 }
+
+                document.add(table);
+
+                Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Font.BOLD, new Color(0, 51, 102));
+                Paragraph totalPar = new Paragraph("Valor Total: " + sm.apply(valorTotal), totalFont);
+                totalPar.setAlignment(Element.ALIGN_RIGHT);
+                totalPar.setSpacingBefore(15);
+                document.add(totalPar);
             }
+
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.GRAY);
+            Paragraph footer = new Paragraph("Relatório gerado em: " + dfCompleto.format(new Date()), footerFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            footer.setSpacingBefore(30);
+            document.add(footer);
+
         } finally {
             document.close();
             writer.flush();
             writer.close();
             facesContext.responseComplete();
         }
+    }
+
+    private PdfPCell createHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.WHITE);
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(0, 51, 102)); // Azul escuro
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(6);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    private PdfPCell createDataCell(String content, int alignment) {
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Font.NORMAL, Color.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(content, contentFont));
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
     }
 
     public List<MetodoPagamento> getMetodosPagamento() {

@@ -30,30 +30,48 @@ import com.lowagie.text.pdf.PdfWriter;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 
 /**
  *
  * @author felip
  */
-@ManagedBean
-@SessionScoped
+@Named("compraControle")
+@ViewScoped
 public class CompraControle implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+    private static final Locale PT_BR = new Locale("pt", "BR");
+    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(PT_BR);
     private Compra compra = new Compra();
-    private ItensCompra itensCompra;
+
+    private ItensCompra itensCompra = new ItensCompra();
+    private Date dataInicio;
+    private Date dataFim;
+    private Compra compraSelecionado;
+    private Pessoa fornecedorFiltro;
+    private Produto produtoFiltro;
+
+    private boolean mostrarParcelas;
+    private Boolean edit = false;
+
+    private List<PlanoPagamento> planosPagamentos;
+    private List<Compra> listaComprasFiltradas = new ArrayList<>();
+
     @EJB
     private CompraFacade compraFacade;
     @EJB
@@ -62,72 +80,36 @@ public class CompraControle implements Serializable {
     private ProdutoFacade produtoFacade;
     @EJB
     private ProdutoDerivacaoFacade produtoDevFacade;
+
     private ConverterGenerico pessoaConverter;
     private ConverterGenerico produtoConverter;
     private ConverterGenerico produtoDevConverter;
-    private List<PlanoPagamento> planosPagamentos;
+
     @ManagedProperty("#{produtoControle}")
     private ProdutoControle produtoControle;
-    private boolean mostrarParcelas;
-    private Date dataInicio;
-    private Date dataFim;
-    private Boolean edit = false;
-    private List<Compra> listaComprasFiltradas = new ArrayList<>();
-    private Compra compraSelecionado;
-    private Pessoa fornecedorFiltro;
-    private Produto produtoFiltro;
 
-    public void prepararVisualizacao(Compra com) {
-        this.compraSelecionado = compraFacade.findWithItens(com.getId());
+    @PostConstruct
+    public void init() {
+        if (FacesContext.getCurrentInstance().isPostback()) {
+            return;
+        }
+        edit = false;
+        compra = new Compra();
+        itensCompra = new ItensCompra();
+        Object id = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getFlash()
+                .get("compraId");
+        if (id != null) {
+            Long pid = (id instanceof Long) ? (Long) id : Long.valueOf(id.toString());
+            this.compra = compraFacade.findWithItens(pid);
+        }
+
     }
 
     public CompraControle() {
         this.planosPagamentos = PlanoPagamento.getPlanosPagamento();
         this.compra = new Compra();
-    }
-
-    public List<PlanoPagamento> getPlanosPagamentos() {
-        return planosPagamentos;
-    }
-
-    public void setPlanosPagamentos(List<PlanoPagamento> planosPagamentos) {
-        this.planosPagamentos = planosPagamentos;
-    }
-
-    public ItensCompra getItensCompra() {
-        return itensCompra;
-    }
-
-    public void setItensCompra(ItensCompra itensCompra) {
-        this.itensCompra = itensCompra;
-    }
-
-    public ProdutoControle getProdutoControle() {
-        return produtoControle;
-    }
-
-    public void setProdutoControle(ProdutoControle produtoControle) {
-        this.produtoControle = produtoControle;
-    }
-
-    public CompraFacade getCompraFacade() {
-        return compraFacade;
-    }
-
-    public void setCompraFacade(CompraFacade compraFacade) {
-        this.compraFacade = compraFacade;
-    }
-
-    public void atualizaPreco() {
-        itensCompra.setValorUnitario(itensCompra.getProdutoDerivacao().getProduto().getValorUnitarioCompra());
-    }
-
-    public List<Pessoa> getListaFornecedoresFiltrando(String filtro) {
-        return pessoaFacade.listaFornecedorFiltrando(filtro, "nome", "cpfcnpj");
-    }
-
-    public List<Produto> getListaProdutosFiltrando(String filtro) {
-        return produtoFacade.listaFiltrar(filtro, "categoria", "tipo");
     }
 
     public ConverterGenerico getPessoaConverter() {
@@ -151,79 +133,13 @@ public class CompraControle implements Serializable {
         return produtoDevConverter;
     }
 
-    public void setProdutoConverter(ConverterGenerico produtoConverter) {
-        this.produtoConverter = produtoConverter;
-    }
-
-    public void setFornecedorConverter(ConverterGenerico estadoConverter) {
-        this.pessoaConverter = estadoConverter;
-    }
-
-    public PessoaFacade getFornecedorFacade() {
-        if (pessoaConverter == null) {
-            pessoaConverter = new ConverterGenerico(pessoaFacade);
-        }
-        return pessoaFacade;
-    }
-
-    public void setFornecedorFacade(PessoaFacade estadoFacade) {
-        this.pessoaFacade = estadoFacade;
-    }
-
-    public ProdutoFacade getProdutoFacade() {
-        if (produtoConverter == null) {
-            produtoConverter = new ConverterGenerico(produtoFacade);
-        }
-        return produtoFacade;
-    }
-
-    public void atualizarPreco() {
-        if (itensCompra.getProdutoDerivacao() != null) {
-            Produto produto = itensCompra.getProdutoDerivacao().getProduto();
-            if (produto != null) {
-                itensCompra.setValorUnitario(produto.getValorUnitarioVenda());
-            }
-        }
-    }
-
-    public void adicionarItem() {
-        if (produtoControle.getListaProdutos() == null
-                || produtoControle.getListaProdutos().isEmpty()
-                || itensCompra.getQuantidade() == null || itensCompra.getValorUnitario() == null) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Erro", "Preencha os Campos para Adicionar um Item"));
-            return;
-        }
-
-        ItensCompra itemTemp = null;
-        for (ItensCompra it : compra.getItensCompra()) {
-            if (it.getProdutoDerivacao().getId().equals(itensCompra.getProdutoDerivacao().getId())) {
-                itemTemp = it;
-            }
-        }
-
-        if (itemTemp == null) {
-            itensCompra.setCompra(compra);
-            compra.getItensCompra().add(itensCompra);
-        } else {
-            if (!Objects.equals(itensCompra.getValorUnitario(), itemTemp.getValorUnitario())) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                "Erro", "O valor do produto precisa ser o mesmo do já cadastrado"));
-                return;
-            }
-            itemTemp.setQuantidade(itemTemp.getQuantidade() + itensCompra.getQuantidade());
-        }
+    public String novo() {
+        edit = false;
+        compra = new Compra();
         itensCompra = new ItensCompra();
 
-    }
-
-    public void removerItem(ItensCompra item) {
-        compra.getItensCompra().remove(item);
-        compra.setValorTotal(compra.getValorTotal() - item.getSubTotal());
-        itensCompra = new ItensCompra();
-        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Item removido com sucesso!"));
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("compraId");
+        return "compraCadastro.xhtml?faces-redirect=true";
     }
 
     public void salvar() {
@@ -270,6 +186,85 @@ public class CompraControle implements Serializable {
         compra = new Compra();
     }
 
+    public void editar(Compra ven) {
+        edit = true;
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("compraId", ven.getId());
+
+        try {
+            FacesContext.getCurrentInstance().getExternalContext().redirect("compraCadastro.xhtml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void excluir(Compra ven) {
+        compraFacade.remover(ven);
+    }
+
+    public void adicionarItem() {
+        if (itensCompra.getProdutoDerivacao() == null
+                || itensCompra.getQuantidade() == null
+                || itensCompra.getQuantidade() <= 0
+                || itensCompra.getValorUnitario() == null) {
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Selecione o produto, informe quantidade e valor."));
+            return;
+        }
+
+        ItensCompra itemExistente = null;
+        for (ItensCompra it : compra.getItensCompra()) {
+            if (it.getProdutoDerivacao().getId().equals(itensCompra.getProdutoDerivacao().getId())) {
+                itemExistente = it;
+                break;
+            }
+        }
+
+        if (itemExistente == null) {
+            itensCompra.setCompra(compra);
+            compra.addItem(itensCompra);
+        } else {
+            if (!Objects.equals(itensCompra.getValorUnitario(), itemExistente.getValorUnitario())) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Erro", "O valor do produto precisa ser o mesmo do já cadastrado"));
+                return;
+            }
+            itemExistente.setQuantidade(itemExistente.getQuantidade() + itensCompra.getQuantidade());
+
+        }
+        compra.setValorTotal(
+                (compra.getValorTotal() == null ? 0d : compra.getValorTotal())
+                + itensCompra.getSubTotal()
+        );
+        itensCompra = new ItensCompra();
+
+    }
+
+    public void removerItem(ItensCompra item) {
+        if (item == null) {
+            return;
+        }
+
+        compra.removeItem(item); // usa o helper da entidade
+        compra.setValorTotal(
+                (compra.getValorTotal() == null ? 0d : compra.getValorTotal()) - item.getSubTotal()
+        );
+        itensCompra = new ItensCompra();
+        limpaCampos();
+        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Item removido com sucesso!"));
+    }
+
+    public void atualizarPreco() {
+        if (itensCompra.getProdutoDerivacao() != null) {
+            Produto produto = itensCompra.getProdutoDerivacao().getProduto();
+            if (produto != null) {
+                itensCompra.setValorUnitario(produto.getValorUnitarioVenda());
+            }
+        }
+    }
+
     public void fecharCompra(Compra com) {
         com = compraFacade.findWithItens(com.getId());
 
@@ -302,156 +297,13 @@ public class CompraControle implements Serializable {
         }
     }
 
-    public List<MetodoPagamento> getMetodosParcelados() {
-        List<MetodoPagamento> metodosParcelados = new ArrayList<>();
-        metodosParcelados.add(MetodoPagamento.CARTAO_CREDITO);
-        return metodosParcelados;
+    public void limpaCampos() {
+        itensCompra.setQuantidade(null);
+        itensCompra.setValorUnitario(null);
     }
 
-    public void exportarPDFFiltrado() throws DocumentException, IOException {
-    List<Compra> comprasParaExportar = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);  
-    exportarPDF(comprasParaExportar); 
-}
-
-
-    public void aplicarFiltro() {
-        listaComprasFiltradas = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
-    }
-
-    public void limparFiltros() {
-        fornecedorFiltro = null;
-        produtoFiltro = null;
-        dataInicio = null;
-        dataFim = null;
-        listaComprasFiltradas = compraFacade.listaTodosComItens(); // ou vazio, como preferir
-    }
-
-    public void exportarPDF(List<Compra> comprasParaExportar) throws DocumentException, IOException {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
-        response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "attachment; filename=relatorio_compra.pdf");
-
-        Document document = new Document(PageSize.A4, 20, 20, 20, 30); // Margens
-        PdfWriter.getInstance(document, response.getOutputStream());
-        document.open();
-
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
-        Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
-        title.setAlignment(Element.ALIGN_CENTER);
-        title.setSpacingAfter(10);
-        document.add(title);
-
-        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
-        Paragraph subtitle = new Paragraph("Relatório de Compras", subtitleFont);
-        subtitle.setAlignment(Element.ALIGN_CENTER);
-        subtitle.setSpacingAfter(20);
-        document.add(subtitle);
-
-        // Fonte para os cabeçalhos
-        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.BOLD, Color.BLACK);
-        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
-
-        int vendaCounter = 1;
-
-        // Para cada venda, criamos uma nova seção
-        for (Compra com : comprasParaExportar) {
-            // Seção de cabeçalho de cada venda
-            Paragraph compraHeader = new Paragraph("Detalhes da Compra: " + vendaCounter, headerFont);
-            compraHeader.setSpacingAfter(10);
-            document.add(compraHeader);
-
-            // Informações principais da venda
-            PdfPTable compraTable = new PdfPTable(2);
-            compraTable.setWidthPercentage(100);
-            compraTable.setSpacingBefore(5);
-            compraTable.setSpacingAfter(10);
-            compraTable.addCell(new PdfPCell(new Phrase("Data da Compra:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getDataCompra().toString(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Fornecedor:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getFornecedor().getNome(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Método de Pagamento:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getMetodoPagamento().toString(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Parcelas:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getParcelas().toString(), contentFont)));
-            compraTable.addCell(new PdfPCell(new Phrase("Valor Total:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(com.getValorTotal().toString(), contentFont)));
-
-            NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-            String textoParcela;
-            if (com.getParcelasCompra() != null && !com.getParcelasCompra().isEmpty()) {
-                double vParc = com.getParcelasCompra().get(0).getValorParcela(); // assume todas iguais
-                int qtd = com.getParcelasCompra().size();
-                textoParcela = qtd + "x de " + fmt.format(vParc);
-            } else {
-                textoParcela = "-";
-            }
-            compraTable.addCell(new PdfPCell(new Phrase("Valor Parcelas:", headerFont)));
-            compraTable.addCell(new PdfPCell(new Phrase(textoParcela, contentFont)));
-
-            document.add(compraTable);
-
-            // Tabela de itens da compra
-            PdfPTable itemTable = new PdfPTable(4);
-            itemTable.setWidthPercentage(100);
-            itemTable.setWidths(new float[]{2f, 1f, 1f, 1f});
-            itemTable.setSpacingBefore(10);
-
-            // Cabeçalhos da tabela de itens
-            String[] itemHeaders = {"Produto", "Quantidade", "Valor Unitário", "Subtotal"};
-            for (String itemHeader : itemHeaders) {
-                PdfPCell itemHeaderCell = new PdfPCell(new Phrase(itemHeader, headerFont));
-                itemHeaderCell.setBackgroundColor(new Color(192, 192, 192)); // Cinza claro
-                itemHeaderCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                itemHeaderCell.setPadding(5);
-                itemTable.addCell(itemHeaderCell);
-            }
-
-            // Adiciona os detalhes dos itens da venda
-            for (ItensCompra item : com.getItensCompra()) {
-                itemTable.addCell(new PdfPCell(new Phrase(item.getProdutoDerivacao().getTexto(), contentFont)));
-                itemTable.addCell(new PdfPCell(new Phrase(item.getQuantidade().toString(), contentFont)));
-                itemTable.addCell(new PdfPCell(new Phrase(item.getValorUnitario().toString(), contentFont)));
-                itemTable.addCell(new PdfPCell(new Phrase(item.getSubTotal().toString(), contentFont)));
-            }
-
-            // Adiciona a tabela de itens ao documento
-            document.add(itemTable);
-
-            // Linha de separação entre compras
-            Paragraph separator = new Paragraph(" ", headerFont);
-            separator.setSpacingBefore(10);
-            separator.setSpacingAfter(20);
-            document.add(separator);
-
-            vendaCounter++;
-        }
-
-        document.close();
-        facesContext.responseComplete();
-    }
-
-    public void novo() {
-        edit = false;
-        compra = new Compra();
-        itensCompra = new ItensCompra();
-    }
-
-    public void excluir(Compra ven) {
-        compraFacade.remover(ven);
-    }
-
-    public void editar(Compra ven) {
-        edit = true;
-        this.compra = compraFacade.findWithItens(ven.getId());
-    }
-
-    public Compra getCompra() {
-        return compra;
-    }
-
-    public void setCompra(Compra compra) {
-        this.compra = compra;
+    public void prepararVisualizacao(Compra com) {
+        this.compraSelecionado = compraFacade.findWithItens(com.getId());
     }
 
     public List<Compra> getListaCompras() {
@@ -472,6 +324,217 @@ public class CompraControle implements Serializable {
 
     public List<ProdutoDerivacao> getListaDerivacoes() {
         return produtoFacade.listarProdutosDerivacoesAtivas();
+    }
+
+    public List<PlanoPagamento> getPlanosPagamentos() {
+        return planosPagamentos;
+    }
+
+    public List<Pessoa> getListaFornecedoresFiltrando(String filtro) {
+        return pessoaFacade.listaFornecedorFiltrando(filtro, "nome", "cpfcnpj");
+    }
+
+    public List<Produto> getListaProdutosFiltrando(String filtro) {
+        return produtoFacade.listaFiltrar(filtro, "categoria", "tipo");
+    }
+
+    //pdf
+    public void exportarPDF(List<Compra> comprasParaExportar, String tituloRelatorio, Date dataIni, Date dataFim) throws DocumentException, IOException {
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=relatorio_compras.pdf");
+
+        Document document = new Document(PageSize.A4, 20, 20, 30, 20);
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
+
+        NumberFormat moeda = NumberFormat.getCurrencyInstance(PT_BR);
+        DateFormat dfRelatorio = DateFormat.getDateInstance(DateFormat.SHORT, PT_BR); // 31/10/2025
+        DateFormat dfCompleto = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, PT_BR); // 31/10/2025 10:30
+
+        java.util.function.Function<Object, String> s = obj -> (obj == null) ? "-" : obj.toString();
+        java.util.function.Function<Date, String> sd = dt -> (dt == null) ? "-" : dfRelatorio.format(dt);
+        java.util.function.Function<Number, String> sm = num -> (num == null) ? moeda.format(0) : moeda.format(num);
+
+        try {
+            document.open();
+
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
+            Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(5);
+            document.add(title);
+
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 14, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph(tituloRelatorio, subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(5);
+            document.add(subtitle);
+
+            Font periodFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.ITALIC, Color.GRAY);
+            String periodoStr = "Período: ";
+            if (dataIni == null && dataFim == null) {
+                periodoStr += "Todos os registros";
+            } else {
+                periodoStr += (dataIni != null ? sd.apply(dataIni) : "__/__/____") + " até " + (dataFim != null ? sd.apply(dataFim) : "__/__/____");
+            }
+            Paragraph periodo = new Paragraph(periodoStr, periodFont);
+            periodo.setAlignment(Element.ALIGN_CENTER);
+            periodo.setSpacingAfter(20);
+            document.add(periodo);
+
+            if (comprasParaExportar == null || comprasParaExportar.isEmpty()) {
+                document.add(new Paragraph("Nenhum registro encontrado para o período.", FontFactory.getFont(FontFactory.HELVETICA, 12)));
+            } else {
+
+                double valorTotalRelatorio = 0.0;
+
+                for (Compra com : comprasParaExportar) {
+
+                    PdfPTable compraTable = new PdfPTable(4);
+                    compraTable.setWidthPercentage(100);
+                    compraTable.setSpacingBefore(15);
+                    compraTable.setWidths(new float[]{1.5f, 3f, 1.5f, 3f});
+
+                    compraTable.addCell(createHeaderCell("Compra ID:"));
+                    compraTable.addCell(createDataCell(s.apply(com.getId()), Element.ALIGN_LEFT));
+                    compraTable.addCell(createHeaderCell("Fornecedor:"));
+                    compraTable.addCell(createDataCell(s.apply(com.getFornecedor().getNome()), Element.ALIGN_LEFT));
+
+                    compraTable.addCell(createHeaderCell("Data:"));
+                    compraTable.addCell(createDataCell(sd.apply(com.getDataCompra()), Element.ALIGN_LEFT));
+                    compraTable.addCell(createHeaderCell("Status:"));
+                    compraTable.addCell(createDataCell(s.apply(com.getStatus()), Element.ALIGN_LEFT));
+
+                    compraTable.addCell(createHeaderCell("Vencimento:")); // Adicionado vencimento
+                    compraTable.addCell(createDataCell(sd.apply(com.getDataVencimento()), Element.ALIGN_LEFT));
+                    compraTable.addCell(createHeaderCell("Valor Total Compra:"));
+                    compraTable.addCell(createDataCell(sm.apply(com.getValorTotal()), Element.ALIGN_RIGHT));
+
+                    document.add(compraTable);
+
+                    if (com.getItensCompra() != null && !com.getItensCompra().isEmpty()) {
+                        PdfPTable itemTable = new PdfPTable(4); // 4 colunas
+                        itemTable.setWidthPercentage(100);
+                        itemTable.setSpacingBefore(5);
+                        itemTable.setWidths(new float[]{4f, 1f, 1.5f, 1.5f}); // Produto, Qtd, Vl. Unit., Subtotal
+
+                        itemTable.addCell(createSubHeaderCell("Produto (Derivação)"));
+                        itemTable.addCell(createSubHeaderCell("Qtd."));
+                        itemTable.addCell(createSubHeaderCell("Vl. Unit."));
+                        itemTable.addCell(createSubHeaderCell("Subtotal"));
+
+                        for (ItensCompra item : com.getItensCompra()) {
+                            itemTable.addCell(createDataCell(s.apply(item.getProdutoDerivacao().getTexto()), Element.ALIGN_LEFT));
+                            itemTable.addCell(createDataCell(s.apply(item.getQuantidade()), Element.ALIGN_CENTER));
+                            itemTable.addCell(createDataCell(sm.apply(item.getValorUnitario()), Element.ALIGN_RIGHT));
+                            itemTable.addCell(createDataCell(sm.apply(item.getSubTotal()), Element.ALIGN_RIGHT));
+
+                            if (item.getSubTotal() != null) {
+                                valorTotalRelatorio += item.getSubTotal();
+                            }
+                        }
+                        document.add(itemTable);
+                    }
+
+                    Paragraph separator = new Paragraph(" ");
+                    separator.setSpacingAfter(10);
+                    document.add(separator);
+                }
+
+                Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Font.BOLD, new Color(0, 51, 102));
+                Paragraph totalPar = new Paragraph("Valor Total (Soma de todos os itens): " + sm.apply(valorTotalRelatorio), totalFont);
+                totalPar.setAlignment(Element.ALIGN_RIGHT);
+                totalPar.setSpacingBefore(15);
+                document.add(totalPar);
+            }
+
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.GRAY);
+            Paragraph footer = new Paragraph("Relatório gerado em: " + dfCompleto.format(new Date()), footerFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            footer.setSpacingBefore(30);
+            document.add(footer);
+
+        } finally {
+            document.close();
+            writer.flush();
+            writer.close();
+            facesContext.responseComplete();
+        }
+    }
+
+    public List<MetodoPagamento> getMetodosParcelados() {
+        List<MetodoPagamento> metodosParcelados = new ArrayList<>();
+        metodosParcelados.add(MetodoPagamento.CARTAO_CREDITO);
+        return metodosParcelados;
+    }
+
+    public void exportarPDFFiltrado() throws DocumentException, IOException {
+        List<Compra> comprasParaExportar = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
+        exportarPDF(comprasParaExportar, "Relatório de Compras Detalhado", dataInicio, dataFim);
+    }
+
+    public void aplicarFiltro() {
+        listaComprasFiltradas = compraFacade.buscarPorFiltros(fornecedorFiltro, produtoFiltro, dataInicio, dataFim);
+    }
+
+    public void limparFiltros() {
+        fornecedorFiltro = null;
+        produtoFiltro = null;
+        dataInicio = null;
+        dataFim = null;
+        listaComprasFiltradas = compraFacade.listaTodosComItens(); // ou vazio, como preferir
+    }
+
+    private PdfPCell createHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.WHITE);
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(0, 51, 102)); // Azul escuro
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT); // Alinhado à direita
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(6);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    // Helper - Célula de Sub-Cabeçalho (Cinza)
+    private PdfPCell createSubHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.BLACK); // Texto preto
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(220, 220, 220)); // Cinza claro
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    // Helper para Célula de Dados (Branca)
+    private PdfPCell createDataCell(String content, int alignment) {
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Font.NORMAL, Color.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(content, contentFont));
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    //get e set
+    public Compra getCompra() {
+        return compra;
+    }
+
+    public void setCompra(Compra compra) {
+        this.compra = compra;
+    }
+
+    public ItensCompra getItensCompra() {
+        return itensCompra;
+    }
+
+    public void setItensCompra(ItensCompra itensCompra) {
+        this.itensCompra = itensCompra;
     }
 
     public Date getDataInicio() {
@@ -520,6 +583,14 @@ public class CompraControle implements Serializable {
 
     public void setProdutoFiltro(Produto produtoFiltro) {
         this.produtoFiltro = produtoFiltro;
+    }
+
+    public ProdutoControle getProdutoControle() {
+        return produtoControle;
+    }
+
+    public void setProdutoControle(ProdutoControle produtoControle) {
+        this.produtoControle = produtoControle;
     }
 
 }

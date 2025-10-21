@@ -51,17 +51,10 @@
                                          style="margin-right: 5px"
                                          rendered="#{contaControle.contaSelecionada.tipoConta eq 'COFRE'}"
                                          oncomplete="PF('dlgMovimentacaoCofre').show()"/>
-                        <p:splitButton value="Exportar" icon="pi pi-download" styleClass="ml-2" style="margin-right: 1px">
-                            <p:menuitem value="CSV" icon="pi pi-file" ajax="false">
-                                <p:dataExporter type="csv" target="tabelaMov" fileName="movimentacoes"/>
-                            </p:menuitem>
-                            <p:menuitem value="Excel" icon="pi pi-file-excel" ajax="false">
-                                <p:dataExporter type="xlsx" target="tabelaMov" fileName="movimentacoes"/>
-                            </p:menuitem>
-                            <p:menuitem value="PDF" icon="pi pi-file-pdf" ajax="false">
-                                <p:dataExporter type="pdf" target="tabelaMov" fileName="movimentacoes"/>
-                            </p:menuitem>
-                        </p:splitButton>
+
+                        <p:commandButton value="Gerar Extrato (PDF)" icon="pi pi-file-pdf"
+                                         type="button" onclick="PF('dlgFiltroExtrato').show()"
+                                         styleClass="ui-button-info" style="margin-left: 5px;"/>
                     </p:toolbarGroup>
                 </p:toolbar>
 
@@ -151,7 +144,7 @@
                                 <h:outputText value="Banco:"  styleClass="info-label"/>
                                 <h:outputText  value="#{contaControle.contaSelecionada.banco != null and contaControle.contaSelecionada.banco ne '' ? contaControle.contaSelecionada.banco : 'Não Informado'}" styleClass="info-value"/>
                             </p:outputPanel>
-                            
+
                             <p:outputPanel styleClass="info-item" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}">
                                 <h:outputText value="Agência:" styleClass="info-label"/>
                                 <h:outputText value="#{contaControle.contaSelecionada.agencia != null and contaControle.contaSelecionada.agencia ne '' ? contaControle.contaSelecionada.agencia : '—'}" styleClass="info-value"/>
@@ -381,6 +374,40 @@
                                          actionListener="#{contaControle.adicionarNoCofre()}"
                                          update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
                                          oncomplete="if(!args.validationFailed){PF('dlgMovimentacaoCofre').hide()}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog widgetVar="dlgFiltroExtrato" header="Filtrar Período e Tipo do Extrato" modal="true"
+                      width="450" responsive="true" closable="true" closeOnEscape="true">
+                <h:form id="formFiltroExtrato">
+                    <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
+
+                        <p:outputLabel for="dtIniExtrato" value="Data Início:"/>
+                        <p:calendar id="dtIniExtrato" value="#{contaControle.dataInicioRelatorio}"
+                                    pattern="dd/MM/yyyy" mask="99/99/9999" />
+
+                        <p:outputLabel for="dtFimExtrato" value="Data Fim:"/>
+                        <p:calendar id="dtFimExtrato" value="#{contaControle.dataFimRelatorio}"
+                                    pattern="dd/MM/yyyy" mask="99/99/9999"/>
+
+                        <p:outputLabel for="filtroTipo" value="Mostrar Tipo:"/>
+                        <p:selectOneRadio id="filtroTipo" value="#{contaControle.filtroTipoExtrato}" layout="lineDirection">
+                            <f:selectItem itemLabel="Todos" itemValue="TODOS" />
+                            <f:selectItem itemLabel="Entradas" itemValue="ENTRADA" />
+                            <f:selectItem itemLabel="Saídas" itemValue="SAIDA" />
+                        </p:selectOneRadio>
+                    </p:panelGrid>
+                    <br/>
+                    <div style="text-align: center; display: flex; justify-content: center; gap: 10px;">
+                        <p:commandButton value="Limpar Filtros" icon="pi pi-refresh" update="@form"
+                                         actionListener="#{contaControle.limparFiltroExtrato}"
+                                         styleClass="ui-button-outlined ui-button-secondary"/>
+
+                        <p:commandButton value="Gerar Extrato PDF" icon="pi pi-check" ajax="false"
+                                         actionListener="#{contaControle.exportarPDFExtratoContaSelecionada}"
+                                         onclick="PF('dlgFiltroExtrato').hide();"
+                                         styleClass="ui-button-success" />
                     </div>
                 </h:form>
             </p:dialog>

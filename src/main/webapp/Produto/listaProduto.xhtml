@@ -13,27 +13,33 @@
 
                 <h1>📑 Listagem de Produtos</h1>
 
-                <p:toolbar styleClass="mb-3">
+                <p:toolbar style="margin-bottom:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
                     <p:toolbarGroup>
                         <p:commandButton value="Novo Produto" icon="pi pi-plus"
-                                         action="produtoCadastro.xhtml"
-                                         actionListener="#{produtoControle.novo()}"
+                                         action="#{produtoControle.novo()}"
+                                         ajax="false"
                                          styleClass="ui-button-success"
                                          process="@this"
                                          style="margin-right: 10px"/>
 
-                        <p:commandButton value="Lista de Produtos Inativados" icon="pi pi-plus"
+                        <p:commandButton value="Lista de Produtos Inativados" icon="pi pi-eye"
                                          action="listaProdutosInativas.xhtml?faces-redirect=true"
                                          styleClass="ui-button-success"
                                          process="@this" 
                                          style="margin-right: 10px"/>
 
-                        <p:commandButton id="dynaButton" value="Gerar Relatorios(PDF)" icon="pi pi-download" styleClass="ml-2" style="margin-right: 1px">
+                        <p:commandButton id="dynaButton" value="Gerar Relatorios" icon="pi pi-download" styleClass="ml-2" style="margin-right: 10px">
                             <p:menu overlay="true" trigger="dynaButton" my="left top" at="left bottom">
-                                <p:menuitem value="Exportar Relatorio Completo(pdf)" action="#{produtoControle.exportarPDF(false)}" ajax="false"/>
-                                <p:menuitem value="Exportar Relatorio Visivel(pdf)" action="#{produtoControle.exportarPDF(true)}" ajax="false"/>
+                                <p:menuitem value="Exportar Relatorio Completo da lista(pdf)" action="#{produtoControle.exportarPDF(false)}" ajax="false"/>
+                                <p:menuitem value="Exportar Relatorio Visivel da lista(pdf)" action="#{produtoControle.exportarPDF(true)}" ajax="false"/>
+                                <p:menuitem value="Exportar Relatorio Estoque Total (pdf)" action="#{produtoControle.exportarPDFEstoqueTotal}" ajax="false"/>
                             </p:menu>
                         </p:commandButton>
+
+                        <p:commandButton value="Análise Vendas/Compras (PDF)"
+                                         icon="pi pi-chart-line"
+                                         onclick="PF('dlgAnaliseProdutos').show()"
+                                         type="button" styleClass="ui-button-info"/>
 
                     </p:toolbarGroup>
                 </p:toolbar>
@@ -86,7 +92,8 @@
                                          style="margin-right: 5px;"/>
 
                         <p:commandButton icon="pi pi-pencil" title="Editar"
-                                         actionListener="#{produtoControle.editar(produtoItem)}"
+                                         action="#{produtoControle.editar(produtoItem)}"
+                                         ajax="false"
                                          process="@this"
                                          styleClass="rounded-button ui-button-info"
                                          style="margin-right: 5px;"/>
@@ -109,7 +116,7 @@
                         <!-- Bloco com informações principais -->
                         <h3 class="section-title"><strong>Informações Gerais</strong></h3>
 
-                        <div class="info-box-grid" rendered="#{not empty produtoControle.produtoSelecionado}">
+                        <h:panelGroup class="info-box-grid" rendered="#{not empty produtoControle.produtoSelecionado}">
                             <div class="info-box">
                                 <span class="label"><strong>Categoria</strong></span>
                                 <span class="value">#{produtoControle.produtoSelecionado.categoria.categoria}</span>
@@ -135,7 +142,7 @@
                                     </h:outputText>
                                 </span>
                             </div>
-                        </div>
+                        </h:panelGroup>
                         <!-- Derivações -->
                         <h3 class="section-title"><strong>Derivações</strong></h3>
                         <p:dataTable value="#{produtoControle.produtoSelecionado.variacoes}" var="var" style="width:100%; margin-bottom: 30px;">
@@ -162,8 +169,27 @@
                     <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
                 </p:confirmDialog>
 
-                
+
             </h:form>
+            <p:dialog widgetVar="dlgAnaliseProdutos" header="Filtrar Análise de Vendas/Compras" modal="true">
+                <h:form id="formAnalise">
+                    <p:panelGrid columns="2">
+                        <p:outputLabel for="dtIniAnalise" value="Data Início:"/>
+                        <p:calendar id="dtIniAnalise" value="#{produtoControle.dataInicioAnalise}" pattern="dd/MM/yyyy"/>
+
+                        <p:outputLabel for="dtFimAnalise" value="Data Fim:"/>
+                        <p:calendar id="dtFimAnalise" value="#{produtoControle.dataFimAnalise}" pattern="dd/MM/yyyy"/>
+                    </p:panelGrid>
+                    <br/>
+                    <p:commandButton value="Mais Vendidos" ajax="false" icon="pi pi-arrow-up"
+                                     actionListener="#{produtoControle.exportarPDFMaisVendidos}"
+                                     styleClass="ui-button-success" style="margin-right: 5px;"/>
+                    <p:commandButton value="Mais Comprados" ajax="false" icon="pi pi-arrow-down"
+                                     actionListener="#{produtoControle.exportarPDFMaisComprados}"
+                                     styleClass="ui-button-warning" style="margin-right: 5px;"/>
+                    <p:commandButton value="Fechar" type="button" onclick="PF('dlgAnaliseProdutos').hide()"/>
+                </h:form>
+            </p:dialog>
             <style>
                 .info-box-grid {
                     display: grid;

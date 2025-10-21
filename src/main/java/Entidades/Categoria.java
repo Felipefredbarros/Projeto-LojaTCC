@@ -19,16 +19,27 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "categoria")
-public class Categoria implements Serializable, ClassePai{
+public class Categoria implements Serializable, ClassePai {
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "categoria_id")
     private Long id;
-    
+
     @Column(name = "categoria_nome", nullable = true)
     private String categoria;
-    
+
+    @Column(name = "categoria_ativo")
+    private Boolean ativo = true;
+
+    public String getStatus() {
+        if (ativo == true) {
+            return "Ativo";
+        } else {
+            return "Inativo";
+        }
+    }
 
     @Override
     public Long getId() {
@@ -45,6 +56,14 @@ public class Categoria implements Serializable, ClassePai{
 
     public void setCategoria(String categoria) {
         this.categoria = categoria;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 
     @Override
@@ -68,6 +87,5 @@ public class Categoria implements Serializable, ClassePai{
         final Categoria other = (Categoria) obj;
         return Objects.equals(this.id, other.id);
     }
-    
-    
+
 }

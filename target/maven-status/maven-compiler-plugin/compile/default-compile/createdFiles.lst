@@ -14,6 +14,7 @@ Entidades\Enums\tipoTelefone.class
 Entidades\Enums\TipoBonus.class
 Facade\CompraFacade.class
 Controladores\VendaControle.class
+Controladores\ContaControle$1.class
 Entidades\Cidade.class
 Converters\ConverterGenerico.class
 Entidades\Enums\MetodoPagamento.class

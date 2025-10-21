@@ -5,9 +5,11 @@
 package Facade;
 
 import Entidades.Marca;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 /**
  *
@@ -26,6 +28,25 @@ public class MarcaFacade extends AbstractFacade<Marca>{
 
     public MarcaFacade() {
         super(Marca.class);
+    }
+    
+    public boolean categoriaTemProduto(Long marcaId) {
+        Long count = em.createQuery(
+                "SELECT COUNT(p) FROM Produto p WHERE p.marca.id = :marcaId", Long.class)
+                .setParameter("marcaId", marcaId)
+                .getSingleResult();
+
+        return count != null && count > 0;
+    }
+    
+    public List<Marca> listaMarcaAtiva() {
+        Query q = getEntityManager().createQuery("from Marca as p where p.ativo = true order by p.id desc");
+        return q.getResultList();
+    }
+    
+    public List<Marca> listaMarcaInativa() {
+        Query q = getEntityManager().createQuery("from Marca as p where p.ativo = true order by p.id desc");
+        return q.getResultList();
     }
 
 }

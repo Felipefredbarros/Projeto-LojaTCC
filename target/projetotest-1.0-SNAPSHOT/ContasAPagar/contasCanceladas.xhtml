@@ -12,9 +12,16 @@
                 <p:growl id="growlMessages" globalOnly="true" showDetail="true" life="3000"/>
 
                 <h1>📑 Contas a Pagar Canceladas</h1>
-                <p:commandButton value="Contas a Pagar"
-                                 styleClass="btn-canceladas"
-                                 action="listaContasAPagar.xhtml?faces-redirect=true"/>
+                <p:toolbar style="margin-bottom:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                    <p:toolbarGroup>
+
+                        <p:commandButton value="Contas a Pagar"
+                                         styleClass="btn-canceladas"
+                                         icon="pi pi-check"
+                                         action="listaContasAPagar.xhtml?faces-redirect=true"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
                 <p:dataTable id="tabelaContaPagar"  
                              widgetVar="tabelaContaPagarWV"
                              var="contaPagarItem" 

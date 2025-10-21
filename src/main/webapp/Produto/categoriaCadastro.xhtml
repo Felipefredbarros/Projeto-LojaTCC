@@ -52,19 +52,22 @@
                         <!-- Lista de Categorias -->
                         <div class="bloco-direito">
                             <h:form id="formListaCategorias">
-                                <h1 class="form-title-alt">Categorias Cadastradas</h1>
+                                <h1 class="form-title-alt">📑 Categorias Cadastradas Ativas</h1>
                                 <p:dataTable id="tabelaCategorias" scrollable="true" scrollHeight="200px"
-                                             value="#{categoriaControle.listaCategorias}" var="cat"
+                                             value="#{categoriaControle.listaCategoriasAtivas}" var="cat"
                                              emptyMessage="Nenhuma categoria cadastrada." rows="5" paginator="false"
                                              paginatorPosition="bottom" styleClass="tabela-categorias"
                                              rowsPerPageTemplate="5,10,15">
                                     <p:column headerText="Nome da Categoria" filterBy="#{cat.categoria}" filterMatchMode="contains">
                                         <h:outputText value="#{cat.categoria}" />
                                     </p:column>
+                                    <p:column headerText="Status" filterBy="#{cat.status}" filterMatchMode="contains">
+                                        <h:outputText value="#{cat.status}" />
+                                    </p:column>
                                     <p:column headerText="Ações" style="width:120px; text-align:center;">
                                         <p:commandButton icon="pi pi-pencil" title="Editar Categoria"
                                                          actionListener="#{categoriaControle.editar(cat)}"
-                                                         update=":formCategoria" process="@this"
+                                                         update=":formCategoria:growlMessagesCategoria" process="@this"
                                                          styleClass="ui-button-info rounded-button" style="margin-right: 5px;"/>
                                         <p:commandButton icon="pi pi-trash" title="Excluir Categoria"
                                                          actionListener="#{categoriaControle.excluir(cat)}"

@@ -71,7 +71,7 @@ public class VendaFacade extends AbstractFacade<Venda> {
     public Double valorVendaVendido() {
         String jpql = "SELECT SUM(v.valorTotal) FROM Venda v";
         Double result = em.createQuery(jpql, Double.class).getSingleResult();
-        return result != null ? result : 0.0;  // Se o resultado for null, retorna 0.0
+        return result != null ? result : 0.0;  
     }
 
     public void salvarVenda(Venda entity, Boolean edit) {
@@ -84,12 +84,12 @@ public class VendaFacade extends AbstractFacade<Venda> {
             }
 
             if (entity.getId() == null) {
-                em.persist(entity); // novo
+                em.persist(entity); 
             } else {
-                em.merge(entity);   // já existe (deve ser atualizado)
+                em.merge(entity);   
             }
         } else {
-            em.merge(entity); // edição
+            em.merge(entity); 
         }
     }
 
@@ -137,7 +137,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
 
         venda.setContasReceber(contas);
 
-        // comissão / movimentação
         MovimentacaoMensalFuncionario mov = new MovimentacaoMensalFuncionario();
         mov.setFuncionario(venda.getFuncionario());
         mov.setData(venda.getDataVenda());
@@ -274,7 +273,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
         return q.getResultList();
     }
 
-    // VendaFacade.java (Java 8 ok)
     public double findValorTotalVendasPorData(Date dataAlvo) {
         if (dataAlvo == null) {
             return 0.0;
@@ -284,7 +282,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
         Date inicio = Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
         Date fim = Date.from(ld.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        // TROQUE v.valorTotal pelo nome REAL do campo na sua entidade Venda
         String jpql
                 = "SELECT COALESCE(SUM(v.valorTotal), 0) "
                 + "FROM Venda v "
@@ -309,7 +306,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
         Date inicio = Date.from(inicioLD.atStartOfDay(zone).toInstant());
         Date fim = Date.from(hoje.plusDays(1).atStartOfDay(zone).toInstant());
 
-        // PREENCHE 30 dias com zero (mantém o gráfico contínuo)
         for (int i = 0; i < 30; i++) {
             LocalDate d = inicioLD.plusDays(i);
             Date chave = Date.from(d.atStartOfDay(zone).toInstant());
@@ -319,10 +315,9 @@ public class VendaFacade extends AbstractFacade<Venda> {
         String jpql
                 = "SELECT YEAR(v.dataVenda), MONTH(v.dataVenda), DAY(v.dataVenda), "
                 + "       COALESCE(SUM(v.valorTotal), 0) "
-                + // <-- troque 'valorTotal' se o nome for outro
-                "FROM Venda v "
-                + "WHERE v.status <> 'CANCELADA' "
-                + // se enum: use parâmetro
+                +  "FROM Venda v "
+                + "WHERE v.status = 'FECHADA' "
+                + 
                 "  AND v.dataVenda >= :inicio AND v.dataVenda < :fim "
                 + "GROUP BY YEAR(v.dataVenda), MONTH(v.dataVenda), DAY(v.dataVenda) "
                 + "ORDER BY YEAR(v.dataVenda), MONTH(v.dataVenda), DAY(v.dataVenda)";
@@ -356,7 +351,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
         Date inicio = Date.from(inicioLD.atStartOfDay(zone).toInstant());
         Date fim = Date.from(fimLD.atStartOfDay(zone).toInstant());
 
-        // 1) Buscamos pelo ID da derivação (campo mapeado certo) + soma das quantidades
         String jpql
                 = "SELECT pd.id, SUM(iv.quantidade) "
                 + "FROM ItensVenda iv "
@@ -374,7 +368,6 @@ public class VendaFacade extends AbstractFacade<Venda> {
                 .setMaxResults(5)
                 .getResultList();
 
-        // 2) Para cada ID, carregamos a derivação e usamos getTexto() como rótulo do gráfico
         for (Object[] r : rows) {
             Long derivacaoId = (Long) r[0];
             Number qtd = (Number) r[1];
@@ -441,6 +434,40 @@ public class VendaFacade extends AbstractFacade<Venda> {
         }
 
         return q.getResultList();
+    }
+    
+    public List<Object[]> buscarProdutosMaisVendidos(Date dataInicio, Date dataFim) {
+        String jpql = "SELECT iv.produtoDerivacao.id, SUM(iv.quantidade) as totalVendido " +
+                      "FROM ItensVenda iv JOIN iv.venda v " +
+                      "WHERE v.status = :statusVenda " +
+                      (dataInicio != null ? "AND v.dataVenda >= :dataInicio " : "") +
+                      (dataFim != null ? "AND v.dataVenda <= :dataFim " : "") +
+                      "GROUP BY iv.produtoDerivacao.id " + 
+                      "ORDER BY totalVendido DESC";
+
+        Query query = getEntityManager().createQuery(jpql);
+        query.setParameter("statusVenda", "FECHADA");
+
+        if (dataInicio != null) {
+            query.setParameter("dataInicio", dataInicio);
+        }
+        if (dataFim != null) {
+             Date dataFimAjustada = ajustarDataFim(dataFim);
+            query.setParameter("dataFim", dataFimAjustada);
+        }
+        
+        return query.getResultList();
+    }
+    
+    private Date ajustarDataFim(Date dataFim) {
+        if (dataFim == null) return null;
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(dataFim);
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+        cal.set(java.util.Calendar.MINUTE, 59);
+        cal.set(java.util.Calendar.SECOND, 59);
+        cal.set(java.util.Calendar.MILLISECOND, 999);
+        return cal.getTime();
     }
 
     public VendaFacade() {

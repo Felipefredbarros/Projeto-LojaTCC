@@ -20,9 +20,7 @@ import Utilitario.FinanceDesc;
 
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.Color;
@@ -35,9 +33,15 @@ import java.util.Objects;
 
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
+import javax.annotation.PostConstruct;
+import javax.faces.view.ViewScoped;
+import javax.inject.Named;
 
-@ManagedBean
-@SessionScoped
+@Named("vendaControle")
+@ViewScoped
 public class VendaControle implements Serializable {
 
     private Venda venda = new Venda();
@@ -91,11 +95,37 @@ public class VendaControle implements Serializable {
     @ManagedProperty("#{produtoControle}")
     private ProdutoControle produtoControle;
 
+    @PostConstruct
+    public void init() {
+        if (FacesContext.getCurrentInstance().isPostback()) {
+            return;
+        }
+
+        Object id = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getFlash()
+                .get("vendaId");
+
+        if (id != null) {
+            Long pid = (id instanceof Long) ? (Long) id : Long.valueOf(id.toString());
+            this.venda = vendaFacade.findWithItens(pid);
+            this.edit = true; 
+            this.itensVenda = new ItensVenda(); 
+
+        } else {
+            this.edit = false;
+            this.venda = new Venda();
+            this.itensVenda = new ItensVenda();
+
+            this.venda.setPlanoPagamento(PlanoPagamento.A_VISTA);
+        }
+        atualizarMetodosPagamento();
+    }
+
     // Construtor
     public VendaControle() {
         this.planosPagamentos = PlanoPagamento.getPlanosPagamento();
         this.metodosPagamentoFiltrados = MetodoPagamento.getMetodosPagamentoAVista();
-        atualizarMetodosPagamento();
 
     }
 
@@ -114,17 +144,26 @@ public class VendaControle implements Serializable {
 
     public void editar(Venda ven) {
         edit = true;
-        this.venda = vendaFacade.findWithItens(ven.getId());
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("vendaId", ven.getId());
+
+        try {
+            FacesContext.getCurrentInstance().getExternalContext().redirect("vendaCadastro.xhtml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void excluir(Venda ven) {
         vendaFacade.remover(ven);
     }
 
-    public void novo() {
+    public String novo() {
         edit = false;
         venda = new Venda();
         itensVenda = new ItensVenda();
+
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().remove("vendaId");
+        return "vendaCadastro.xhtml?faces-redirect=true";
     }
 
     public void atualizarMetodosPagamento() {
@@ -368,7 +407,9 @@ public class VendaControle implements Serializable {
 
     public void exportarPDFFiltrado() throws DocumentException, IOException {
         List<Venda> vendasParaExportar = vendaFacade.buscarPorFiltros(clienteFiltro, funcionarioFiltro, produtoFiltro, dataInicio, dataFim);
-        exportarPDF(vendasParaExportar);
+
+        // Passa as datas de filtro para o método principal de exportação
+        exportarPDF(vendasParaExportar, "Relatório de Vendas Detalhado", dataInicio, dataFim);
     }
 
     public void aplicarFiltro() {
@@ -384,15 +425,24 @@ public class VendaControle implements Serializable {
         listaVendasFiltradas = vendaFacade.listaTodosComItens(); // ou vazio, como preferir
     }
 
-    public void exportarPDF(List<Venda> vendasParaExportar) throws DocumentException, IOException {
+    public void exportarPDF(List<Venda> vendasParaExportar, String tituloRelatorio, Date dataIni, Date dataFim) throws DocumentException, IOException {
 
         FacesContext facesContext = FacesContext.getCurrentInstance();
         HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=relatorio_vendas.pdf");
 
-        Document document = new Document(PageSize.A4, 20, 20, 20, 30);
+        Document document = new Document(PageSize.A4, 20, 20, 30, 20);
         PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
+
+        Locale ptBr = new Locale("pt", "BR");
+        NumberFormat moeda = NumberFormat.getCurrencyInstance(ptBr);
+        DateFormat dfRelatorio = DateFormat.getDateInstance(DateFormat.SHORT, ptBr); // 31/10/2025
+        DateFormat dfCompleto = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, ptBr); // 31/10/2025 10:30
+
+        java.util.function.Function<Object, String> s = obj -> (obj == null) ? "-" : obj.toString();
+        java.util.function.Function<Date, String> sd = dt -> (dt == null) ? "-" : dfRelatorio.format(dt);
+        java.util.function.Function<Number, String> sm = num -> (num == null) ? moeda.format(0) : moeda.format(num);
 
         try {
             document.open();
@@ -400,75 +450,137 @@ public class VendaControle implements Serializable {
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Font.BOLD, new Color(0, 51, 102));
             Paragraph title = new Paragraph("Loja São Judas Tadeu", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
-            title.setSpacingAfter(10);
+            title.setSpacingAfter(5);
             document.add(title);
 
-            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL, Color.DARK_GRAY);
-            Paragraph subtitle = new Paragraph("Relatório de Vendas", subtitleFont);
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 14, Font.NORMAL, Color.DARK_GRAY);
+            Paragraph subtitle = new Paragraph(tituloRelatorio, subtitleFont);
             subtitle.setAlignment(Element.ALIGN_CENTER);
-            subtitle.setSpacingAfter(20);
+            subtitle.setSpacingAfter(5);
             document.add(subtitle);
 
-            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.BOLD, Color.BLACK);
-            Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
-
-            int vendaCounter = 1;
-            for (Venda ven : vendasParaExportar) {
-                Paragraph vendaHeader = new Paragraph("Detalhes da Venda " + vendaCounter, headerFont);
-                vendaHeader.setSpacingAfter(10);
-                document.add(vendaHeader);
-
-                PdfPTable vendaTable = new PdfPTable(2);
-                vendaTable.setWidthPercentage(100);
-                vendaTable.setSpacingBefore(5);
-                vendaTable.setSpacingAfter(10);
-                vendaTable.addCell(new PdfPCell(new Phrase("Data da Venda:", headerFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase(ven.getDataVenda().toString(), contentFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase("Cliente:", headerFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase(ven.getCliente().getNome(), contentFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase("Funcionário:", headerFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase(ven.getFuncionario().getNome(), contentFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase("Método de Pagamento:", headerFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase(ven.getMetodoPagamento().toString(), contentFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase("Valor Total:", headerFont)));
-                vendaTable.addCell(new PdfPCell(new Phrase(ven.getValorTotal().toString(), contentFont)));
-                document.add(vendaTable);
-
-                PdfPTable itemTable = new PdfPTable(4);
-                itemTable.setWidthPercentage(100);
-                itemTable.setWidths(new float[]{2f, 1f, 1f, 1f});
-                itemTable.setSpacingBefore(10);
-
-                String[] itemHeaders = {"Produto", "Quantidade", "Valor Unitário", "Subtotal"};
-                for (String itemHeader : itemHeaders) {
-                    PdfPCell itemHeaderCell = new PdfPCell(new Phrase(itemHeader, headerFont));
-                    itemHeaderCell.setBackgroundColor(new Color(192, 192, 192));
-                    itemHeaderCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    itemHeaderCell.setPadding(5);
-                    itemTable.addCell(itemHeaderCell);
-                }
-
-                for (ItensVenda item : ven.getItensVenda()) {
-                    itemTable.addCell(new PdfPCell(new Phrase(item.getProdutoDerivacao().getTexto(), contentFont)));
-                    itemTable.addCell(new PdfPCell(new Phrase(item.getQuantidade().toString(), contentFont)));
-                    itemTable.addCell(new PdfPCell(new Phrase(item.getValorUnitario().toString(), contentFont)));
-                    itemTable.addCell(new PdfPCell(new Phrase(item.getSubTotal().toString(), contentFont)));
-                }
-
-                document.add(itemTable);
-
-                Paragraph separator = new Paragraph(" ");
-                separator.setSpacingAfter(20);
-                document.add(separator);
-
-                vendaCounter++;
+            Font periodFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.ITALIC, Color.GRAY);
+            String periodoStr = "Período: ";
+            if (dataIni == null && dataFim == null) {
+                periodoStr += "Todos os registros";
+            } else {
+                periodoStr += (dataIni != null ? sd.apply(dataIni) : "__/__/____") + " até " + (dataFim != null ? sd.apply(dataFim) : "__/__/____");
             }
+            Paragraph periodo = new Paragraph(periodoStr, periodFont);
+            periodo.setAlignment(Element.ALIGN_CENTER);
+            periodo.setSpacingAfter(20);
+            document.add(periodo);
+
+            if (vendasParaExportar == null || vendasParaExportar.isEmpty()) {
+                document.add(new Paragraph("Nenhum registro encontrado para o período.", FontFactory.getFont(FontFactory.HELVETICA, 12)));
+            } else {
+
+                double valorTotalRelatorio = 0.0;
+
+                for (Venda ven : vendasParaExportar) {
+
+                    PdfPTable vendaTable = new PdfPTable(4);
+                    vendaTable.setWidthPercentage(100);
+                    vendaTable.setSpacingBefore(15);
+                    vendaTable.setWidths(new float[]{1.5f, 3f, 1.5f, 3f});
+
+                    vendaTable.addCell(createHeaderCell("Venda ID:"));
+                    vendaTable.addCell(createDataCell(s.apply(ven.getId()), Element.ALIGN_LEFT));
+                    vendaTable.addCell(createHeaderCell("Cliente:"));
+                    vendaTable.addCell(createDataCell(s.apply(ven.getCliente().getNome()), Element.ALIGN_LEFT));
+
+                    vendaTable.addCell(createHeaderCell("Data:"));
+                    vendaTable.addCell(createDataCell(sd.apply(ven.getDataVenda()), Element.ALIGN_LEFT));
+                    vendaTable.addCell(createHeaderCell("Funcionário:"));
+                    vendaTable.addCell(createDataCell(s.apply(ven.getFuncionario().getNome()), Element.ALIGN_LEFT));
+
+                    vendaTable.addCell(createHeaderCell("Status:"));
+                    vendaTable.addCell(createDataCell(s.apply(ven.getStatus()), Element.ALIGN_LEFT));
+                    vendaTable.addCell(createHeaderCell("Valor Total Venda:"));
+                    vendaTable.addCell(createDataCell(sm.apply(ven.getValorTotal()), Element.ALIGN_RIGHT));
+
+                    document.add(vendaTable);
+
+                    if (ven.getItensVenda() != null && !ven.getItensVenda().isEmpty()) {
+                        PdfPTable itemTable = new PdfPTable(4); // 4 colunas
+                        itemTable.setWidthPercentage(100);
+                        itemTable.setSpacingBefore(5);
+                        itemTable.setWidths(new float[]{4f, 1f, 1.5f, 1.5f});
+
+                        itemTable.addCell(createSubHeaderCell("Produto (Derivação)"));
+                        itemTable.addCell(createSubHeaderCell("Qtd."));
+                        itemTable.addCell(createSubHeaderCell("Vl. Unit."));
+                        itemTable.addCell(createSubHeaderCell("Subtotal"));
+
+                        for (ItensVenda item : ven.getItensVenda()) {
+                            itemTable.addCell(createDataCell(s.apply(item.getProdutoDerivacao().getTexto()), Element.ALIGN_LEFT));
+                            itemTable.addCell(createDataCell(s.apply(item.getQuantidade()), Element.ALIGN_CENTER));
+                            itemTable.addCell(createDataCell(sm.apply(item.getValorUnitario()), Element.ALIGN_RIGHT));
+                            itemTable.addCell(createDataCell(sm.apply(item.getSubTotal()), Element.ALIGN_RIGHT));
+
+                            if (item.getSubTotal() != null) {
+                                valorTotalRelatorio += item.getSubTotal();
+                            }
+                        }
+                        document.add(itemTable);
+                    }
+
+                    Paragraph separator = new Paragraph(" ");
+                    separator.setSpacingAfter(10);
+                    document.add(separator);
+                }
+
+                Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Font.BOLD, new Color(0, 51, 102));
+                Paragraph totalPar = new Paragraph("Valor Total (Soma de todos os itens): " + sm.apply(valorTotalRelatorio), totalFont);
+                totalPar.setAlignment(Element.ALIGN_RIGHT);
+                totalPar.setSpacingBefore(15);
+                document.add(totalPar);
+            }
+
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.ITALIC, Color.GRAY);
+            Paragraph footer = new Paragraph("Relatório gerado em: " + dfCompleto.format(new Date()), footerFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            footer.setSpacingBefore(30);
+            document.add(footer);
+
         } finally {
             document.close();
             writer.flush();
             writer.close();
             facesContext.responseComplete();
         }
+    }
+
+    private PdfPCell createHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.WHITE);
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(0, 51, 102));
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(6);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    private PdfPCell createSubHeaderCell(String content) {
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, Color.BLACK); // Texto preto
+        PdfPCell cell = new PdfPCell(new Phrase(content, headerFont));
+        cell.setBackgroundColor(new Color(220, 220, 220));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
+    }
+
+    private PdfPCell createDataCell(String content, int alignment) {
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Font.NORMAL, Color.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(content, contentFont));
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
+        cell.setBorderColor(Color.LIGHT_GRAY);
+        return cell;
     }
 
     // Getters e Setters adicionais
