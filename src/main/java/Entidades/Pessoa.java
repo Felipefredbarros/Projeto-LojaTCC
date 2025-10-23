@@ -40,10 +40,6 @@ public class Pessoa implements Serializable, ClassePai {
     private String nome;
     @Column(name = "tipoPessoa")
     private String tipoPessoa;
-    @Column(name = "pes_telefone")
-    private String telefone;
-    @Column(name = "pes_endereco")
-    private String endereco;
     @Column(name = "pes_email")
     private String email;
     @Column(name = "pes_cpfcnpj")
@@ -178,22 +174,6 @@ public class Pessoa implements Serializable, ClassePai {
 
     public void setTipoPessoa(String tipoPessoa) {
         this.tipoPessoa = tipoPessoa;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    public String getEndereco() {
-        return endereco;
-    }
-
-    public void setEndereco(String endereco) {
-        this.endereco = endereco;
     }
 
     public String getEmail() {

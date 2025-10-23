@@ -473,7 +473,16 @@
     <h:body>
 
         <header>
-            LOJA SÃO JUDAS TADEU
+            <div class="header-title">LOJA SÃO JUDAS TADEU</div>
+
+            <h:panelGroup layout="block" styleClass="user-info" rendered="#{not empty sessionScope.usuarioLogado}">
+                <h:form style="display: flex; align-items: center;">
+                    <i class="pi pi-user" style="margin-right: 8px; font-size: 1.1rem;"></i>
+                    <h:outputText value="#{sessionScope.usuarioLogado.login}" style="margin-right: 15px; font-weight: 500; font-size: 0.95rem;" />
+                    <p:commandButton value="Sair" action="#{LoginControle.sair}" icon="pi pi-sign-out"
+                                     styleClass="ui-button-danger ui-button-outlined" ajax="false" />
+                </h:form>
+            </h:panelGroup>
         </header>
 
         <div class="container">

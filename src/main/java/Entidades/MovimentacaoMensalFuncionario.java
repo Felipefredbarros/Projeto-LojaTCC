@@ -44,9 +44,7 @@ public class MovimentacaoMensalFuncionario implements Serializable, ClassePai {
     private Double bonus = 0d;
     @Column(name = "movFunc_porCom")
     private Double porcentagemCom = 0.05d;
-    @Column(name = "movFunc_valorHora")
-    private Double valorHora = 15d;
-    @Column(name = "tel_tipotelefone")
+    @Column(name = "movFunc_tipoBonus")
     @Enumerated(EnumType.STRING)
     private TipoBonus tipoBonus;
     @OneToOne
@@ -64,9 +62,6 @@ public class MovimentacaoMensalFuncionario implements Serializable, ClassePai {
     public void calcularBonus(Double valor) {
         if(getTipoBonus().equals(tipoBonus.COMISSAO)){
             this.bonus = valor * porcentagemCom;
-        }
-        if(getTipoBonus().equals(tipoBonus.HORA_EXTRA)){
-            this.bonus = valorHora;
         }
     }
 
@@ -128,14 +123,6 @@ public class MovimentacaoMensalFuncionario implements Serializable, ClassePai {
 
     public void setPorcentagemCom(Double porcentagemCom) {
         this.porcentagemCom = porcentagemCom;
-    }
-
-    public Double getValorHora() {
-        return valorHora;
-    }
-
-    public void setValorHora(Double valorHora) {
-        this.valorHora = valorHora;
     }
 
     @Override

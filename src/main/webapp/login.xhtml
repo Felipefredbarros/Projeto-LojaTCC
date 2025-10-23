@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login - Loja São Judas Tadeu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css"/>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-color-dark: #0056b3;
+            --light-color: #f8f9fa;
+            --white-color: #ffffff;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+            --border-radius: 0.375rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --font-family-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            font-family: var(--font-family-base);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: var(--spacing-lg) var(--spacing-lg); /* Padding interno */
+            background-color: var(--white-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            margin: var(--spacing-md); /* Margem externa para não colar nas bordas */
+        }
+
+        .login-header {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .login-header h2 {
+            color: var(--primary-color);
+            margin: 0 0 var(--spacing-md) 0;
+            font-weight: 700;
+        }
+
+        .login-header i {
+            font-size: 3rem; /* Tamanho do ícone */
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* Ajustes para InputGroup do PrimeFaces */
+        .ui-inputgroup .ui-inputgroup-addon {
+            background-color: var(--light-color);
+            border-color: var(--border-color);
+            color: var(--primary-color);
+            min-width: 40px;
+            text-align: center;
+        }
+        .ui-inputgroup .ui-inputtext,
+        .ui-inputgroup .ui-password {
+            border-left: none; /* Remover borda esquerda para juntar com addon */
+            padding-left: 0.5rem;
+            border-color: var(--border-color);
+        }
+        .ui-inputgroup .ui-inputtext:focus,
+        .ui-inputgroup .ui-password:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
+
+        .login-form .ui-panelgrid .ui-grid-col-12 {
+            padding-bottom: var(--spacing-md) !important; /* Espaçamento entre os campos */
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.75rem 1rem !important; /* Botão maior */
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            margin-top: var(--spacing-md); /* Espaço acima do botão */
+        }
+
+        /* Mensagens de erro */
+        .ui-messages-error-summary {
+            font-weight: bold;
+        }
+        .ui-message {
+            margin-top: var(--spacing-md) !important;
+        }
+        
+        .footer-text {
+            margin-top: var(--spacing-lg);
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+    </style>
+</h:head>
+
+<h:body>
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-store"></i> <h2>Loja São Judas Tadeu</h2>
+        </div>
+
+        <h:form id="loginForm" styleClass="login-form">
+            <p:outputPanel style="margin-bottom: #{empty facesContext.messageList ? '0' : '1rem'};">
+                 <p:messages id="messages" showDetail="false" closable="true" >
+                     <p:autoUpdate/>
+                 </p:messages>
+            </p:outputPanel>
+
+            <p:panelGrid columns="1" layout="grid" styleClass="ui-noborder ui-panelgrid-blank" columnClasses="ui-grid-col-12">
+
+                <p:outputPanel styleClass="ui-inputgroup">
+                    <span class="ui-inputgroup-addon"><i class="pi pi-user"></i></span>
+                    <p:inputText id="login" value="#{LoginControle.login}" placeholder="Usuário" required="true" requiredMessage="O campo Usuário é obrigatório."/>
+                </p:outputPanel>
+
+                <p:outputPanel styleClass="ui-inputgroup">
+                    <span class="ui-inputgroup-addon"><i class="pi pi-lock"></i></span>
+                    <p:password id="senha" value="#{LoginControle.senha}" placeholder="Senha" required="true" requiredMessage="O campo Senha é obrigatório." feedback="false" />
+                </p:outputPanel>
+
+                <p:commandButton value="Entrar" action="#{LoginControle.entrar}" update="@form"
+                                 styleClass="ui-button-raised login-button" icon="pi pi-sign-in" />
+
+            </p:panelGrid>
+             <p class="footer-text">&copy; #{calendario.anoAtual} - Todos os direitos reservados.</p>
+        </h:form>
+    </div>
+</h:body>
+</html>

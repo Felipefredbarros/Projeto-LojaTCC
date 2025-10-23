@@ -8,7 +8,6 @@ C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\LancamentoFinancei
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Pessoa.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Facade\VendaFacade.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Estado.java
-C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\RegistroPonto.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Cidade.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\MetodoPagamento.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Facade\UsuarioFacade.java
@@ -17,6 +16,7 @@ C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Facade\ContaFacade.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\TipoLancamento.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\dto\ProdutoRankingDTO.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ContaPagar.java
+C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Utilitario\AuthFilter.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Facade\CompraFacade.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Compra.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\PlanoPagamento.java
@@ -28,12 +28,12 @@ C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ParcelaCompra.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Converters\ConverterGenerico.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Categoria.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Facade\AbstractFacade.java
+C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Services\InitializationService.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Services\DatabaseSeederService.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\TipoPessoa.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Facade\ProdutoFacade.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Controladores\MarcaControle.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Marca.java
-C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\TipoBatida.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Enums\tipoTelefone.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\FolhaPagamento.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Controladores\ContaControle.java
@@ -58,6 +58,7 @@ C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Endereco.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Produto.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\Telefone.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Controladores\ProdutoControle.java
+C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Controladores\LoginControle.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Controladores\ContaReceberControle.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Entidades\ContaReceber.java
 C:\Projetos\TCC\Projeto\projeto-teste\src\main\java\Facade\ContaPagarFacade.java

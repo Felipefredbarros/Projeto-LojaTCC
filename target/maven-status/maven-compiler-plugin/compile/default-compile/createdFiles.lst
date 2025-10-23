@@ -1,9 +1,9 @@
 Entidades\Pessoa.class
+AuthFilter.class
 Facade\MarcaFacade.class
 Controladores\ContaReceberControle.class
 Facade\AbstractFacade.class
 Entidades\Produto.class
-Entidades\Enums\TipoBatida.class
 Controladores\MarcaControle.class
 Facade\ContaFacade.class
 Controladores\ContaControle.class
@@ -33,7 +33,6 @@ Facade\ProdutoFacade.class
 Facade\VendaFacade.class
 dto\ProdutoRankingDTO.class
 Entidades\Enums\TipoPessoa.class
-Entidades\RegistroPonto.class
 Facade\ContaPagarFacade.class
 Facade\LancamentoFinanceiroFacade.class
 Facade\FolhaFacade.class
@@ -48,6 +47,7 @@ Entidades\Categoria.class
 Facade\VendaFacade$1.class
 Services\IbgeService$1.class
 Entidades\Enums\PlanoPagamento.class
+Services\InitializationService.class
 Entidades\Endereco.class
 Entidades\ParcelaCompra.class
 Facade\ContaReceberFacade.class
@@ -66,6 +66,7 @@ Controladores\CompraControle.class
 MovimentacaoMensalControle.class
 Facade\UsuarioFacade.class
 Entidades\ItensVenda.class
+Controladores\LoginControle.class
 Controladores\UsuarioControle.class
 Entidades\ContaPagar.class
 Controladores\VendaControle$1.class
