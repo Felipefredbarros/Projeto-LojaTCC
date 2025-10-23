@@ -12,8 +12,7 @@ public class AuthFilter implements Filter { // <- Implementa a interface Filter
     // MÉTODO OBRIGATÓRIO: init
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        // Pode deixar vazio se não precisar de inicialização
-        // Filter.super.init(filterConfig); // Se estiver usando Java 8+, pode usar o default, senão, deixe vazio ou com sua lógica
+
     }
 
     @Override
