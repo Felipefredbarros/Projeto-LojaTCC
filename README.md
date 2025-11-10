@@ -109,7 +109,7 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 | DashBoard | Tela de Login |
 | :------------------: | :--------------------------------------: |
-| ![DashBoard]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Tela de Login](<img width="522" height="416" alt="login" src="https://github.com/user-attachments/assets/f270dcc8-6444-4fc7-bb1a-531e00fe400a"/>) |
+| ![DashBoard]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Tela de Login]([CODSDSA]) |
 
 | Cadastro de Pessoas | Listagem de Pessoa |
 | :------------------: | :--------------------------------------: |
