@@ -51,9 +51,6 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
     @Column(name = "lancamento_descricao")
     private String descricao;
 
-    @Column(name = "lancamento_categoria")
-    private String categoria;
-
     @Column(name = "lancamento_metodo")
     @Enumerated(EnumType.STRING)
     private MetodoPagamento metodo;
@@ -113,14 +110,6 @@ public class LancamentoFinanceiro implements Serializable, ClassePai {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
-    }
-
-    public String getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
     }
 
     public MetodoPagamento getMetodo() {

@@ -54,10 +54,6 @@ import javax.inject.Named;
 public class PessoaControle implements Serializable {
 
     private Pessoa pessoa = new Pessoa();
-    @EJB
-    private PessoaFacade pessoaFacade;
-    @EJB
-    private CidadeFacade cidadeFacade;
     private ConverterGenerico pessoaConverter;
     private Endereco novoEndereco = new Endereco();
     private Telefone novoTelefone = new Telefone();
@@ -70,6 +66,10 @@ public class PessoaControle implements Serializable {
     private List<Cidade> listaCidades;
     @EJB
     private EstadoFacade estadoFacade;
+    @EJB
+    private PessoaFacade pessoaFacade;
+    @EJB
+    private CidadeFacade cidadeFacade;
 
     @PostConstruct
     public void init() {
@@ -298,60 +298,28 @@ public class PessoaControle implements Serializable {
             return null;
         }
     }
+    
+    public void editar(Pessoa pes) {
+        if (pessoaFacade.pessoaTemVendas(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui vendas relacionadas e não pode ser editado"));
+            return;
+        }
 
-    public List<TipoPessoa> getTiposPessoaDisponiveis() {
-        return Arrays.asList(TipoPessoa.values());
-    }
+        if (pessoaFacade.pessoaTemCompras(pes.getId())) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Erro", "Esta pessoa possui compras relacionadas e não pode ser editado"));
+            return;
+        }
+        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("pessoaId", pes.getId());
 
-    public List<tipoTelefone> getTiposTelefoneDisponiveis() {
-        return Arrays.asList(tipoTelefone.values());
-    }
-
-    public PessoaFacade getPessoaFacade() {
-        return pessoaFacade;
-    }
-
-    public void setPessoaFacade(PessoaFacade pessoaFacade) {
-        this.pessoaFacade = pessoaFacade;
-    }
-
-    public ConverterGenerico getPessoaConverter() {
-        return pessoaConverter;
-    }
-
-    public void setPessoaConverter(ConverterGenerico pessoaConverter) {
-        this.pessoaConverter = pessoaConverter;
-    }
-
-    public Pessoa getPessoaSelecionado() {
-        return pessoaSelecionado;
-    }
-
-    public void setPessoaSelecionado(Pessoa pessoaSelecionado) {
-        this.pessoaSelecionado = pessoaSelecionado;
-    }
-
-    public void salvarCliente() {
-        pessoa.setTipo(TipoPessoa.CLIENTE);
-        pessoa.setTipoPessoa("FISICA");
-        pessoa.limparDadosPessoais();
-        pessoaFacade.salvar(pessoa);
-        pessoa = new Pessoa();
-    }
-
-    public void salvarFunc() {
-        pessoa.setTipoPessoa("FISICA");
-        pessoa.setTipo(TipoPessoa.FUNCIONARIO);
-        pessoa.limparDadosPessoais();
-        pessoaFacade.salvar(pessoa);
-        pessoa = new Pessoa();
-    }
-
-    public void salvarForn() {
-        pessoa.setTipo(TipoPessoa.FORNECEDOR);
-        pessoa.limparDadosPessoais();
-        pessoaFacade.salvar(pessoa);
-        pessoa = new Pessoa();
+        try {
+            FacesContext.getCurrentInstance().getExternalContext().redirect("pessoaCadastro.xhtml");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public String novo() {
@@ -402,101 +370,14 @@ public class PessoaControle implements Serializable {
                         "Sucesso",
                         "Pessoa excluída com sucesso!"));
     }
-    
-    public void ativar(Pessoa pes){
+
+    public void ativar(Pessoa pes) {
         pes.setAtivo(true);
         pessoaFacade.salvar(pes);
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO,
                         "Sucesso",
                         "Pessoa ativado com sucesso!"));
-    }
-
-    public void editar(Pessoa pes) {
-        if (pessoaFacade.pessoaTemVendas(pes.getId())) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Erro", "Esta pessoa possui vendas relacionadas e não pode ser editado"));
-            return;
-        }
-
-        if (pessoaFacade.pessoaTemCompras(pes.getId())) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Erro", "Esta pessoa possui compras relacionadas e não pode ser editado"));
-            return;
-        }
-        FacesContext.getCurrentInstance().getExternalContext().getFlash().put("pessoaId", pes.getId());
-
-        try {
-            FacesContext.getCurrentInstance().getExternalContext().redirect("pessoaCadastro.xhtml");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Pessoa getPessoa() {
-        return pessoa;
-    }
-
-    public void setPessoa(Pessoa pessoa) {
-        this.pessoa = pessoa;
-    }
-
-    public Endereco getNovoEndereco() {
-        return novoEndereco;
-    }
-
-    public void setNovoEndereco(Endereco novoEndereco) {
-        this.novoEndereco = novoEndereco;
-    }
-
-    public Telefone getNovoTelefone() {
-        return novoTelefone;
-    }
-
-    public void setNovoTelefone(Telefone novoTelefone) {
-        this.novoTelefone = novoTelefone;
-    }
-
-    public List<Pessoa> getListaClientes() {
-        return pessoaFacade.listaClienteAtivo();
-    }
-
-    public List<Pessoa> getListaFornecedor() {
-        return pessoaFacade.listaFornecedorAtivo();
-    }
-
-    public List<Pessoa> getListaFuncionario() {
-        return pessoaFacade.listaFuncionarioAtivo();
-    }
-
-    public List<Pessoa> getListaClientesInativos() {
-        return pessoaFacade.listaClienteInativo();
-    }
-
-    public List<Pessoa> getListaFornecedorInativos() {
-        return pessoaFacade.listaFornecedorInativo();
-    }
-
-    public List<Pessoa> getListaFuncionarioInativos() {
-        return pessoaFacade.listaFuncionarioInativo();
-    }
-
-    public List<Pessoa> getListaPessoaAtiva() {
-        return pessoaFacade.listaPessoaAtivo();
-    }
-
-    public List<Pessoa> getListaPessoaInativa() {
-        return pessoaFacade.listaPessoaInativo();
-    }
-
-    public ContratoTrabalho getContrato() {
-        return contrato;
-    }
-
-    public void setContrato(ContratoTrabalho contrato) {
-        this.contrato = contrato;
     }
 
     public void exportarRelatorioClientes() throws DocumentException, IOException {
@@ -686,6 +567,46 @@ public class PessoaControle implements Serializable {
         return cell;
     }
 
+    public List<TipoPessoa> getTiposPessoaDisponiveis() {
+        return Arrays.asList(TipoPessoa.values());
+    }
+
+    public List<tipoTelefone> getTiposTelefoneDisponiveis() {
+        return Arrays.asList(tipoTelefone.values());
+    }
+
+    public List<Pessoa> getListaClientes() {
+        return pessoaFacade.listaCliAtivo();
+    }
+
+    public List<Pessoa> getListaFornecedor() {
+        return pessoaFacade.listaFornAtivo();
+    }
+
+    public List<Pessoa> getListaFuncionario() {
+        return pessoaFacade.listaFuncAtivo();
+    }
+
+    public List<Pessoa> getListaClientesInativos() {
+        return pessoaFacade.listaClienteInativo();
+    }
+
+    public List<Pessoa> getListaFornecedorInativos() {
+        return pessoaFacade.listaFornecedorInativo();
+    }
+
+    public List<Pessoa> getListaFuncionarioInativos() {
+        return pessoaFacade.listaFuncionarioInativo();
+    }
+
+    public List<Pessoa> getListaPessoaAtiva() {
+        return pessoaFacade.listaPessoaAtivo();
+    }
+
+    public List<Pessoa> getListaPessoaInativa() {
+        return pessoaFacade.listaPessoaInativo();
+    }
+
     public Long getEstadoSelecionadoId() {
         return estadoSelecionadoId;
     }
@@ -708,6 +629,62 @@ public class PessoaControle implements Serializable {
 
     public void setCidadeSelecionadaId(Long cidadeSelecionadaId) {
         this.cidadeSelecionadaId = cidadeSelecionadaId;
+    }
+
+    public Pessoa getPessoa() {
+        return pessoa;
+    }
+
+    public void setPessoa(Pessoa pessoa) {
+        this.pessoa = pessoa;
+    }
+
+    public Endereco getNovoEndereco() {
+        return novoEndereco;
+    }
+
+    public void setNovoEndereco(Endereco novoEndereco) {
+        this.novoEndereco = novoEndereco;
+    }
+
+    public Telefone getNovoTelefone() {
+        return novoTelefone;
+    }
+
+    public void setNovoTelefone(Telefone novoTelefone) {
+        this.novoTelefone = novoTelefone;
+    }
+
+    public ContratoTrabalho getContrato() {
+        return contrato;
+    }
+
+    public void setContrato(ContratoTrabalho contrato) {
+        this.contrato = contrato;
+    }
+
+    public PessoaFacade getPessoaFacade() {
+        return pessoaFacade;
+    }
+
+    public void setPessoaFacade(PessoaFacade pessoaFacade) {
+        this.pessoaFacade = pessoaFacade;
+    }
+
+    public ConverterGenerico getPessoaConverter() {
+        return pessoaConverter;
+    }
+
+    public void setPessoaConverter(ConverterGenerico pessoaConverter) {
+        this.pessoaConverter = pessoaConverter;
+    }
+
+    public Pessoa getPessoaSelecionado() {
+        return pessoaSelecionado;
+    }
+
+    public void setPessoaSelecionado(Pessoa pessoaSelecionado) {
+        this.pessoaSelecionado = pessoaSelecionado;
     }
 
 }

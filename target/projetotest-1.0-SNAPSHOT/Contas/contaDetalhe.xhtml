@@ -1,0 +1,629 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <ui:composition template="../index.xhtml">
+        <ui:define name="body">
+            <f:metadata>
+                <f:viewParam name="contaId" value="#{contaControle.paramContaId}" />
+                <f:viewAction action="#{contaControle.initDetalhe}" />
+            </f:metadata>
+            <h:form id="formContaDetalhe">
+                <p:growl id="growl" showDetail="true" life="4000"/>
+
+                <!-- Header / Toolbar -->
+                <p:toolbar styleClass="erp-toolbar">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Voltar" icon="pi pi-arrow-left" 
+                                         styleClass="ui-button-text-only"
+                                         action="contas.xhtml?faces-redirect=true"
+                                         />
+                        <span class="divider"></span>
+                        <span class="titulo">
+                            <i class="pi pi-wallet"></i>
+                            <h:outputText value="#{contaControle.contaSelecionada.nome}"/>
+                        </span>
+                        <p:tag styleClass="ml-2"
+                               value="#{contaControle.contaSelecionada.tipoConta}"
+                               severity="#{contaControle.contaSelecionada.tipoConta eq 'BANCO' ? 'info' : 'warning'}"/>
+                    </p:toolbarGroup>
+
+                    <p:toolbarGroup align="right">
+                        <p:commandButton value="Transferir" icon="pi pi-exchange" styleClass="ui-button-success"
+                                         style="margin-right: 5px"
+                                         oncomplete="PF('dlgTransferencia').show()"/>
+                        <p:commandButton value="Retirada" styleClass="ui-button-warning"
+                                         rendered="#{contaControle.contaSelecionada.tipoConta eq 'COFRE'}"
+                                         oncomplete="PF('dlgRetirada').show()"
+                                         style="margin-right: 5px"/>
+                        <!-- Botão padrão (para contas que não são cofre) -->
+                        <p:commandButton value="Movimentar" icon="pi pi-exchange" styleClass="ui-button-success"
+                                         style="margin-right: 5px"
+                                         rendered="#{contaControle.contaSelecionada.tipoConta ne 'COFRE'}"
+                                         oncomplete="PF('dlgMovimentacao').show()"/>
+
+                        <!-- Botão específico (quando for COFRE) -->
+                        <p:commandButton value="Adicionar" icon="pi pi-exchange" styleClass="ui-button-success"
+                                         style="margin-right: 5px"
+                                         rendered="#{contaControle.contaSelecionada.tipoConta eq 'COFRE'}"
+                                         oncomplete="PF('dlgMovimentacaoCofre').show()"/>
+
+                        <p:commandButton value="Gerar Extrato (PDF)" icon="pi pi-file-pdf"
+                                         type="button" onclick="PF('dlgFiltroExtrato').show()"
+                                         styleClass="ui-button-info" style="margin-left: 5px;"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+                <!-- KPI Cards -->
+
+                <p:outputPanel id="painelPrincipal">
+                    <div class="kpi-grid">
+                        <div class="kpi-card saldo">
+                            <div class="kpi-title">Saldo Atual</div>
+                            <div class="kpi-value">
+                                <h:outputText value="#{contaControle.contaSelecionada.saldo}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </div>
+                            <div class="kpi-footer">
+                                <i class="pi pi-shield"></i>
+                                <span>
+                                    <h:outputText value="#{contaControle.contaSelecionada.tipoConta eq 'BANCO' ? 'Conta bancária' : 'Cofre físico'}"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card entrada">
+                            <div class="kpi-title">Entradas (Mês)</div>
+                            <div class="kpi-value">
+                                <h:outputText value="#{contaControle.totalEntradasMes(contaControle.contaSelecionada)}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </div>
+                            <div class="kpi-footer"><i class="pi pi-arrow-down-left"></i><span>Mês corrente</span></div>
+                        </div>
+
+                        <div class="kpi-card saida">
+                            <div class="kpi-title">Saídas (Mês)</div>
+                            <div class="kpi-value">
+                                <h:outputText value="#{contaControle.totalSaidasMes(contaControle.contaSelecionada)}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </div>
+                            <div class="kpi-footer"><i class="pi pi-arrow-up-right"></i><span>Mês corrente</span></div>
+                        </div>
+
+                        <div class="kpi-card ult">
+                            <div class="kpi-title">Última Movimentação</div>
+                            <div class="kpi-value small">
+                                <h:panelGroup rendered="#{not empty contaControle.ultimaMovimentacao(contaControle.contaSelecionada)}">
+                                    <h:outputText value="#{contaControle.ultimaMovimentacao(contaControle.contaSelecionada).dataHora}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                                    </h:outputText>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{empty contaControle.ultimaMovimentacao(contaControle.contaSelecionada)}">
+                                    <span>—</span>
+                                </h:panelGroup>
+                            </div>
+                            <div class="kpi-footer"><i class="pi pi-clock"></i><span>Atualizado em tempo real</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Info Card -->
+                    <p:card styleClass="info-card">
+                        <f:facet name="title">
+                            <h:outputText value="Informações da Conta"/>
+                        </f:facet>
+
+                        <p:panelGrid columns="3" layout="grid" styleClass="ui-panelgrid-blank ui-fluid info-grid" 
+                                     columnClasses="ui-g-12 ui-md-6 ui-lg-4, ui-g-12 ui-md-6 ui-lg-4, ui-g-12 ui-md-12 ui-lg-4">
+
+                            <p:outputPanel styleClass="info-item">
+                                <h:outputText value="Saldo Inicial da Conta: " styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.valorInicial}" styleClass="info-value">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="info-item">
+                                <h:outputText value="Nome:" styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.nome}" styleClass="info-value"/>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="info-item">
+                                <h:outputText value="Tipo:" styleClass="info-label"/>
+                                <p:tag value="#{contaControle.contaSelecionada.tipoConta}"
+                                       severity="#{contaControle.contaSelecionada.tipoConta eq 'BANCO' ? 'info' : 'warning'}"/>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="info-item" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}">
+                                <h:outputText value="Banco:"  styleClass="info-label"/>
+                                <h:outputText  value="#{contaControle.contaSelecionada.banco != null and contaControle.contaSelecionada.banco ne '' ? contaControle.contaSelecionada.banco : 'Não Informado'}" styleClass="info-value"/>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="info-item" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}">
+                                <h:outputText value="Agência:" styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.agencia != null and contaControle.contaSelecionada.agencia ne '' ? contaControle.contaSelecionada.agencia : '—'}" styleClass="info-value"/>
+                            </p:outputPanel>
+
+                            <p:outputPanel styleClass="info-item" rendered="#{contaControle.contaSelecionada.tipoConta eq 'BANCO'}">
+                                <h:outputText value="Conta:" styleClass="info-label"/>
+                                <h:outputText value="#{contaControle.contaSelecionada.conta != null and contaControle.contaSelecionada.conta ne '' ? contaControle.contaSelecionada.conta : '—'}" styleClass="info-value"/>
+                            </p:outputPanel>
+
+                        </p:panelGrid>
+                    </p:card>
+
+                    <!-- Movimentações Table -->
+                    <p:card styleClass="mt-3">
+                        <f:facet name="title">
+                            <h:outputText value="Movimentações"/>
+                        </f:facet>
+                        <p:outputPanel styleClass="table-actions" layout="block">
+                            <p:selectOneRadio value="#{contaControle.filtroEstorno}">
+                                <f:selectItem itemLabel="Normais" itemValue="SEM_ESTORNOS" />
+                                <f:selectItem itemLabel="Estornos" itemValue="APENAS_ESTORNOS" />
+                                <p:ajax update="tabelaMov" />
+                            </p:selectOneRadio>
+
+                        </p:outputPanel>
+
+                        <p:dataTable id="tabelaMov" widgetVar="tabelaMovWV"
+                                     value="#{contaControle.movimentacoesFiltradas}"
+                                     var="mov"
+                                     emptyMessage="Nenhuma movimentação registrada"
+                                     paginator="true" rows="10"
+                                     rowStyleClass="#{mov.tipo eq 'ENTRADA' ? 'row-in' : 'row-out'}"
+                                     styleClass="tabela-conta">
+
+                            <p:column headerText="Data" styleClass="col-sm"  style="text-align: center">
+                                <h:outputText value="#{mov.dataHora}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Descrição" filterBy="#{mov.descricao}" styleClass="col-lg"  style="text-align: center">
+                                <h:outputText value="#{mov.descricao}"/>
+                            </p:column>
+
+                            <p:column headerText="Tipo" filterBy="#{mov.tipo}" styleClass="col-xs center"  style="text-align: center">
+                                <p:tag value="#{mov.tipo}" severity="#{mov.tipo eq 'ENTRADA' ? 'success' : 'danger'}"/>
+                            </p:column>
+
+                            <p:column headerText="Metodo Pagamento"  filterBy="#{mov.metodo.descricao}" styleClass="col-xs center"  style="text-align: center">
+                                <p:tag value="#{mov.metodo.descricao}"/>
+                            </p:column>
+
+                            <p:column headerText="Valor"  filterBy="#{mov.valor}" styleClass="col-md right"  style="text-align: center">
+                                <h:outputText value="#{mov.valor}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Status" filterBy="#{mov.status.label}" styleClass="col-xs center"  style="text-align: center">
+                                <p:tag value="#{mov.status.label}" severity="#{mov.status.label eq 'OK' ? 'success' : 'danger'}"/>
+                            </p:column>
+
+                            <f:facet name="footer">
+                                <div class="table-footer">
+                                    <span>
+                                        Entradas:
+                                        <strong>
+                                            <h:outputText value="#{contaControle.somarEntradas(contaControle.contaSelecionada)}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </strong>
+                                    </span>
+                                    <span>
+                                        Saídas:
+                                        <strong>
+                                            <h:outputText value="#{contaControle.somarSaidas(contaControle.contaSelecionada)}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </strong>
+                                    </span>
+                                    <span class="sep">|</span>
+                                    <span>
+                                        Saldo:
+                                        <strong class="saldo-foot #{contaControle.contaSelecionada.saldo lt 0 ? 'neg' : 'pos'}">
+                                            <h:outputText value="#{contaControle.contaSelecionada.saldo}">
+                                                <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                            </h:outputText>
+                                        </strong>
+                                    </span>
+                                </div>
+                            </f:facet>
+                        </p:dataTable>
+
+                    </p:card>
+                </p:outputPanel>
+
+            </h:form>
+
+            <!-- Dialog: Transferência -->
+            <p:dialog header="Transferir entre contas" widgetVar="dlgTransferencia" modal="true" responsive="true" width="480">
+                <h:form id="frmTransferencia">
+                    <p:messages id="msgsT"/>
+                    <p:panelGrid columns="2" columnClasses="label,value" styleClass="grid-clean">
+                        <h:outputText value="Origem"/>
+                        <p:inputText value="#{contaControle.contaSelecionada.nome}" readonly="true"/>
+
+                        <h:outputText value="Destino"/>
+                        <p:selectOneMenu value="#{contaControle.contaDestino}" converter="#{contaControle.contaConverter}"> 
+                            <f:selectItem itemLabel="Selecione" itemValue="#{null}"/>
+                            <f:selectItems value="#{contaControle.contasTransferiveis(contaControle.contaSelecionada)}" var="c"
+                                           itemLabel="#{c.nome}" itemValue="#{c}"/>
+                        </p:selectOneMenu>
+
+                        <h:outputText value="Valor"/>
+                        <p:inputNumber value="#{contaControle.valorTransferencia}" symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                       required="true" requiredMessage="O valor de transferencia é obrigatório."
+                                       minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
+
+                        <h:outputText value="Data"/>
+                        <p:datePicker value="#{contaControle.dataTransferencia}" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                      showTime="true" hourFormat="24"/>
+
+                        <h:outputText value="Descrição"/>
+                        <p:inputTextarea value="#{contaControle.descricaoTransferencia}" autoResize="true" rows="2"/>
+                    </p:panelGrid>
+
+                    <p:separator/>
+                    <div class="dlg-actions">
+                        <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgTransferencia').hide()" actionListener="#{contaControle.limparTransferencia}"/>
+                        <p:commandButton value="Confirmar" icon="pi pi-check" styleClass="ui-button-success"
+                                         actionListener="#{contaControle.transferir()}"
+                                         update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
+                                         oncomplete="if(!args.validationFailed){PF('dlgTransferencia').hide()}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <!-- Dialog: Retirada (Cofre) -->
+            <p:dialog header="Registrar retirada do cofre" widgetVar="dlgRetirada" modal="true" responsive="true" width="460">
+                <h:form id="frmRetirada">
+                    <p:messages id="msgsR"/>
+                    <p:panelGrid columns="2" columnClasses="label,value" styleClass="grid-clean">
+                        <h:outputText value="Valor"/>
+                        <p:inputNumber value="#{contaControle.valorRetirada}" symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                       required="true" requiredMessage="O preço de venda é obrigatório."
+                                       minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
+
+                        <h:outputText value="Data"/>
+                        <p:datePicker value="#{contaControle.dataRetirada}" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                      showTime="true" hourFormat="24"/>
+
+                        <h:outputText value="Motivo"/>
+                        <p:inputTextarea value="#{contaControle.motivoRetirada}" autoResize="true" rows="2"/>
+                    </p:panelGrid>
+
+                    <p:separator/>
+                    <div class="dlg-actions">
+                        <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgRetirada').hide()"/>
+                        <p:commandButton value="Confirmar" icon="pi pi-check" styleClass="ui-button-warning"
+                                         actionListener="#{contaControle.retirarDoCofre()}"
+                                         update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
+                                         oncomplete="if(!args.validationFailed){PF('dlgRetirada').hide()}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog header="Nova movimentação" widgetVar="dlgMovimentacao" modal="true" responsive="true" width="500">
+                <h:form id="frmMov">
+                    <p:messages id="msgsM"/>
+                    <p:panelGrid columns="2" columnClasses="label,value" styleClass="grid-clean">
+                        <h:outputText value="Tipo"/>
+                        <p:selectOneRadio value="#{contaControle.tipoMovimentacao}">
+                            <f:selectItem itemLabel="Entrada" itemValue="ENTRADA"/>
+                            <f:selectItem itemLabel="Saída" itemValue="SAIDA"/>
+                        </p:selectOneRadio>
+
+                        <h:outputText value="Valor"/>
+                        <p:inputNumber value="#{contaControle.valorMovimentacao}" symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                       required="true" requiredMessage="O preço de venda é obrigatório."
+                                       minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
+
+                        <h:outputText value="Data"/>
+                        <p:datePicker value="#{contaControle.dataMovimentacao}" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                      showTime="true" hourFormat="24"/>
+
+                        <h:outputText value="Descrição"/>
+                        <p:inputTextarea value="#{contaControle.descricaoMovimentacao}" autoResize="true" rows="2"/>
+                    </p:panelGrid>
+
+                    <p:separator/>
+                    <div class="dlg-actions">
+                        <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgMovimentacao').hide()"/>
+                        <p:commandButton value="Salvar" icon="pi pi-check" styleClass="ui-button-success"
+                                         actionListener="#{contaControle.salvarMovimentacao()}"
+                                         update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
+                                         oncomplete="if(!args.validationFailed){PF('dlgMovimentacao').hide()}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog header="Nova movimentação" widgetVar="dlgMovimentacaoCofre" modal="true" responsive="true" width="500">
+                <h:form id="frmMovCofre">
+                    <p:messages id="msgsMCofre"/>
+                    <p:panelGrid columns="2" columnClasses="label,value" styleClass="grid-clean">
+                        <h:outputText value="Tipo"/>
+                        <p:selectOneRadio value="#{contaControle.tipoMovimentacao}">
+                            <f:selectItem itemLabel="Entrada" itemValue="ENTRADA"/>
+                        </p:selectOneRadio>
+
+                        <h:outputText value="Valor"/>
+                        <p:inputNumber value="#{contaControle.valorMovimentacao}" symbol="R$ " decimalSeparator="," thousandSeparator="."
+                                       required="true" requiredMessage="O preço de venda é obrigatório."
+                                       minValue="0.01" decimalPlaces="2" placeholder="0,00"/>
+
+                        <h:outputText value="Data"/>
+                        <p:datePicker value="#{contaControle.dataMovimentacao}" showIcon="true"/>
+
+                        <h:outputText value="Descrição"/>
+                        <p:inputTextarea value="#{contaControle.descricaoMovimentacao}" autoResize="true" rows="2"/>
+                    </p:panelGrid>
+
+                    <p:separator/>
+                    <div class="dlg-actions">
+                        <p:commandButton value="Cancelar" icon="pi pi-times" type="button" onclick="PF('dlgMovimentacao').hide()"/>
+                        <p:commandButton value="Salvar" icon="pi pi-check" styleClass="ui-button-success"
+                                         actionListener="#{contaControle.adicionarNoCofre()}"
+                                         update=":formContaDetalhe:painelPrincipal :formContaDetalhe:growl"
+                                         oncomplete="if(!args.validationFailed){PF('dlgMovimentacaoCofre').hide()}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog widgetVar="dlgFiltroExtrato" header="Filtrar Período e Tipo do Extrato" modal="true"
+                      width="450" responsive="true" closable="true" closeOnEscape="true">
+                <h:form id="formFiltroExtrato">
+                    <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid">
+
+                        <p:outputLabel for="dtIniExtrato" value="Data Início:"/>
+                        <p:calendar id="dtIniExtrato" value="#{contaControle.dataInicioRelatorio}"
+                                    pattern="dd/MM/yyyy" mask="99/99/9999" />
+
+                        <p:outputLabel for="dtFimExtrato" value="Data Fim:"/>
+                        <p:calendar id="dtFimExtrato" value="#{contaControle.dataFimRelatorio}"
+                                    pattern="dd/MM/yyyy" mask="99/99/9999"/>
+
+                        <p:outputLabel for="filtroTipo" value="Mostrar Tipo:"/>
+                        <p:selectOneRadio id="filtroTipo" value="#{contaControle.filtroTipoExtrato}" layout="lineDirection">
+                            <f:selectItem itemLabel="Todos" itemValue="TODOS" />
+                            <f:selectItem itemLabel="Entradas" itemValue="ENTRADA" />
+                            <f:selectItem itemLabel="Saídas" itemValue="SAIDA" />
+                        </p:selectOneRadio>
+                    </p:panelGrid>
+                    <br/>
+                    <div style="text-align: center; display: flex; justify-content: center; gap: 10px;">
+                        <p:commandButton value="Limpar Filtros" icon="pi pi-refresh" update="@form"
+                                         actionListener="#{contaControle.limparFiltroExtrato}"
+                                         styleClass="ui-button-outlined ui-button-secondary"/>
+
+                        <p:commandButton value="Gerar Extrato PDF" icon="pi pi-check" ajax="false"
+                                         actionListener="#{contaControle.exportarPDFExtratoContaSelecionada}"
+                                         onclick="PF('dlgFiltroExtrato').hide();"
+                                         styleClass="ui-button-success" />
+                    </div>
+                </h:form>
+            </p:dialog>
+
+            <!-- Styles -->
+            <style>
+                /* Toolbar */
+                .erp-toolbar {
+                    margin-bottom: 16px;
+                    border-radius: 12px;
+                }
+                .erp-toolbar .titulo {
+                    font-weight: 700;
+                    font-size: 1.15rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: .5rem;
+                }
+                .erp-toolbar .divider {
+                    width: 1px;
+                    height: 22px;
+                    background: var(--surface-border);
+                    margin: 0 .75rem;
+                    display: inline-block;
+                }
+                .ml-2 {
+                    margin-left: .5rem;
+                }
+                .mr-2 {
+                    margin-right: .5rem;
+                }
+
+                /* KPI Grid */
+                .kpi-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 16px;
+                    margin-bottom: 18px;
+                }
+                @media (max-width: 1100px) {
+                    .kpi-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                @media (max-width: 600px)  {
+                    .kpi-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .kpi-card {
+                    position: relative;
+                    padding: 10px;
+                    border-radius: 14px;
+                    background: linear-gradient(180deg, var(--surface-card), var(--surface-ground));
+                    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+                }
+                .kpi-card .kpi-title {
+                    font-size: .95rem;
+                    color: #212529;
+                    margin-bottom: 8px;
+                    font-weight: bold;
+                }
+                .kpi-card .kpi-value {
+                    font-size: 1.8rem;
+                    font-weight: 800;
+                    letter-spacing: .3px;
+                }
+                .kpi-card .kpi-value.small {
+                    font-size: 1.15rem;
+                    font-weight: 700;
+                }
+                .kpi-card .kpi-footer {
+                    margin-top: 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: .5rem;
+                    color: #212529;
+                    font-weight: bold;
+                    font-size: .85rem;
+                }
+
+                .kpi-card.saldo {
+                    background: linear-gradient(135deg, #42a5f5, #1e88e5); /* azul médio elegante */
+                    color: #fff;
+                }
+
+                .kpi-card.entrada {
+                    background: linear-gradient(135deg, #66bb6a, #43a047); /* verde suave e limpo */
+                    color: #fff;
+                }
+
+                .kpi-card.saida {
+                    background: linear-gradient(135deg, #ef5350, #e53935); /* vermelho moderno e menos agressivo */
+                    color: #fff;
+                }
+
+                .kpi-card.ult {
+                    background: linear-gradient(135deg, #ab47bc, #8e24aa); /* roxo vibrante e sofisticado */
+                    color: #fff;
+                }
+
+
+                /* Info card */
+                .info-card {
+                    border-radius: 14px;
+                }
+                /* Remova a classe .grid-clean e suas propriedades se for usar a nova estrutura */
+
+                /* Estilos para o Card de Informações - Seção do p:card */
+                .info-card .ui-card-content {
+                    padding: 1rem !important; /* Ajuste interno do card */
+                }
+
+                /* Estilos para o novo p:panelGrid com layout="grid" */
+                .info-grid {
+                    padding: 0; /* Remove padding extra do panelgrid */
+                    margin: 0;
+                }
+
+                /* Estilo para cada item (Label + Value) */
+                .info-grid .info-item {
+                    padding: 0.5rem 0.75rem; /* Adiciona um pequeno espaçamento interno */
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    background-color: var(--surface-hover); /* Fundo sutil para destacar cada item */
+                    display: flex; /* Usa flexbox para alinhar Label e Value */
+                    flex-direction: column; /* Coloca Label em cima do Value */
+                    gap: 2px;
+                }
+
+                /* Estilo para o Label */
+                .info-grid .info-item .info-label {
+                    color: var(--text-color-secondary);
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                }
+
+                /* Estilo para o Valor */
+                .info-grid .info-item .info-value {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: var(--text-color);
+                }
+
+                /* Table actions */
+                .table-actions {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                }
+                .table-actions .right {
+                    display: flex;
+                    align-items: center;
+                    gap: .5rem;
+                }
+
+                /* Movimentações table */
+                .tabela-conta .col-xs {
+                    width: 110px;
+                }
+                .tabela-conta .col-sm {
+                    width: 160px;
+                }
+                .tabela-conta .col-md {
+                    width: 180px;
+                }
+                .tabela-conta .col-lg {
+                    width: auto;
+                }
+                .tabela-conta .center {
+                    text-align: center;
+                }
+                .tabela-conta .right {
+                    text-align: right;
+                }
+                .row-in {
+                    background: rgba(39, 174, 96, .06);
+                }
+                .row-out {
+                    background: rgba(231, 76, 60, .06);
+                }
+
+                .table-footer {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 1rem;
+                    padding: .5rem;
+                }
+                .table-footer .sep {
+                    opacity: .6;
+                }
+                .saldo-foot.pos {
+                    color: #1abc9c;
+                }
+                .saldo-foot.neg {
+                    color: #e74c3c;
+                }
+
+                /* Dialogs */
+                .dlg-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: .5rem;
+                }
+
+                /* Utility */
+                .mt-3 {
+                    margin-top: 18px;
+                }
+
+
+            </style>
+        </ui:define>
+    </ui:composition>
+</html>

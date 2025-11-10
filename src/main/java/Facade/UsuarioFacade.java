@@ -4,10 +4,10 @@
  */
 package Facade;
 
-import Entidades.Categoria;
 import Entidades.Usuario;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 /**
@@ -27,6 +27,17 @@ public class UsuarioFacade extends AbstractFacade<Usuario>{
 
     public UsuarioFacade() {
         super(Usuario.class);
+    }
+    
+     public Usuario findByLogin(String login) {
+        try {
+            return em.createQuery(
+                    "SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class)
+                    .setParameter("login", login)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null; 
+        }
     }
 
 }

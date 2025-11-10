@@ -71,6 +71,10 @@ public class ContaReceber implements Serializable, ClassePai {
     @Column(name = "contaReceber_dataCriação")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataCriação;
+    
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "conta_id")
+    private Conta contaRecebimento;
 
     @OneToMany(mappedBy = "contaReceber", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<LancamentoFinanceiro> lancamentos = new ArrayList<>();
@@ -168,6 +172,16 @@ public class ContaReceber implements Serializable, ClassePai {
     public void setCliente(Pessoa cliente) {
         this.cliente = cliente;
     }
+
+    public Conta getContaRecebimento() {
+        return contaRecebimento;
+    }
+
+    public void setContaRecebimento(Conta contaRecebimento) {
+        this.contaRecebimento = contaRecebimento;
+    }
+    
+    
     
     
 

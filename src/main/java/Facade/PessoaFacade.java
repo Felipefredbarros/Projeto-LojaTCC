@@ -101,24 +101,6 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
         return listaPessoasAtivasPorTipo(TipoPessoa.FORNECEDOR);
     }
 
-    public List<Pessoa> listaPorTipoAtivo(TipoPessoa tipo) {
-        Query q = getEntityManager().createQuery("from Pessoa as p where p.tipo = :tipo and p.ativo = true order by p.id desc");
-        q.setParameter("tipo", tipo);
-        return q.getResultList();
-    }
-
-    public List<Pessoa> listaClienteAtivo() {
-        return listaPorTipoAtivo(TipoPessoa.CLIENTE);
-    }
-
-    public List<Pessoa> listaFornecedorAtivo() {
-        return listaPorTipoAtivo(TipoPessoa.FORNECEDOR);
-    }
-
-    public List<Pessoa> listaFuncionarioAtivo() {
-        return listaPorTipoAtivo(TipoPessoa.FUNCIONARIO);
-    }
-
 //INATIVOS
     public List<Pessoa> listaPorTipoInativo(TipoPessoa tipo) {
         Query q = getEntityManager().createQuery("from Pessoa as p where p.tipo = :tipo and p.ativo = false order by p.id desc");
@@ -173,7 +155,7 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
     }
 
     public List<Pessoa> listaFornecedoresFisicos() {
-        List<Pessoa> fornecedores = listaFornecedorAtivo();
+        List<Pessoa> fornecedores = listaFornAtivo();
         List<Pessoa> fornecedoresFisicos = new ArrayList<>();
 
         for (Pessoa fornecedor : fornecedores) {
@@ -185,7 +167,7 @@ public class PessoaFacade extends AbstractFacade<Pessoa> {
     }
 
     public List<Pessoa> listaFornecedoresJuridicos() {
-        List<Pessoa> fornecedores = listaFornecedorAtivo();
+        List<Pessoa> fornecedores = listaFornAtivo();
         List<Pessoa> fornecedoresJuridicos = new ArrayList<>();
 
         for (Pessoa fornecedor : fornecedores) {

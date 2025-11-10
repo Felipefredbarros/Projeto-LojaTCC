@@ -37,15 +37,17 @@ public class Usuario implements Serializable, ClassePai {
     private String senha;
 
     @ManyToOne
-    @JoinColumn(name = "pessoa_id", unique = true)
+    @JoinColumn(name = "pessoa_id")
     private Pessoa pessoa;
-    
+
     public boolean verificarSenha(String senhaPura) {
-    if (senhaPura == null || this.senha == null) {
-        return false;
+        if (senhaPura == null || this.senha == null) {
+            return false;
+        }
+        return BCrypt.checkpw(senhaPura, this.senha);
     }
-    return BCrypt.checkpw(senhaPura, this.senha);
-}
+    
+    
 
     @Override
     public Long getId() {

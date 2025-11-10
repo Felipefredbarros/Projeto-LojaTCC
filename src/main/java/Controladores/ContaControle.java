@@ -145,17 +145,14 @@ public class ContaControle implements Serializable {
 
     public void excluirOuInativar(Conta conta) {
         try {
-            // Verifica se existem lançamentos financeiros para essa conta
             boolean temLancamentos = !lancamentoFinanceiroFacade.listarPorConta(conta).isEmpty();
 
             if (temLancamentos) {
-                // Só inativa
                 conta.setAtivo(false);
                 conta.setStatus("INATIVA");
                 contaFacade.salvar(conta);
                 addMensagem(FacesMessage.SEVERITY_WARN, "Conta inativada pois possui lançamentos relacionados.");
             } else {
-                // Pode excluir de vez
                 contaFacade.remover(conta);
                 addMensagem(FacesMessage.SEVERITY_INFO, "Conta removida com sucesso!");
             }

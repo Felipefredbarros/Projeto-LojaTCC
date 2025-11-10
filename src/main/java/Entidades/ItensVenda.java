@@ -113,8 +113,6 @@ public class ItensVenda implements Serializable {
     public void setDesc(String desc) {
         this.desc = desc;
     }
-    
-    
 
     @Override
     public int hashCode() {
@@ -125,18 +123,28 @@ public class ItensVenda implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
+        // 1. Verifica se é a exata mesma instância na memória
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+
+        // 2. Verifica se é nulo ou de classe diferente
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
+        // 3. Converte o objeto
         final ItensVenda other = (ItensVenda) obj;
+
+        // 4. LÓGICA CORRIGIDA: Se 'this.id' for nulo, o objeto só pode ser igual
+        //    a ele mesmo (o que já foi checado no passo 1).
+        //    Como 'this' é diferente de 'obj', retornamos 'false'.
+        if (this.id == null) {
+            return false;
+        }
+
+        // 5. Se o 'this.id' não é nulo, aí sim comparamos pelo ID.
         return Objects.equals(this.id, other.id);
     }
 
-    
 }

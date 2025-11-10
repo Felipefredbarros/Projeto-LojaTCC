@@ -48,7 +48,7 @@ public class ProdutoFacade extends AbstractFacade<Produto> {
     }
 
     public List<ProdutoDerivacao> listarProdutosEstoqueBaixo() {
-        String jpql = "SELECT d FROM ProdutoDerivacao d WHERE d.quantidade < 5 AND d.produto.ativo = true";
+        String jpql = "SELECT d FROM ProdutoDerivacao d WHERE d.quantidade < 3 AND d.produto.ativo = true";
         return em.createQuery(jpql, ProdutoDerivacao.class).getResultList();
     }
 

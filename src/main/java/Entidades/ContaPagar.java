@@ -68,7 +68,7 @@ public class ContaPagar implements Serializable, ClassePai {
     @Column(name = "contaPagar_dataRecebimento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataRecebimento;
-    
+
     @Column(name = "contaReceber_dataCriação")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dataCriação;
@@ -81,10 +81,10 @@ public class ContaPagar implements Serializable, ClassePai {
     private List<LancamentoFinanceiro> lancamentos = new ArrayList<>();
 
     public void addLancamento(LancamentoFinanceiro l) {
-    l.setContaPagar(this);
-    this.lancamentos.add(l);
-}
-    
+        l.setContaPagar(this);
+        this.lancamentos.add(l);
+    }
+
     @Override
     public Long getId() {
         return id;
@@ -177,10 +177,6 @@ public class ContaPagar implements Serializable, ClassePai {
     public void setDataCriação(Date dataCriação) {
         this.dataCriação = dataCriação;
     }
-    
-    
-
-    
 
     @Override
     public int hashCode() {
