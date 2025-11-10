@@ -6,21 +6,21 @@ Projeto de Trabalho de Conclusão de Curso (TCC) desenvolvido no curso de Sistem
 
 🧩 Sobre o Projeto
 
-O Sistema de Gerenciamento - Loja São Judas Tadeu é uma aplicação web completa voltada à administração de uma varejista de roupas, desenvolvida com foco em eficiência operacional, integridade dos dados e usabilidade.
+O Sistema de Gerenciamento - Loja São Judas Tadeu é uma aplicação web completa voltada à administração de uma varejista de roupas, desenvolvida com foco em eficiência operacional, integridade dos dados e usabilidade.<br>
 A solução foi construída sobre a arquitetura MVC, utilizando JSF + PrimeFaces na camada de apresentação e EJB + JPA (Hibernate) no backend, integrando-se ao banco de dados PostgreSQL.
 
 --
 
 🛠️ Tecnologias Utilizadas
 🔹 Backend
--Java 8 (Jakarta EE) — Linguagem principal do sistema.
--EJB (Enterprise Java Beans) — Controle de regras de negócio e transações.
--JPA / Hibernate — Persistência de dados com mapeamento objeto-relacional.
--GlassFish / Payara — Servidor de aplicação Java EE para deploy.
+-Java 8 (Jakarta EE) — Linguagem principal do sistema.<br>
+-EJB (Enterprise Java Beans) — Controle de regras de negócio e transações.<br>
+-JPA / Hibernate — Persistência de dados com mapeamento objeto-relacional.<br>
+-GlassFish / Payara — Servidor de aplicação Java EE para deploy.<br>
 
 🔹 Frontend
--JSF (JavaServer Faces) — Framework component-based para a camada de visão.
--PrimeFaces 12 — Biblioteca rica de componentes UI e responsividade.
+-JSF (JavaServer Faces) — Framework component-based para a camada de visão.<br>
+-PrimeFaces 12 — Biblioteca rica de componentes UI e responsividade.<br>
 -HTML5 / CSS3 / PrimeIcons — Personalização visual e responsiva da interface.
 
 🔹 Banco de Dados
@@ -32,44 +32,44 @@ A solução foi construída sobre a arquitetura MVC, utilizando JSF + PrimeFaces
 O sistema é modularizado e cobre os principais processos administrativos de uma loja de varejo:
 
 🏷️ Gestão de Produtos
--Cadastro completo de produtos e suas derivações (tamanho, cor, marca).
--Cálculo automático de estoque total.
--Filtros e busca avançada.
+-Cadastro completo de produtos e suas derivações (tamanho, cor, marca).<br>
+-Cálculo automático de estoque total.<br>
+-Filtros e busca avançada.<br>
 -Relatórios de produtos com estoque baixo.
 
 📦 Controle de Estoque
--Atualização automática após vendas e compras.
--Entrada de mercadorias via módulo de compras.
+-Atualização automática após vendas e compras.<br>
+-Entrada de mercadorias via módulo de compras.<br>
 -Acompanhamento de movimentações.
 
 💰 Módulo de Vendas (PDV)
--Interface otimizada para vendas no balcão.
--Cálculo de totais, descontos e troco.
+-Interface otimizada para vendas no balcão.<br>
+-Cálculo de totais, descontos e troco.<br>
 -Integração com contas a receber e fechamento de caixa.
 
 👥 Gestão de Pessoas
--Controle de clientes, fornecedores e funcionários em uma única estrutura.
+-Controle de clientes, fornecedores e funcionários em uma única estrutura.<br>
 -Histórico de compras e vendas vinculadas.
 
 🧾 Financeiro
--Controle de Contas a Pagar e Contas a Receber.
--Fluxo de Caixa e relatórios financeiros.
+-Controle de Contas a Pagar e Contas a Receber.<br>
+-Fluxo de Caixa e relatórios financeiros.<br>
 -Emissão de relatórios em PDF.
 
 🔐 Gestão de Usuários e Acesso
--Controle de login e senha criptografada (BCrypt).
--Níveis de acesso (Administrador / Vendedor).
+-Controle de login e senha criptografada (BCrypt).<br>
+-Níveis de acesso (Administrador / Vendedor).<br>
 -Registro de sessão do usuário logado.
 
 --
 
 📊 Dashboard e Relatórios
-O painel principal (Dashboard) reúne indicadores e métricas em tempo real:
--Total de produtos cadastrados
--Valor total de vendas e compras
--Lucro líquido
--Produtos com estoque crítico
--Contas a pagar e receber próximas do vencimento
+O painel principal (Dashboard) reúne indicadores e métricas em tempo real:<br>
+-Total de produtos cadastrados<br>
+-Valor total de vendas e compras<br>
+-Lucro líquido<br>
+-Produtos com estoque crítico<br>
+-Contas a pagar e receber próximas do vencimento<br>
 
 Todos os relatórios podem ser exportados em PDF, facilitando a tomada de decisão gerencial.
 
@@ -85,13 +85,13 @@ Todos os relatórios podem ser exportados em PDF, facilitando a tomada de decis�
 --
 
 🧠 Diagramas UML
-🔸 Diagrama de Casos de Uso
-🔸 Diagrama de Classes
+🔸 Diagrama de Casos de Uso<br>
+🔸 Diagrama de Classes<br>
 🔸 Diagrama de Sequência (Exemplo: Processo de Venda)
 
 --
 
-🧾 Estrutura do Projeto (Módulos Principais)
+🧾 Estrutura do Projeto (Módulos Principais)<br>
 src/
 ├── Controladores/
 │   ├── ProdutoControle.java
@@ -119,8 +119,8 @@ src/
 
 📚 Metodologia e Arquitetura
 O projeto segue o padrão MVC (Model-View-Controller), separando de forma clara as responsabilidades entre:
--Model: Entidades JPA mapeando as tabelas do banco.
--View: Páginas JSF com PrimeFaces e CSS personalizado.
+-Model: Entidades JPA mapeando as tabelas do banco.<br>
+-View: Páginas JSF com PrimeFaces e CSS personalizado.<br>
 -Controller: ManagedBeans e EJBs intermediando regras de negócio.
 
 Além disso, foram aplicados princípios de POO, coesão e modularidade, visando fácil manutenção e expansão futura — como a integração de NFC-e, mobile app e relatórios avançados.
@@ -128,8 +128,8 @@ Além disso, foram aplicados princípios de POO, coesão e modularidade, visando
 --
 
 👨‍💻 Autor
-Felipe Frederico Barros
-Acadêmico de Sistemas de Informação – Universidade Paranaense (UNIPAR)
+Felipe Frederico Barros<br>
+Acadêmico de Sistemas de Informação – Universidade Paranaense (UNIPAR)<br>
 Desenvolvedor Full Stack (Java / JSF / PrimeFaces / Spring / Angular)
 
 🔗 LinkedIn
