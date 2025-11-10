@@ -105,11 +105,11 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 ---
 
-### 🧾 Cadastro e Listagem de Entidades
-
 | DashBoard | Tela de Login |
 | :------------------: | :--------------------------------------: |
 | ![DashBoard]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Tela de Login]([CODSDSA]) |
+
+### 🧾 Cadastro e Listagem de Entidades
 
 | Cadastro de Pessoas | Listagem de Pessoa |
 | :------------------: | :--------------------------------------: |
