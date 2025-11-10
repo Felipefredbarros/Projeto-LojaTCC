@@ -37,26 +37,40 @@ O sistema é modularizado e cobre os principais processos administrativos de uma
 - Cadastro completo de produtos e suas derivações (tamanho, cor, marca).  
 - Cálculo automático de estoque total.  
 - Filtros e busca avançada.  
-- Relatórios de produtos com estoque baixo.  
+- Emissão de Relatorios de Produtos em PDF.
+- Emissão de Relatorios de Produtos mais Vendidos e Comprados em PDF
+- Emissão de Relatorios do geral do estoque em PDF.  
 
 ### 📦 Controle de Estoque
 - Atualização automática após vendas e compras.  
 - Entrada de mercadorias via módulo de compras.  
+- Saída de mercadorias via módulo de vendas.  
 - Acompanhamento de movimentações.  
 
-### 💰 Módulo de Vendas (PDV)
-- Interface otimizada para vendas no balcão.  
-- Cálculo de totais, descontos e troco.  
-- Integração com contas a receber e fechamento de caixa.  
-
+### 💰 Módulo de Venda e Compra
+- Interface otimizada para o registro, visualização e fechamento de vendas e compras.    
+- Integração com contas a receber/pagar e contas bancárias/cofres.
+- Emissão de Relatorios com filtros em PDF.
+  
 ### 👥 Gestão de Pessoas
-- Controle de clientes, fornecedores e funcionários em uma única estrutura.  
-- Histórico de compras e vendas vinculadas.  
+- Controle e cadastro de clientes, fornecedores e funcionários em uma única estrutura.  
+- Emissão de Relatorios de Pessoas com filtros em PDF.
 
 ### 🧾 Financeiro
-- Controle de Contas a Pagar e Contas a Receber.  
-- Fluxo de Caixa e relatórios financeiros.  
-- Emissão de relatórios em PDF.  
+- Controle de **Contas a Pagar** e **Contas a Receber**.  
+- Controle de **Contas Bancárias** e **Cofres** da empresa.  
+- Registro automático de lançamentos gerados por vendas, compras e folha de pagamento.  
+
+### 👔 Módulo de Recursos Humanos (RH)
+- Cálculo e registro da **Folha de Pagamento** de cada funcionário, considerando:  
+  - Salário base  
+  - Horas extras  
+  - Adicionais (comissões e bônus)  
+  - Descontos (faltas, adiantamentos etc.)  
+  - Encargos (INSS, IRRF, FGTS)  
+- Geração automática do **salário líquido** e vinculação à competência mensal.  
+- Relatórios detalhados de folha de pagamento em PDF, com filtros por período e funcionário.  
+- Histórico completo de movimentações salariais de comissão e folhas por mês.  
 
 ### 🔐 Gestão de Usuários e Acesso
 - Controle de login e senha criptografada (**BCrypt**).  
@@ -65,29 +79,85 @@ O sistema é modularizado e cobre os principais processos administrativos de uma
 
 ---
 
-## 📊 Dashboard e Relatórios
+## 🔄 Integração Entre Módulos
 
-O painel principal (**Dashboard**) reúne indicadores e métricas em tempo real:
+O sistema foi projetado com **integração total entre os módulos Financeiro, Vendas, Compras e RH**, garantindo **maior controle dos fluxos financeiros**, **controle de lançamentos** e **coerência entre operações**.
 
-- Total de produtos cadastrados  
-- Valor total de vendas e compras  
-- Lucro líquido  
-- Produtos com estoque crítico  
-- Contas a pagar e receber próximas do vencimento  
+### 💸 Integração Financeira
+- Cada **venda** gera automaticamente uma **Conta a Receber**, vinculada ao cliente e método de pagamento.  
+- Cada **compra** gera uma **Conta a Pagar**, vinculada ao fornecedor e às parcelas correspondentes.  
+- As movimentações de pagamento e recebimento das conta geram lançamentos financeiros e atualizam automaticamente o **saldo de cofres e contas bancárias selecionadas**.  
 
-Todos os relatórios podem ser **exportados em PDF**, facilitando a tomada de decisão gerencial.
+### 🛒 Integração de Vendas
+- O fechamento de uma venda atualiza o estoque e gera automaticamente uma **Conta a Receber**.
+- Também é criada uma Movimentação Mensal de Funcionário, registrando a comissão do vendedor responsável pela venda, que posteriormente é incorporada à folha de pagamento do mês. 
+- Relatórios de vendas por período, produto, cliente ou funcionário, exportáveis em PDF.  
+
+### 📦 Integração de Compras
+- Cada compra fechada atualiza o estoque e gera automaticamente uma **Conta a Pagar**.  
+- Relatórios de compras por fornecedor, produto ou período, exportáveis em PDF.  
 
 ---
 
-## 📸 Telas do Sistema
+## 💡 Exemplos de Funcionalidades
 
-| Tela de Login | Dashboard Principal |
-| :------------: | :-----------------: |
-| ![Tela de Login]([COLE_A_URL_DA_IMAGEM_LOGIN_AQUI]) | ![Dashboard]([COLE_A_URL_DA_IMAGEM_DASHBOARD_AQUI]) |
+Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em execução, demonstrando a integração entre os módulos e a geração de relatórios em tempo real.
 
-| Cadastro de Produto | Ponto de Venda (PDV) |
-| :------------------: | :------------------: |
-| ![Cadastro de Produto]([COLE_A_URL_DA_IMAGEM_PRODUTO_AQUI]) | ![PDV]([COLE_A_URL_DA_IMAGEM_PDV_AQUI]) |
+---
+
+### 🧾 Cadastro e Listagem de Entidades
+
+| DashBoard | Tela de Login |
+| :------------------: | :--------------------------------------: |
+| ![DashBoard]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Tela de Login](<img width="522" height="416" alt="login" src="https://github.com/user-attachments/assets/f270dcc8-6444-4fc7-bb1a-531e00fe400a"/>) |
+
+| Cadastro de Pessoas | Listagem de Pessoa |
+| :------------------: | :--------------------------------------: |
+| ![Cadastro de Pessoa]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Listagem de Pessoa]([COLE_A_URL_DA_IMAGEM_CADASTRO_PESSOA]) |
+
+- Interfaces criadas com **PrimeFaces**, utilizando componentes como `p:dataTable`, `p:dialog` e `p:inputText`.  
+- Filtros dinâmicos para busca rápida e paginação automática.  
+- Validações de campos obrigatórios e feedback visual de sucesso/erro.  
+- Edição e exclusão integradas diretamente na tabela, com atualização via **Ajax**.  
+
+---
+
+### 💰 Relatórios Financeiros
+
+| Relatório de Contas a Receber | Relatório de Contas a Pagar |
+| :-----------------------------: | :---------------------------: |
+| ![Relatório de Contas a Receber]([COLE_A_URL_DA_IMAGEM_RELATORIO_RECEBER]) | ![Relatório de Contas a Pagar]([COLE_A_URL_DA_IMAGEM_RELATORIO_PAGAR]) |
+
+- Geração de relatórios em **PDF**, com cabeçalhos personalizados e filtros por período, status e tipo de conta.  
+- Informações detalhadas de cada conta, incluindo valores, vencimentos e clientes/fornecedores vinculados.  
+- Exportação de relatórios diretos do PrimeFaces (`p:commandButton` → `PDFExporter`).  
+- Totalizadores automáticos ao final de cada relatório.  
+
+---
+
+### 📈 Contas
+
+| Listagem das contas | Visualização de uma conta |
+| :-------------: | :----------------------: |
+| ![Listagem de Conta]([COLE_A_URL_DA_IMAGEM_FLUXO_CAIXA]) | ![Visualização de conta]([COLE_A_URL_DA_IMAGEM_LANCAMENTOS]) |
+
+- Exibição das **entradas e saídas** consolidadas em tempo real.  
+- Controle separado por **contas bancárias** e **cofres físicos**.  
+- Cálculo instantâneo do **saldo total da empresa**, exibido em destaque no topo da tela.  
+- Possibilidade de **filtrar lançamentos** por data, tipo e origem.  
+
+---
+
+### 📊 Relatórios de Desempenho
+
+| Produtos Mais Vendidos | Resumo de Vendas por Período |
+| :---------------------: | :---------------------------: |
+| ![Produtos Mais Vendidos]([COLE_A_URL_DA_IMAGEM_RELATORIO_VENDIDOS]) | ![Resumo de Vendas]([COLE_A_URL_DA_IMAGEM_RESUMO_VENDAS]) |
+
+- Relatórios gráficos e tabulares com resumo de vendas e compras.  
+- Filtros por **período, funcionário e categoria de produto**.  
+- Cálculo de **lucro bruto e líquido**.  
+- Exportação em PDF e integração direta com o **Dashboard**.  
 
 ---
 
