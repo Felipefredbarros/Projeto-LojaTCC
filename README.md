@@ -72,9 +72,8 @@ O sistema é modularizado e cobre os principais processos administrativos de uma
 - Relatórios detalhados de folha de pagamento em PDF, com filtros por período e funcionário.  
 - Histórico completo de movimentações salariais de comissão e folhas por mês.  
 
-### 🔐 Gestão de Usuários e Acesso
+### 🔐 Gestão de Usuários
 - Controle de login e senha criptografada (**BCrypt**).  
-- Níveis de acesso (Administrador / Vendedor).  
 - Registro de sessão do usuário logado.  
 
 ---
