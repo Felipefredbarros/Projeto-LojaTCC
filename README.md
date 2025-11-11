@@ -163,40 +163,39 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 ## 🧠 Diagramas UML
 
-- 🔸 **Diagrama de Casos de Uso**  
-- 🔸 **Diagrama de Classes**  
-- 🔸 **Diagrama de Sequência (Exemplo: Processo de Venda)**  
-
-*(Adicione as imagens dos diagramas aqui, se desejar.)*
+- 🔸 [**Diagrama de Caso de Uso**](https://github.com/user-attachments/assets/189e8cdf-88bb-4d1d-ae63-89dbf7578032)  
+- 🔸 [**Diagrama de Classes**](https://github.com/user-attachments/assets/9aefc4ef-42ba-4790-bb4e-0c38fa4c60cc)  
+- 🔸 [**Diagramas de Sequências (Ex: Processos de Conta "ENTRADA")**](https://github.com/user-attachments/assets/1b5b464d-6201-4fa8-9774-162b7c8a46e2)
+- 🔸 [**Diagramas de Sequências (Ex: Processos de Conta "SAÍDA)**](https://github.com/user-attachments/assets/33cd9035-3cd4-4315-8db0-8c19ffda9734)
+- 🔸 [**Diagramas de Sequências (Ex: Processos de Conta "TRANSFERENCIA)**](https://github.com/user-attachments/assets/bc3566a1-215b-4171-a148-d0206020b9b8)
 
 ---
 
 ## 🧾 Estrutura do Projeto (Módulos Principais)
 
-src/
-├── Controladores/
-│ ├── ProdutoControle.java
-│ ├── VendaControle.java
-│ ├── ContaControle.java
+src/<br>
+├── Controladores/<br>
+│ ├── ProdutoControle.java<br>
+│ ├── VendaControle.java<br>
+│ ├── ContaControle.java<br>
+│ └── ...<br>
+├── Entidades/<br>
+│ ├── Produto.java<br>
+│ ├── ProdutoDerivacao.java<br>
+│ ├── Venda.java<br>
+│ ├── Pessoa.java<br>
+│ ├── Conta.java<br>
+│ └── ...<br>
+├── Facade/<br>
+│ ├── AbstractFacade.java<br>
+│ ├── ProdutoFacade.java<br>
+│ ├── VendaFacade.java<br>
+│ ├── ContaFacade.java<br>
+│ ├── PessoaFacade.java<br>
+│ └── ...<br>
+├── Converters/<br>
+│ ├── AbstractConverter.java<br>
 │ └── ...
-├── Entidades/
-│ ├── Produto.java
-│ ├── ProdutoDerivacao.java
-│ ├── Venda.java
-│ ├── Pessoa.java
-│ ├── Conta.java
-│ └── ...
-├── Facade/
-│ ├── AbstractFacade.java
-│ ├── ProdutoFacade.java
-│ ├── VendaFacade.java
-│ ├── ContaFacade.java
-│ ├── PessoaFacade.java
-│ └── ...
-├── Converters/
-│ ├── AbstractConverter.java
-│ └── ...
-
 
 ---
 
@@ -217,8 +216,8 @@ Além disso, foram aplicados princípios de **POO**, **coesão** e **modularidad
 Acadêmico de **Sistemas de Informação – Universidade Paranaense (UNIPAR)**  
 Desenvolvedor **Full Stack (Java / JSF / PrimeFaces / Spring / Angular)**  
 
-🔗 [LinkedIn](https://www.linkedin.com/in/SEU-LINKEDIN-AQUI)  
-💻 [GitHub](https://github.com/SEU-USUARIO-AQUI)
+🔗 [LinkedIn](www.linkedin.com/in/felipe-frederico-barros1)  
+💻 [GitHub](https://github.com/Felipefredbarros)
 
 ---
 
