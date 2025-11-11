@@ -213,8 +213,8 @@ Além disso, foram aplicados princípios de **POO**, **coesão** e **modularidad
 ## 👨‍💻 Autor
 
 **Felipe Frederico Barros**  
-Acadêmico de **Sistemas de Informação – Universidade Paranaense (UNIPAR)**  
-Desenvolvedor **Full Stack (Java / JSF / PrimeFaces / Spring / Angular)**  
+Formado em **Sistemas de Informação – Universidade Paranaense (UNIPAR)**  
+Desenvolvedor  
 
 🔗 [LinkedIn](www.linkedin.com/in/felipe-frederico-barros1)  
 💻 [GitHub](https://github.com/Felipefredbarros)
