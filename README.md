@@ -107,7 +107,7 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 | DashBoard | Tela de Login |
 | :------------------: | :--------------------------------------: |
-| ![DashBoard]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Tela de Login]([CODSDSA]) |
+| ![DashBoard]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Tela de Login](https://github.com/user-attachments/assets/f35f819e-1f6e-455e-91cf-11c2bc7fd7ef/>) |
 
 ### 🧾 Cadastro e Listagem de Entidades
 
