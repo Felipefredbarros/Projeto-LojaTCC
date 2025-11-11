@@ -107,13 +107,13 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 | DashBoard | Tela de Login |
 | :------------------: | :--------------------------------------: |
-| ![DashBoard]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Tela de Login](https://github.com/user-attachments/assets/f35f819e-1f6e-455e-91cf-11c2bc7fd7ef) |
+| ![DashBoard](https://github.com/user-attachments/assets/b222681a-65e6-4819-8af4-19a1e3aec92b) | ![Tela de Login](https://github.com/user-attachments/assets/f35f819e-1f6e-455e-91cf-11c2bc7fd7ef) |
 
 ### 🧾 Cadastro e Listagem de Entidades
 
 | Cadastro de Pessoas | Listagem de Pessoa |
 | :------------------: | :--------------------------------------: |
-| ![Cadastro de Pessoa]([COLE_A_URL_DA_IMAGEM_CADASTRO_PRODUTO]) | ![Listagem de Pessoa]([COLE_A_URL_DA_IMAGEM_CADASTRO_PESSOA]) |
+| ![Cadastro de Pessoa](https://github.com/user-attachments/assets/1cacc960-7d6a-4863-b4d7-98ecfc6283f1) | ![Listagem de Pessoa](https://github.com/user-attachments/assets/8d944a89-824c-4fb9-9162-a9cb1599c185) |
 
 - Interfaces criadas com **PrimeFaces**, utilizando componentes como `p:dataTable`, `p:dialog` e `p:inputText`.  
 - Filtros dinâmicos para busca rápida e paginação automática.  
@@ -126,7 +126,7 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 | Relatório de Contas a Receber | Relatório de Contas a Pagar |
 | :-----------------------------: | :---------------------------: |
-| ![Relatório de Contas a Receber]([COLE_A_URL_DA_IMAGEM_RELATORIO_RECEBER]) | ![Relatório de Contas a Pagar]([COLE_A_URL_DA_IMAGEM_RELATORIO_PAGAR]) |
+| ![Relatório de Contas a Receber](https://github.com/user-attachments/assets/0cc2934e-f81b-42f2-a228-cd67328697e8) | ![Relatório de Contas a Pagar](https://github.com/user-attachments/assets/584e41bf-2306-4334-b309-3da81cfe6d15) |
 
 - Geração de relatórios em **PDF**, com cabeçalhos personalizados e filtros por período, status e tipo de conta.  
 - Informações detalhadas de cada conta, incluindo valores, vencimentos e clientes/fornecedores vinculados.  
