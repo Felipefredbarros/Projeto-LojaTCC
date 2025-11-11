@@ -165,9 +165,13 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 - 🔸 [**Diagrama de Caso de Uso**](https://github.com/user-attachments/assets/189e8cdf-88bb-4d1d-ae63-89dbf7578032)  
 - 🔸 [**Diagrama de Classes**](https://github.com/user-attachments/assets/9aefc4ef-42ba-4790-bb4e-0c38fa4c60cc)  
-- 🔸 [**Diagramas de Sequências (Ex: Processos de Conta "ENTRADA")**](https://github.com/user-attachments/assets/1b5b464d-6201-4fa8-9774-162b7c8a46e2)
-- 🔸 [**Diagramas de Sequências (Ex: Processos de Conta "SAÍDA)**](https://github.com/user-attachments/assets/33cd9035-3cd4-4315-8db0-8c19ffda9734)
-- 🔸 [**Diagramas de Sequências (Ex: Processos de Conta "TRANSFERENCIA)**](https://github.com/user-attachments/assets/bc3566a1-215b-4171-a148-d0206020b9b8)
+
+### 🔸 Diagramas de Sequência  
+*(Abaixo alguns exemplos representativos; o projeto possui diversos outros diagramas que ilustram os principais processos do sistema.)*  
+
+- [Processo de Conta **"ENTRADA"**](https://github.com/user-attachments/assets/1b5b464d-6201-4fa8-9774-162b7c8a46e2)  
+- [Processo de Conta **"SAÍDA"**](https://github.com/user-attachments/assets/33cd9035-3cd4-4315-8db0-8c19ffda9734)  
+- [Processo de Conta **"TRANSFERÊNCIA"**](https://github.com/user-attachments/assets/bc3566a1-215b-4171-a148-d0206020b9b8)  
 
 ---
 
