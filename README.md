@@ -139,7 +139,7 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 | Listagem das contas | Visualização de uma conta |
 | :-------------: | :----------------------: |
-| ![Listagem de Conta]([COLE_A_URL_DA_IMAGEM_FLUXO_CAIXA]) | ![Visualização de conta]([COLE_A_URL_DA_IMAGEM_LANCAMENTOS]) |
+| ![Listagem de Conta](https://github.com/user-attachments/assets/3079835f-5ecb-4cae-96d2-d4ce0d02136d) | ![Visualização de conta](https://github.com/user-attachments/assets/a53beb90-34d5-45c9-a45a-fc661c5d6a18) |
 
 - Exibição das **entradas e saídas** consolidadas em tempo real.  
 - Controle separado por **contas bancárias** e **cofres físicos**.  
@@ -152,7 +152,7 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 | Produtos Mais Vendidos | Resumo de Vendas por Período |
 | :---------------------: | :---------------------------: |
-| ![Produtos Mais Vendidos]([COLE_A_URL_DA_IMAGEM_RELATORIO_VENDIDOS]) | ![Resumo de Vendas]([COLE_A_URL_DA_IMAGEM_RESUMO_VENDAS]) |
+| ![Produtos Mais Vendidos](https://github.com/user-attachments/assets/5fbf111c-6147-47b9-bb03-215d76c5b3f1) | ![Resumo de Vendas](https://github.com/user-attachments/assets/0c51ccad-c4af-47c1-a2f8-6f83beb3631c) |
 
 - Relatórios gráficos e tabulares com resumo de vendas e compras.  
 - Filtros por **período, funcionário e categoria de produto**.  
