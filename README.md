@@ -113,7 +113,7 @@ Abaixo estão alguns exemplos das **funcionalidades práticas** do sistema em ex
 
 | Cadastro de Pessoas | Listagem de Pessoa |
 | :------------------: | :--------------------------------------: |
-| ![Cadastro de Pessoa](https://github.com/user-attachments/assets/1cacc960-7d6a-4863-b4d7-98ecfc6283f1) | ![Listagem de Pessoa](https://github.com/user-attachments/assets/8d944a89-824c-4fb9-9162-a9cb1599c185) |
+| ![Cadastro de Pessoa](https://github.com/user-attachments/assets/fe0d06c4-b6be-4c54-9227-c4e7c7fdadcb) | ![Listagem de Pessoa](https://github.com/user-attachments/assets/8d944a89-824c-4fb9-9162-a9cb1599c185) |
 
 - Interfaces criadas com **PrimeFaces**, utilizando componentes como `p:dataTable`, `p:dialog` e `p:inputText`.  
 - Filtros dinâmicos para busca rápida e paginação automática.  
