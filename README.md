@@ -219,7 +219,7 @@ Além disso, foram aplicados princípios de **POO**, **coesão** e **modularidad
 Formado em **Sistemas de Informação – Universidade Paranaense (UNIPAR)**  
 Desenvolvedor  
 
-🔗 [LinkedIn](www.linkedin.com/in/felipe-frederico-barros1)  
+🔗 [LinkedIn](https://www.linkedin.com/in/felipe-frederico-barros1/)  
 💻 [GitHub](https://github.com/Felipefredbarros)
 
 ---
